@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>JW Marriott · Ordering System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore,collection,doc,setDoc,getDoc,getDocs,onSnapshot,updateDoc,addDoc,deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const cfg = {
+  apiKey:"AIzaSyCKmFise4aQ_aXwl_t2h1g8podcOfvmlyk",
+  authDomain:"ordering-app-8bcb8.firebaseapp.com",
+  projectId:"ordering-app-8bcb8",
+  storageBucket:"ordering-app-8bcb8.firebasestorage.app",
+  messagingSenderId:"415914625333",
+  appId:"1:415914625333:web:2d40088539cc96c62a647c"
+};
+const db = getFirestore(initializeApp(cfg));
+window._fb = { db,collection,doc,setDoc,getDoc,getDocs,onSnapshot,updateDoc,addDoc,deleteDoc };
+window.dispatchEvent(new Event('firebase-ready'));
+</script>
+<style>
+:root{
+  --gold:#B8972E;--gold-light:#D4AF50;--gold-dim:#8A6F20;--gold-tint:#F5ECD4;
+  --bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F7F4EF;--surface3:#EDE9E0;
+  --border:#E2DBD0;--border-soft:#EDE9E0;
+  --text:#1A1714;--text-muted:#8C8680;--text-soft:#5C5652;
+  --red:#B94040;--red-dim:#FDF0F0;--red-border:#E8BABA;
+  --green:#3A7A58;--green-dim:#EFF7F2;--green-border:#B0D9C2;
+  --amber:#A06820;--amber-dim:#FDF4E8;--amber-border:#E8CFA0;
+  --navy:#1E2D4A;--navy2:#2A3D5C;
+  --sw:240px;--hh:64px;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
+  --sh-sm:0 1px 4px rgba(26,23,20,.06);--sh-md:0 4px 16px rgba(26,23,20,.08);--sh-lg:0 8px 32px rgba(26,23,20,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+/* LOADING */
+#ls{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:9999;transition:opacity .4s}
+#ls.out{opacity:0;pointer-events:none}
+.ll{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;letter-spacing:.3em;color:var(--gold-light);text-transform:uppercase}
+.ll span{color:rgba(255,255,255,.3);font-weight:300}
+.lb{width:120px;height:2px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
+.lf{height:100%;background:var(--gold-light);border-radius:99px;animation:ld 1.5s ease-in-out infinite}
+@keyframes ld{0%{width:0;margin-left:0}50%{width:100%;margin-left:0}100%{width:0;margin-left:100%}}
+
+/* SHELL */
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:var(--sw);flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;z-index:50;transition:transform .3s}
+.sb-brand{padding:28px 20px 24px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;letter-spacing:.2em;color:var(--gold-light);text-transform:uppercase}
+.sb-name span{font-weight:300;color:rgba(255,255,255,.35)}
+.sb-sub{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-top:4px}
+.sb-nav{flex:1;padding:16px 12px;overflow-y:auto}
+.nav-sec{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:12px 8px 6px}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;transition:all .15s;margin-bottom:2px}
+.ni:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+.ni.on{background:rgba(184,151,46,.15);color:var(--gold-light)}
+.ni-ic{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.ni-bd{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px}
+.sb-foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.25);line-height:1.7}
+
+/* MAIN */
+.mn{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.tb{height:var(--hh);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0}
+.tb-menu{display:none;font-size:22px;color:var(--text-muted);padding:4px}
+.tb-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.tb-badge{display:flex;align-items:center;gap:6px;background:var(--red-dim);border:1px solid var(--red-border);border-radius:99px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--red);cursor:pointer}
+.pdot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pu 1.5s infinite}
+@keyframes pu{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+
+/* PAGES */
+.pg{display:none;flex:1;overflow-y:auto;padding:24px}
+.pg.on{display:block}
+
+/* SHARED */
+.ph{margin-bottom:24px}
+.pt{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400}
+.pd{font-size:12px;color:var(--text-muted);margin-top:4px}
+.fbet{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-sm)}
+.ch{padding:16px 20px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-soft)}
+.cb{padding:20px}
+.btn{padding:10px 18px;border-radius:var(--r-sm);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:all .15s;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none}
+.btn-g{background:linear-gradient(135deg,var(--gold-dim),var(--gold-light));color:#fff;box-shadow:0 2px 8px rgba(184,151,46,.25)}
+.btn-g:hover{opacity:.9}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--text-soft)}
+.btn-o:hover{border-color:var(--gold);color:var(--gold-dim)}
+.btn-d{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.bdg{display:inline-flex;align-items:center;padding:3px 8px;border-radius:99px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.bdg-u{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+.bdg-p{background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber)}
+.bdg-o{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
+.pbar{height:5px;background:var(--surface3);border-radius:99px;overflow:hidden;margin-top:8px}
+.pf{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold-dim),var(--gold-light));transition:width .6s}
+.pf.wn{background:linear-gradient(90deg,#C07A18,var(--amber))}
+.pf.dn{background:linear-gradient(90deg,#8A2020,var(--red))}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;box-shadow:var(--sh-sm)}
+.sl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+.sv{font-size:24px;font-weight:700;margin-bottom:4px}
+.ss{font-size:11px;color:var(--text-muted)}
+.mt8{margin-top:8px}.mt16{margin-top:16px}
+.mb8{margin-bottom:8px}.mb16{margin-bottom:16px}
+.hi{display:none!important}
+.tr{color:var(--red)}.tg{color:var(--green)}.ta{color:var(--amber)}
+.fl{font-group:margin-bottom:14px}
+.flb{font-size:11px;font-weight:500;color:var(--text-soft);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.fi{width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--gold)}
+
+/* DASHBOARD */
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:var(--r-lg);padding:28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.he{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px}
+.hm{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:#fff}
+.hs{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px}
+.ha{font-size:28px;font-weight:700;color:var(--gold-light);text-align:right}
+.hbs{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;text-align:right}
+.ub{background:var(--red-dim);border:1px solid var(--red-border);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;transition:box-shadow .2s}
+.ub:hover{box-shadow:0 2px 12px rgba(185,64,64,.15)}
+.ud{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pu 1.5s infinite}
+.ut{font-size:13px;font-weight:600;color:var(--red)}
+.usb{font-size:11px;color:var(--text-muted);margin-top:2px}
+.ua{color:var(--red);font-size:18px;margin-left:auto}
+.blc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:8px;box-shadow:var(--sh-sm)}
+.blct{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.blcn{font-size:13px;font-weight:500}
+.blcu{font-size:14px;font-weight:700;text-align:right}
+.blcto{font-size:10px;color:var(--text-muted);text-align:right}
+
+/* INVENTORY */
+.vtabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none}
+.vtabs::-webkit-scrollbar{display:none}
+.vt{flex-shrink:0;padding:8px 16px;border-radius:99px;border:1px solid var(--border);font-size:12px;color:var(--text-muted);background:var(--surface);cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500}
+.vt:hover{border-color:var(--gold-dim);color:var(--gold-dim)}
+.vt.on{background:var(--gold-tint);border-color:var(--gold);color:var(--gold-dim);font-weight:600}
+.ipr{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;margin-bottom:16px;box-shadow:var(--sh-sm);display:flex;align-items:center;gap:16px}
+.ipc{font-size:18px;font-weight:700;margin-bottom:2px}
+.ips{font-size:11px;color:var(--text-muted)}
+.ipbw{flex:1;height:6px;background:var(--surface3);border-radius:99px;overflow:hidden}
+.ipf{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-light));border-radius:99px;transition:width .4s}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:14px;box-shadow:var(--sh-sm)}
+.pc.pu{border-color:var(--red-border);background:var(--red-dim)}
+.pc.pok{border-color:var(--green-border)}
+.pth{width:52px;height:52px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px}
+.pth img{width:100%;height:100%;object-fit:cover}
+.pin{flex:1;min-width:0}
+.pnm{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmt{font-size:10px;color:var(--text-muted);margin-top:3px}
+.pmt strong{color:var(--gold-dim)}
+.pul{font-size:9px;color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.pctr{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.stpr{display:flex;align-items:center;gap:6px}
+.sb2{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.sb2:hover{background:var(--gold-tint);border-color:var(--gold);color:var(--gold-dim)}
+.sv2{font-size:16px;font-weight:700;width:40px;text-align:center;border:none;background:transparent;-moz-appearance:textfield;color:var(--text)}
+.sv2::-webkit-outer-spin-button,.sv2::-webkit-inner-spin-button{-webkit-appearance:none}
+.op{font-size:10px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.op-g{background:var(--gold-tint);border:1px solid var(--gold);color:var(--gold-dim)}
+.op-ok{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
+.op-w{background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber)}
+.op-u{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+.ca{background:var(--amber-dim);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:12px 14px;margin:-4px 0 8px 66px;font-size:12px;color:var(--amber)}
+.cabs{display:flex;gap:8px;margin-top:10px}
+.cab{flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;transition:opacity .15s}
+.cab:hover{opacity:.8}
+.cab-i{background:var(--gold-tint);border:1px solid var(--gold);color:var(--gold-dim)}
+.cab-f{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted)}
+
+/* ORDER */
+.ovb{margin-bottom:24px}
+.ovbh{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--gold-tint)}
+.ovbn{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dim)}
+.ovbt{font-size:16px;font-weight:700}
+.or2{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--sh-sm)}
+.or2.oru{border-color:var(--red-border);background:var(--red-dim)}
+.orn{font-size:13px;font-weight:500}
+.ord{font-size:10px;color:var(--text-muted);margin-top:2px}
+.orp{font-size:14px;font-weight:700;margin-left:16px;flex-shrink:0}
+.bi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;margin-bottom:16px;box-shadow:var(--sh-sm)}
+.bir{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px}
+.bir:last-child{border-bottom:none;font-weight:700}
+.bil{color:var(--text-muted)}
+.bisf{color:var(--green)}.biov{color:var(--red)}
+.fb{width:100%;padding:16px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--gold-dim),var(--gold-light));color:#fff;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 4px 16px rgba(184,151,46,.3);border:none;cursor:pointer;transition:opacity .2s}
+.fb:hover{opacity:.9}
+.emp{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.ei{font-size:48px;margin-bottom:16px;opacity:.4}
+
+/* ALERTS */
+.ac2{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:8px;box-shadow:var(--sh-sm)}
+.ac2.acu{border-color:var(--red-border);background:var(--red-dim)}
+.act{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.acn{font-size:14px;font-weight:600}
+.ac2.acu .acn{color:var(--red)}
+.acm{font-size:11px;color:var(--text-muted)}
+.acnt{font-size:12px;color:var(--text-soft);background:var(--surface2);border:1px solid var(--border-soft);border-radius:8px;padding:10px 12px;margin-top:10px;font-style:italic;line-height:1.5}
+.acac{display:flex;gap:8px;margin-top:12px}
+.aaa{border:1.5px dashed var(--border);border-radius:var(--r-md);padding:20px;text-align:center;cursor:pointer;transition:all .2s;margin-top:8px;color:var(--text-muted);font-size:13px}
+.aaa:hover{border-color:var(--gold);color:var(--gold-dim);background:var(--gold-tint)}
+
+/* CATALOG */
+.ctabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.ctab{padding:8px 16px;border-radius:99px;border:1px solid var(--border);font-size:12px;color:var(--text-muted);background:var(--surface);cursor:pointer;transition:all .15s;font-weight:500}
+.ctab.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.ci{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;box-shadow:var(--sh-sm)}
+.cith{width:48px;height:48px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px}
+.cith img{width:100%;height:100%;object-fit:cover}
+.cii{flex:1;min-width:0}
+.cin{font-size:13px;font-weight:500}
+.cim{font-size:11px;color:var(--text-muted);margin-top:3px}
+.ciac{display:flex;gap:6px;flex-shrink:0}
+
+/* BUDGET */
+.bri{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft)}
+.bri:last-child{border-bottom:none}
+.bril{flex:1;font-size:13px;font-weight:500}
+.brii{width:130px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--text);text-align:right;outline:none}
+.brii:focus{border-color:var(--gold)}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(250,247,242,.92);backdrop-filter:blur(8px);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.mo.on{display:flex}
+@media(min-width:640px){.mo{align-items:center}}
+.ms{width:100%;max-width:500px;background:var(--surface);border-radius:24px 24px 0 0;border:1px solid var(--border);padding:24px 24px 40px;box-shadow:var(--sh-lg);animation:su .25s ease}
+@media(min-width:640px){.ms{border-radius:var(--r-xl);margin:20px}}
+@keyframes su{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{width:36px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 20px}
+.mt2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:6px}
+.msb{font-size:12px;color:var(--text-muted);margin-bottom:20px}
+.mi{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-soft)}
+.mi:last-of-type{border-bottom:none}
+.md{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0}
+.mitx{font-size:13px}
+.mac{display:flex;gap:10px;margin-top:20px}
+.mb2{flex:1;padding:14px;border-radius:var(--r-md);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:center;cursor:pointer;border:none}
+.mb2.pri{background:linear-gradient(135deg,var(--gold-dim),var(--gold-light));color:#fff;box-shadow:0 4px 12px rgba(184,151,46,.25)}
+.mb2.sec{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted)}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.fgrp{margin-bottom:14px}
+.flbl{font-size:11px;font-weight:500;color:var(--text-soft);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+
+/* TOAST */
+.tc{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px;max-width:360px}
+.tst{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;box-shadow:var(--sh-lg);animation:ti .25s ease}
+@keyframes ti{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.tst.err{border-color:var(--red-border)}
+.tst.ok{border-color:var(--green-border)}
+.ttt{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.ttn{font-size:13px;font-weight:700}
+.tst.err .ttn{color:var(--red)}
+.tst.ok .ttn{color:var(--green)}
+.tcl{font-size:16px;color:var(--text-muted);cursor:pointer;background:none;border:none}
+.tmg{font-size:12px;color:var(--text-soft);line-height:1.5;margin-bottom:8px}
+.tcp{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;width:fit-content}
+.tcp:hover{border-color:var(--gold);color:var(--gold-dim)}
+
+/* SIDEBAR OVERLAY */
+.sbo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  :root{--sw:280px}
+  .sb{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%)}
+  .sb.op{transform:translateX(0)}
+  .sbo.sh{display:block}
+  .tb-menu{display:block}
+  .pg{padding:16px}
+  .g3{grid-template-columns:repeat(2,1fr)}
+  .g2{grid-template-columns:1fr}
+  .ca{margin-left:0}
+  .tc{left:16px;right:16px;bottom:16px}
+  .hm{font-size:24px}.ha{font-size:22px}
+}
+@media(max-width:400px){.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="ls"><div class="ll">JW <span>Ordering</span></div><div class="lb"><div class="lf"></div></div></div>
+
+<div id="app">
+  <div class="sbo" id="sbo" onclick="closeSB()"></div>
+
+  <nav class="sb" id="sb">
+    <div class="sb-brand">
+      <div class="sb-name">JW <span>Ordering</span></div>
+      <div class="sb-sub">Houston Downtown · Housekeeping</div>
+    </div>
+    <div class="sb-nav">
+      <div class="nav-sec">Main</div>
+      <div class="ni on" data-p="dashboard" onclick="go('dashboard')"><span class="ni-ic">⊞</span> Dashboard</div>
+      <div class="ni" data-p="inventory"  onclick="go('inventory')"><span class="ni-ic">📦</span> Inventory Count</div>
+      <div class="ni" data-p="order"      onclick="go('order')"><span class="ni-ic">🛒</span> Order Summary</div>
+      <div class="nav-sec" style="margin-top:8px">Management</div>
+      <div class="ni" data-p="alerts"  onclick="go('alerts')"><span class="ni-ic">🔔</span> Urgent Alerts<span class="ni-bd hi" id="nb">0</span></div>
+      <div class="ni" data-p="catalog" onclick="go('catalog')"><span class="ni-ic">📋</span> Product Catalog</div>
+      <div class="ni" data-p="budget"  onclick="go('budget')"><span class="ni-ic">💰</span> Budget Setup</div>
+    </div>
+    <div class="sb-foot">JW Marriott Houston Downtown<br>Housekeeping Department<br>384 Rooms · Floors 02–22</div>
+  </nav>
+
+  <div class="mn">
+    <div class="tb">
+      <button class="tb-menu" onclick="toggleSB()">☰</button>
+      <div class="tb-title" id="tbt">Dashboard</div>
+      <div class="tb-right">
+        <div class="tb-badge hi" id="tbb" onclick="go('alerts')">
+          <span class="pdot"></span><span id="tbc">0</span> urgent
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="pg on" id="pg-dashboard">
+      <div class="hero">
+        <div><div class="he">Current Period</div><div class="hm" id="dm"></div><div class="hs">JW Marriott Houston Downtown</div></div>
+        <div><div class="ha" id="dsp">$0</div><div class="hbs" id="dbs">of $0 budgeted</div></div>
+      </div>
+      <div id="ubn"></div>
+      <div class="g3 mb16">
+        <div class="sc"><div class="sl">Total Spent</div><div class="sv" id="s1">$0</div><div class="ss">this month</div></div>
+        <div class="sc"><div class="sl">Remaining</div><div class="sv tg" id="s2">$0</div><div class="ss">available</div></div>
+        <div class="sc"><div class="sl">Urgent Alerts</div><div class="sv tr" id="s3">0</div><div class="ss">need attention</div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Budget by Line</div><button class="btn btn-o btn-sm" onclick="go('budget')">Edit Budgets</button></div>
+        <div class="cb" style="padding:12px 16px" id="dbl"></div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="pg" id="pg-inventory">
+      <div class="ph fbet">
+        <div><div class="pt">Inventory Count</div><div class="pd">Count on-hand quantities — app calculates what to order</div></div>
+        <button class="btn btn-g btn-sm" onclick="saveInv()">💾 Save Counts</button>
+      </div>
+      <div class="ipr">
+        <div><div class="ipc" id="ipl">0 / 0</div><div class="ips">products counted</div></div>
+        <div class="ipbw"><div class="ipf" id="ipf" style="width:0%"></div></div>
+      </div>
+      <div class="vtabs" id="vtabs"></div>
+      <div id="plist"></div>
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div class="pg" id="pg-order">
+      <div class="ph fbet">
+        <div><div class="pt">Order Summary</div><div class="pd">What needs to be ordered, grouped by vendor</div></div>
+        <button class="btn btn-o btn-sm" onclick="exportOrd()">📄 Export</button>
+      </div>
+      <div id="oc"></div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="pg" id="pg-alerts">
+      <div class="ph"><div class="pt">Urgent Alerts</div><div class="pd">Digital sticky notes — products needing immediate attention</div></div>
+      <div id="al"></div>
+      <div class="aaa" onclick="openAlertModal()">＋ Flag a product as urgent</div>
+    </div>
+
+    <!-- CATALOG -->
+    <div class="pg" id="pg-catalog">
+      <div class="ph fbet">
+        <div><div class="pt">Product Catalog</div><div class="pd">Manage vendors and products</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-o btn-sm" onclick="addVendor()">＋ Vendor</button>
+          <button class="btn btn-g btn-sm" onclick="openProdModal()">＋ Product</button>
+        </div>
+      </div>
+      <div class="ctabs" id="ctabs"></div>
+      <div id="clist"></div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="pg" id="pg-budget">
+      <div class="ph"><div class="pt">Budget Setup</div><div class="pd">Set monthly budget amounts for each budget line</div></div>
+      <div class="card">
+        <div class="ch"><div class="ct">Monthly Budgets — <span id="bml"></span></div></div>
+        <div class="cb" id="bsb"></div>
+      </div>
+      <button class="btn btn-g mt16" onclick="saveBudgets()">💾 Save Budgets</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="mo" id="mo-confirm">
+  <div class="ms">
+    <div class="mh"></div>
+    <div class="mt2">Before you close…</div>
+    <div class="msb">These items were flagged as urgent. Did you order them?</div>
+    <div id="ci"></div>
+    <div class="mac">
+      <div class="mb2 sec" onclick="closeConfirm(false)">Not yet</div>
+      <div class="mb2 pri" onclick="closeConfirm(true)">Yes, all ordered ✓</div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT MODAL -->
+<div class="mo" id="mo-alert">
+  <div class="ms">
+    <div class="mh"></div>
+    <div class="mt2">Flag a Product as Urgent</div>
+    <div class="msb">It will be highlighted in red during inventory and ordering.</div>
+    <div class="fgrp"><div class="flbl">Product</div><select class="fi" id="ap-sel"></select></div>
+    <div class="fgrp mt8"><div class="flbl">Note (optional)</div><textarea class="fi" id="ap-note" rows="3" placeholder="e.g. We ran out — please order before the weekend" style="resize:vertical"></textarea></div>
+    <div class="mac mt16">
+      <div class="mb2 sec" onclick="closeModal('mo-alert')">Cancel</div>
+      <div class="mb2 pri" onclick="submitAlert()">Flag as Urgent</div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="mo" id="mo-product">
+  <div class="ms" style="max-width:540px">
+    <div class="mh"></div>
+    <div class="mt2" id="pmt">Add Product</div>
+    <div class="fg">
+      <div class="fgrp" style="grid-column:1/-1"><div class="flbl">Product Name</div><input class="fi" id="pm-n" placeholder="e.g. Aloe Facial Soap 30g"/></div>
+      <div class="fgrp"><div class="flbl">Vendor</div><select class="fi" id="pm-v"></select></div>
+      <div class="fgrp"><div class="flbl">Budget Line</div><select class="fi" id="pm-b"></select></div>
+      <div class="fgrp"><div class="flbl">Part Number</div><input class="fi" id="pm-pt" placeholder="0100264"/></div>
+      <div class="fgrp"><div class="flbl">Price / Case ($)</div><input class="fi" type="number" id="pm-pr" placeholder="69.70"/></div>
+      <div class="fgrp"><div class="flbl">Case Pack (units)</div><input class="fi" type="number" id="pm-cp" placeholder="288"/></div>
+      <div class="fgrp"><div class="flbl">Par Level (units)</div><input class="fi" type="number" id="pm-pa" placeholder="288"/></div>
+      <div class="fgrp" style="grid-column:1/-1"><div class="flbl">Photo URL (optional)</div><input class="fi" id="pm-ph" placeholder="https://..."/></div>
+    </div>
+    <div class="mac">
+      <div class="mb2 sec" onclick="closeModal('mo-product')">Cancel</div>
+      <div class="mb2 pri" onclick="saveProd()">Save Product</div>
+    </div>
+  </div>
+</div>
+
+<div class="tc" id="tc"></div>
+
+<script>
+'use strict';
+const BL=['Guest Room Supplies','Office Supplies','Appliances','Cleaning Supplies','Laundry Supplies','Linen Replacement'];
+const DV=['Guest Supply','HD Supply','Tea and Coffee Americas','Wasserstron','Lodging Kit','1Concier','Sysco'];
+const S={products:[],vendors:[],budgets:{},inventory:{},gaps:{},alerts:[],page:'dashboard',vf:null,cv:null,epid:null,uns:[]};
+let FB=null;
+
+window.addEventListener('firebase-ready',async()=>{
+  FB=window._fb;
+  await seed();
+  listen();
+  hideLoad();
+});
+
+async function seed(){
+  try{
+    const {db,collection,getDocs,addDoc}=FB;
+    const vs=await getDocs(collection(db,'vendors'));
+    if(vs.empty) for(const n of DV) await addDoc(collection(db,'vendors'),{name:n,c:now()});
+    const ps=await getDocs(collection(db,'products'));
+    if(ps.empty) await seedProds();
+  }catch(e){err('Could not connect to the database. Please check your internet connection.',e)}
+}
+
+async function seedProds(){
+  const {db,collection,addDoc}=FB;
+  const list=[
+    {name:'JW Marriott Aromatherapy Associates Aloe Facial Soap 30g',vendorName:'Guest Supply',partNumber:'0100264',pricePerCase:69.70,casePack:288,parLevel:288,budgetLine:'Guest Room Supplies',emoji:'🧼'},
+    {name:'JW Marriott Aromatherapy Associates Aloe Bath Soap 50g',vendorName:'Guest Supply',partNumber:'0100265',pricePerCase:69.70,casePack:216,parLevel:216,budgetLine:'Guest Room Supplies',emoji:'🧼'},
+    {name:'Marriott Luxury Olas Mouthrinse 1oz',vendorName:'Guest Supply',partNumber:'0077766',pricePerCase:131.63,casePack:200,parLevel:200,budgetLine:'Guest Room Supplies',emoji:'🦷'},
+    {name:'Marriott Luxury Hommage Razor',vendorName:'Guest Supply',partNumber:'0077762',pricePerCase:270.56,casePack:100,parLevel:100,budgetLine:'Guest Room Supplies',emoji:'🪒'},
+    {name:'Sahajan Make-Up Remover Wipe',vendorName:'Guest Supply',partNumber:'0077744',pricePerCase:91.78,casePack:300,parLevel:300,budgetLine:'Guest Room Supplies',emoji:'🧻'},
+    {name:'JW Marriott Draw Tape Laundry Bag',vendorName:'Guest Supply',partNumber:'0044903',pricePerCase:53.19,casePack:500,parLevel:500,budgetLine:'Guest Room Supplies',emoji:'🛍️'},
+    {name:'Cordoba Recycling Wastebasket 16 Quart Black',vendorName:'Guest Supply',partNumber:'0042701',pricePerCase:144.78,casePack:6,parLevel:18,budgetLine:'Guest Room Supplies',emoji:'🗑️'},
+    {name:"Men's Hanger Walnut with Brass Hook",vendorName:'Guest Supply',partNumber:'019281',pricePerCase:162.58,casePack:100,parLevel:100,budgetLine:'Guest Room Supplies',emoji:'🧥'},
+    {name:'Premium Ironing Board 53x14 Charcoal',vendorName:'Guest Supply',partNumber:'0033967',pricePerCase:33.08,casePack:4,parLevel:20,budgetLine:'Appliances',emoji:'👔'},
+    {name:'Aromatherapy Associates Pre-Threaded Sewing Kit',vendorName:'Guest Supply',partNumber:'0100643',pricePerCase:69.87,casePack:100,parLevel:100,budgetLine:'Guest Room Supplies',emoji:'🧵'},
+    {name:'Luxury Mineral Bath Salts',vendorName:'Guest Supply',partNumber:'0024696',pricePerCase:81.40,casePack:100,parLevel:100,budgetLine:'Guest Room Supplies',emoji:'🛁'},
+    {name:'Maxithins Maxi Pad #4 Box White',vendorName:'Guest Supply',partNumber:'0027978',pricePerCase:46.49,casePack:250,parLevel:250,budgetLine:'Guest Room Supplies',emoji:'🩺'},
+    {name:'Marriott Luxury Hommage Shave Cream 20ml',vendorName:'Guest Supply',partNumber:'0077763',pricePerCase:104.21,casePack:200,parLevel:200,budgetLine:'Guest Room Supplies',emoji:'🪒'},
+    {name:'Marriott 16 Quart Recycle Liner Set Black',vendorName:'Guest Supply',partNumber:'0042702',pricePerCase:57.40,casePack:6,parLevel:18,budgetLine:'Guest Room Supplies',emoji:'🗑️'},
+    {name:'Nassau Soap Dish Ice',vendorName:'Guest Supply',partNumber:'0076258',pricePerCase:101.63,casePack:12,parLevel:24,budgetLine:'Guest Room Supplies',emoji:'🪥'},
+    {name:'Tamper Resistant Seals for Refillable Dispenser Bottles',vendorName:'Guest Supply',partNumber:'0100259',pricePerCase:177.94,casePack:12000,parLevel:12000,budgetLine:'Guest Room Supplies',emoji:'🔒'},
+    {name:'JW & TLC Shoe Mitt',vendorName:'Guest Supply',partNumber:'0077780',pricePerCase:143.10,casePack:500,parLevel:500,budgetLine:'Guest Room Supplies',emoji:'👞'},
+    {name:'Marriott Luxury Olas Bamboo Toothbrush',vendorName:'Guest Supply',partNumber:'0077765',pricePerCase:170.08,casePack:200,parLevel:200,budgetLine:'Guest Room Supplies',emoji:'🪥'},
+    {name:'JW & TLC Vanity Kit',vendorName:'Guest Supply',partNumber:'0077784',pricePerCase:145.10,casePack:500,parLevel:500,budgetLine:'Guest Room Supplies',emoji:'💄'},
+    {name:'JW & TLC Shower Cap',vendorName:'Guest Supply',partNumber:'0077781',pricePerCase:110.13,casePack:500,parLevel:500,budgetLine:'Guest Room Supplies',emoji:'🚿'},
+    {name:'JW Marriott In-Room Twist Stylus Pen Silver',vendorName:'Guest Supply',partNumber:'0044894',pricePerCase:96.86,casePack:500,parLevel:500,budgetLine:'Office Supplies',emoji:'🖊️'},
+    {name:'Bungee Ironing Board Pad and Cover Charcoal',vendorName:'Guest Supply',partNumber:'0030132',pricePerCase:87.24,casePack:12,parLevel:12,budgetLine:'Appliances',emoji:'👔'},
+    {name:'TRESemmé Hair Spray 2oz',vendorName:'Guest Supply',partNumber:'0030029',pricePerCase:81.21,casePack:24,parLevel:48,budgetLine:'Guest Room Supplies',emoji:'💆'},
+    {name:'OLAS Marine Bio-Active Toothpaste Sachet',vendorName:'Guest Supply',partNumber:'0076164',pricePerCase:121.25,casePack:300,parLevel:300,budgetLine:'Guest Room Supplies',emoji:'🦷'},
+    {name:"JW Marriott 4\" Coaster Square White",vendorName:'Guest Supply',partNumber:'0071826',pricePerCase:136.75,casePack:5000,parLevel:5000,budgetLine:'Guest Room Supplies',emoji:'🥤'},
+    {name:'Cordoba Sleek Wastebasket Liner 12 Quart Black',vendorName:'Guest Supply',partNumber:'0079130',pricePerCase:149.43,casePack:12,parLevel:12,budgetLine:'Guest Room Supplies',emoji:'🗑️'},
+    {name:'Cordoba Sleek Wastebasket 12 Quart Black',vendorName:'Guest Supply',partNumber:'0079308',pricePerCase:175.50,casePack:6,parLevel:12,budgetLine:'Guest Room Supplies',emoji:'🗑️'},
+  ];
+  for(const p of list) await addDoc(collection(db,'products'),{...p,createdAt:now()});
+  ok('Product catalog loaded from your Guest Supply order list.');
+}
+
+function listen(){
+  const {db,collection,onSnapshot,doc}=FB,mk=mkey();
+  S.uns.push(onSnapshot(collection(db,'vendors'),s=>{S.vendors=s.docs.map(d=>({id:d.id,...d.data()}));ref()},e=>err('Could not load vendors. Check your connection.',e)));
+  S.uns.push(onSnapshot(collection(db,'products'),s=>{S.products=s.docs.map(d=>({id:d.id,...d.data()}));ref()},e=>err('Could not load products.',e)));
+  S.uns.push(onSnapshot(doc(db,'budgets',mk),s=>{S.budgets=s.exists()?s.data():{};ref()},e=>err('Could not load budgets.',e)));
+  S.uns.push(onSnapshot(collection(db,'alerts'),s=>{S.alerts=s.docs.map(d=>({id:d.id,...d.data()}));updBadges();ref()},e=>err('Could not load alerts.',e)));
+  S.uns.push(onSnapshot(doc(db,'inventory',mk),s=>{
+    const d=s.exists()?s.data():{};
+    for(const[k,v] of Object.entries(d)) if(S.inventory[k]===undefined) S.inventory[k]=v;
+    ref();
+  },e=>err('Could not load inventory.',e)));
+}
+
+function go(p){
+  S.page=p;
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('on'));
+  document.getElementById('pg-'+p)?.classList.add('on');
+  document.querySelector('[data-p="'+p+'"]')?.classList.add('on');
+  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',budget:'Budget Setup'};
+  document.getElementById('tbt').textContent=T[p]||p;
+  closeSB();
+  render(p);
+}
+function ref(){render(S.page)}
+function render(p){
+  if(p==='dashboard') rDash();
+  else if(p==='inventory') rInv();
+  else if(p==='order') rOrd();
+  else if(p==='alerts') rAlerts();
+  else if(p==='catalog') rCatalog();
+  else if(p==='budget') rBudget();
+}
+
+// DASHBOARD
+function rDash(){
+  const d=new Date();
+  document.getElementById('dm').textContent=d.toLocaleString('en-US',{month:'long',year:'numeric'});
+  const tb=BL.reduce((s,l)=>s+(S.budgets[l]||0),0);
+  const ts=BL.reduce((s,l)=>s+(S.budgets['spent_'+l]||0),0);
+  const rm=tb-ts;
+  document.getElementById('dsp').textContent=fmt(ts);
+  document.getElementById('dbs').textContent='of '+fmt(tb)+' budgeted';
+  document.getElementById('s1').textContent=fmt(ts);
+  document.getElementById('s2').textContent=fmt(rm);
+  document.getElementById('s3').textContent=S.alerts.filter(a=>a.status==='urgent').length;
+  document.getElementById('ubn').innerHTML=S.alerts.filter(a=>a.status==='urgent').slice(0,3).map(a=>`
+    <div class="ub" onclick="go('alerts')">
+      <div class="ud"></div>
+      <div style="flex:1"><div class="ut">${e(a.productName)}</div><div class="usb">Flagged by ${e(a.flaggedBy||'manager')} · ${e(a.budgetLine||'')}</div></div>
+      <div class="ua">›</div>
+    </div>`).join('');
+  document.getElementById('dbl').innerHTML=BL.map(l=>{
+    const b=S.budgets[l]||0,sp=S.budgets['spent_'+l]||0,pct=b>0?Math.min((sp/b)*100,100):0;
+    const c=pct>=90?'dn':pct>=70?'wn':'';
+    return`<div class="blc"><div class="blct"><div class="blcn">${e(l)}</div><div><div class="blcu">${fmt(sp)}</div><div class="blcto">of ${fmt(b)}</div></div></div><div class="pbar"><div class="pf ${c}" style="width:${pct}%"></div></div></div>`;
+  }).join('');
+}
+
+// INVENTORY
+function rInv(){rVTabs();rProds();updProg()}
+function allV(){return[...new Set([...S.vendors.map(v=>v.name),...S.products.map(p=>p.vendorName)].filter(Boolean))].sort()}
+function rVTabs(){
+  const vs=allV();
+  if(!S.vf&&vs.length)S.vf=vs[0];
+  document.getElementById('vtabs').innerHTML=vs.map(v=>`<div class="vt ${S.vf===v?'on':''}" onclick="pickV('${e(v)}')">${e(v)}</div>`).join('');
+}
+function pickV(v){S.vf=v;rInv()}
+function rProds(){
+  const c=document.getElementById('plist');
+  const ps=S.products.filter(p=>p.vendorName===S.vf);
+  if(!ps.length){c.innerHTML=`<div class="emp"><div class="ei">📦</div>No products for this vendor.<br><br><button class="btn btn-g btn-sm" onclick="go('catalog')">Add Products</button></div>`;return}
+  const ui=new Set(S.alerts.filter(a=>a.status==='urgent').map(a=>a.productId));
+  const sorted=[...ps].sort((a,b)=>{if(ui.has(a.id)&&!ui.has(b.id))return -1;if(!ui.has(a.id)&&ui.has(b.id))return 1;return a.name.localeCompare(b.name)});
+  c.innerHTML=sorted.map(p=>pCard(p,ui.has(p.id))).join('');
+}
+function pCard(p,isU){
+  const oh=S.inventory[p.id],ct=oh!==undefined&&oh!=='';
+  const par=p.parLevel||0,cp=p.casePack||1;
+  const diff=ct?par-Number(oh):0;
+  const cn=diff>0?Math.ceil(diff/cp):0;
+  const isCG=ct&&diff>0&&diff<cp,dec=S.gaps[p.id];
+  let pill='';
+  if(!ct)pill=`<span class="op op-g">Not counted</span>`;
+  else if(diff<=0)pill=`<span class="op op-ok">✓ OK</span>`;
+  else if(isU)pill=`<span class="op op-u">⚠ ${cn} case${cn>1?'s':''}</span>`;
+  else pill=`<span class="op op-g">${cn} case${cn>1?'s':''}</span>`;
+  const th=p.photoUrl?`<img src="${e(p.photoUrl)}" alt="" onerror="this.style.display='none';this.parentElement.textContent='${p.emoji||'📦'}'">`:(p.emoji||'📦');
+  let ca='';
+  if(isCG&&!dec)ca=`<div class="ca">⚠ You need <strong>${diff} unit${diff>1?'s':''}</strong> but the case contains <strong>${cp}</strong>. Not enough for a full case.<div class="cabs"><div class="cab cab-i" onclick="decG('${p.id}','include')">Include full case</div><div class="cab cab-f" onclick="decG('${p.id}','flag')">Flag for next order</div></div></div>`;
+  return`<div class="pc ${isU?'pu':ct&&diff<=0?'pok':''}" id="pc-${p.id}"><div class="pth">${th}</div><div class="pin"><div class="pnm">${e(p.name)}</div><div class="pmt">Par <strong>${par}</strong> · Case <strong>${cp}</strong> · $${(p.pricePerCase||0).toFixed(2)}</div>${isU?'<div class="pul">⚠ Flagged urgent</div>':''}</div><div class="pctr"><div class="stpr"><button class="sb2" onclick="adj('${p.id}',-1)">−</button><input class="sv2" type="number" min="0" value="${ct?oh:''}" placeholder="0" oninput="upd('${p.id}',this.value)" onchange="upd('${p.id}',this.value)"/><button class="sb2" onclick="adj('${p.id}',1)">+</button></div>${pill}</div></div>${ca}`;
+}
+function adj(id,d){upd(id,Math.max(0,(Number(S.inventory[id]??0))+d))}
+function upd(id,v){
+  S.inventory[id]=Math.max(0,Number(v)||0);delete S.gaps[id];
+  const p=S.products.find(x=>x.id===id);if(!p)return;
+  const isU=S.alerts.some(a=>a.productId===id&&a.status==='urgent');
+  const card=document.getElementById('pc-'+id);
+  if(card){const nx=card.nextElementSibling;if(nx?.classList.contains('ca'))nx.remove();card.outerHTML=pCard(p,isU)}
+  updProg();
+}
+function decG(id,dec){
+  S.gaps[id]=dec;
+  const p=S.products.find(x=>x.id===id);if(!p)return;
+  const isU=S.alerts.some(a=>a.productId===id&&a.status==='urgent');
+  const card=document.getElementById('pc-'+id);
+  if(card){const nx=card.nextElementSibling;if(nx?.classList.contains('ca'))nx.remove();card.outerHTML=pCard(p,isU)}
+  if(dec==='flag')ok(p.name+' flagged — will appear in next order cycle.');
+}
+function updProg(){
+  const tot=S.products.length,cnt=S.products.filter(p=>S.inventory[p.id]!==undefined&&S.inventory[p.id]!=='').length;
+  const lbl=document.getElementById('ipl'),bar=document.getElementById('ipf');
+  if(lbl)lbl.textContent=cnt+' / '+tot;
+  if(bar)bar.style.width=(tot>0?(cnt/tot)*100:0)+'%';
+}
+async function saveInv(){
+  try{await FB.setDoc(FB.doc(FB.db,'inventory',mkey()),{...S.inventory,savedAt:now()});ok('Inventory counts saved to the cloud.')}
+  catch(e2){err('Could not save inventory counts. Please check your connection and try again.',e2)}
+}
+
+// ORDER
+function rOrd(){
+  const items=getItems(),ui=new Set(S.alerts.filter(a=>a.status==='urgent').map(a=>a.productId));
+  const c=document.getElementById('oc');
+  if(!items.length){c.innerHTML=`<div class="emp"><div class="ei">✅</div>Nothing to order right now.<br>Complete an inventory count first.</div>`;return}
+  const bv={};for(const i of items)(bv[i.vn]||(bv[i.vn]=[])).push(i);
+  let html='',gd=0;
+  for(const [v,vi] of Object.entries(bv)){
+    const vt=vi.reduce((s,i)=>s+i.lt,0);gd+=vt;
+    html+=`<div class="ovb"><div class="ovbh"><div class="ovbn">${e(v)}</div><div class="ovbt">${fmt(vt)}</div></div>${vi.map(i=>`<div class="or2 ${ui.has(i.pid)?'oru':''}"><div><div class="orn ${ui.has(i.pid)?'tr':''}">${e(i.name)} ${ui.has(i.pid)?'⚠':''}</div><div class="ord">${i.cases} case${i.cases>1?'s':''} × $${i.pp.toFixed(2)} · ${e(i.bl)}</div></div><div class="orp">${fmt(i.lt)}</div></div>`).join('')}</div>`;
+  }
+  const tb=BL.reduce((s,l)=>s+(S.budgets[l]||0),0),ts=BL.reduce((s,l)=>s+(S.budgets['spent_'+l]||0),0);
+  const rm=tb-ts,af=rm-gd,safe=af>=0;
+  html+=`<div class="bi"><div class="ct mb8">Budget Impact</div><div class="bir"><span class="bil">Available budget</span><span>${fmt(rm)}</span></div><div class="bir"><span class="bil">This order total</span><span>${fmt(gd)}</span></div><div class="bir"><span class="bil">Remaining after order</span><span class="${safe?'bisf':'biov'}">${fmt(Math.abs(af))} ${safe?'left ✓':'OVER BUDGET ⚠'}</span></div></div><button class="fb" onclick="finalize()">Finalize & Mark as Ordered</button>`;
+  c.innerHTML=html;
+}
+function getItems(){
+  const out=[];
+  for(const p of S.products){
+    const oh=S.inventory[p.id];
+    if(oh===undefined||oh==='')continue;
+    const par=p.parLevel||0,diff=par-Number(oh);
+    if(diff<=0)continue;
+    const cp=p.casePack||1,dec=S.gaps[p.id];
+    if(diff<cp&&dec!=='include')continue;
+    const cases=Math.ceil(diff/cp),lt=cases*(p.pricePerCase||0);
+    out.push({pid:p.id,name:p.name,vn:p.vendorName,bl:p.budgetLine,cases,pp:p.pricePerCase||0,lt});
+  }
+  return out;
+}
+async function finalize(){
+  const ua=S.alerts.filter(a=>a.status==='urgent');
+  if(ua.length){showConfirm(ua);return}
+  await doFinalize();
+}
+async function doFinalize(){
+  try{
+    const items=getItems(),mk=mkey();
+    await FB.addDoc(FB.collection(FB.db,'orders'),{items,monthKey:mk,total:items.reduce((s,i)=>s+i.lt,0),createdAt:now()});
+    const sp={};for(const i of items)sp['spent_'+i.bl]=(S.budgets['spent_'+i.bl]||0)+i.lt;
+    if(Object.keys(sp).length)await FB.updateDoc(FB.doc(FB.db,'budgets',mk),sp);
+    ok('Order finalized and recorded!');go('dashboard');
+  }catch(e2){err('Could not save the order. Please try again.',e2)}
+}
+function exportOrd(){
+  const items=getItems();
+  if(!items.length){note('No items to export.');return}
+  let txt=`JW Marriott Houston Downtown — Order Summary\n${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}\n${'─'.repeat(48)}\n\n`;
+  const bv={};for(const i of items)(bv[i.vn]||(bv[i.vn]=[])).push(i);
+  for(const [v,vi] of Object.entries(bv)){
+    txt+=v.toUpperCase()+'\n';
+    for(const i of vi)txt+=`  • ${i.name} — ${i.cases} case${i.cases>1?'s':''} @ $${i.pp.toFixed(2)} = ${fmt(i.lt)}\n`;
+    txt+='  Subtotal: '+fmt(vi.reduce((s,i)=>s+i.lt,0))+'\n\n';
+  }
+  txt+='GRAND TOTAL: '+fmt(items.reduce((s,i)=>s+i.lt,0))+'\n';
+  navigator.clipboard.writeText(txt).then(()=>ok('Order summary copied to clipboard!'));
+}
+
+// ALERTS
+function rAlerts(){
+  const c=document.getElementById('al');
+  if(!S.alerts.length){c.innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted)">No alerts yet. Tap below to flag a product.</div>`;return}
+  const ord={urgent:0,pending:1,ordered:2};
+  c.innerHTML=[...S.alerts].sort((a,b)=>(ord[a.status]||9)-(ord[b.status]||9)).map(a=>`
+    <div class="ac2 ${a.status==='urgent'?'acu':''}">
+      <div class="act"><div class="acn">${e(a.productName)}</div><span class="bdg bdg-${a.status==='urgent'?'u':a.status==='ordered'?'o':'p'}">${cap(a.status)}</span></div>
+      <div class="acm">Flagged by ${e(a.flaggedBy||'manager')} · ${fd(a.createdAt)} · ${e(a.budgetLine||'')}</div>
+      ${a.note?`<div class="acnt">"${e(a.note)}"</div>`:''}
+      <div class="acac">
+        ${a.status!=='ordered'?`<button class="btn btn-o btn-sm" onclick="markOrd('${a.id}')">✓ Mark Ordered</button>`:''}
+        <button class="btn btn-d btn-sm" onclick="delAl('${a.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+function updBadges(){
+  const n=S.alerts.filter(a=>a.status==='urgent').length;
+  const nb=document.getElementById('nb'),tb=document.getElementById('tbb'),tc=document.getElementById('tbc');
+  if(nb){nb.textContent=n;nb.classList.toggle('hi',n===0)}
+  if(tb)tb.classList.toggle('hi',n===0);
+  if(tc)tc.textContent=n;
+}
+function openAlertModal(){
+  document.getElementById('ap-sel').innerHTML=S.products.map(p=>`<option value="${p.id}" data-n="${e(p.name)}" data-bl="${e(p.budgetLine||'')}">${e(p.name)}</option>`).join('');
+  document.getElementById('ap-note').value='';
+  openModal('mo-alert');
+}
+async function submitAlert(){
+  const sel=document.getElementById('ap-sel'),opt=sel.options[sel.selectedIndex];
+  const nt=document.getElementById('ap-note').value.trim();
+  if(!sel.value){note('Please select a product.');return}
+  try{
+    await FB.addDoc(FB.collection(FB.db,'alerts'),{productId:sel.value,productName:opt?.dataset?.n||opt?.text||'',budgetLine:opt?.dataset?.bl||'',note:nt,status:'urgent',flaggedBy:'Manager',createdAt:now()});
+    closeModal('mo-alert');ok('Product flagged as urgent.');
+  }catch(e2){err('Could not save the alert. Please check your connection.',e2)}
+}
+async function markOrd(id){
+  try{await FB.updateDoc(FB.doc(FB.db,'alerts',id),{status:'ordered'})}
+  catch(e2){err('Could not update alert. Try again.',e2)}
+}
+async function delAl(id){
+  if(!confirm('Delete this alert?'))return;
+  try{await FB.deleteDoc(FB.doc(FB.db,'alerts',id))}
+  catch(e2){err('Could not delete alert. Try again.',e2)}
+}
+
+// CATALOG
+function rCatalog(){
+  const vs=allV();
+  if(!S.cv&&vs.length)S.cv=vs[0];
+  document.getElementById('ctabs').innerHTML=vs.map(v=>`<div class="ctab ${S.cv===v?'on':''}" onclick="pickCV('${e(v)}')">${e(v)}</div>`).join('');
+  const ps=S.products.filter(p=>p.vendorName===S.cv);
+  const cl=document.getElementById('clist');
+  if(!ps.length){cl.innerHTML=`<div class="emp"><div class="ei">📋</div>No products yet.<br><br><button class="btn btn-g btn-sm" onclick="openProdModal()">Add first product</button></div>`;return}
+  cl.innerHTML=ps.map(p=>`
+    <div class="ci">
+      <div class="cith">${p.photoUrl?`<img src="${e(p.photoUrl)}" alt="" onerror="this.style.display='none';this.parentElement.textContent='${p.emoji||'📦'}'">`:(p.emoji||'📦')}</div>
+      <div class="cii"><div class="cin">${e(p.name)}</div><div class="cim">Par: ${p.parLevel} · Case: ${p.casePack} · $${(p.pricePerCase||0).toFixed(2)}/case · ${e(p.budgetLine||'')}</div>${p.partNumber?`<div class="cim">Part #: ${e(p.partNumber)}</div>`:''}</div>
+      <div class="ciac"><button class="btn btn-o btn-sm" onclick="editP('${p.id}')">Edit</button><button class="btn btn-d btn-sm" onclick="delP('${p.id}')">Delete</button></div>
+    </div>`).join('');
+}
+function pickCV(v){S.cv=v;rCatalog()}
+function addVendor(){
+  const n=prompt('New vendor name:');if(!n?.trim())return;
+  FB.addDoc(FB.collection(FB.db,'vendors'),{name:n.trim(),createdAt:now()})
+    .then(()=>ok('Vendor "'+n.trim()+'" added.'))
+    .catch(e2=>err('Could not add vendor. Try again.',e2));
+}
+function openProdModal(vn){
+  S.epid=null;
+  document.getElementById('pmt').textContent='Add Product';
+  ['pm-n','pm-pt','pm-ph'].forEach(id=>document.getElementById(id).value='');
+  ['pm-pr','pm-cp','pm-pa'].forEach(id=>document.getElementById(id).value='');
+  fillPS(vn||S.cv);openModal('mo-product');
+}
+function editP(id){
+  const p=S.products.find(x=>x.id===id);if(!p)return;
+  S.epid=id;document.getElementById('pmt').textContent='Edit Product';
+  document.getElementById('pm-n').value=p.name||'';
+  document.getElementById('pm-pt').value=p.partNumber||'';
+  document.getElementById('pm-pr').value=p.pricePerCase||'';
+  document.getElementById('pm-cp').value=p.casePack||'';
+  document.getElementById('pm-pa').value=p.parLevel||'';
+  document.getElementById('pm-ph').value=p.photoUrl||'';
+  fillPS(p.vendorName);
+  document.getElementById('pm-b').value=p.budgetLine||'';
+  openModal('mo-product');
+}
+function fillPS(sv){
+  document.getElementById('pm-v').innerHTML=allV().map(v=>`<option value="${e(v)}" ${v===sv?'selected':''}>${e(v)}</option>`).join('');
+  document.getElementById('pm-b').innerHTML=BL.map(l=>`<option value="${e(l)}">${e(l)}</option>`).join('');
+}
+async function saveProd(){
+  const nm=document.getElementById('pm-n').value.trim(),vn=document.getElementById('pm-v').value,bl=document.getElementById('pm-b').value;
+  if(!nm){note('Please enter a product name.');return}
+  if(!vn){note('Please select a vendor.');return}
+  const data={name:nm,vendorName:vn,budgetLine:bl,partNumber:document.getElementById('pm-pt').value.trim(),pricePerCase:parseFloat(document.getElementById('pm-pr').value)||0,casePack:parseInt(document.getElementById('pm-cp').value)||1,parLevel:parseInt(document.getElementById('pm-pa').value)||0,photoUrl:document.getElementById('pm-ph').value.trim(),updatedAt:now()};
+  try{
+    if(S.epid){await FB.updateDoc(FB.doc(FB.db,'products',S.epid),data);ok('Product updated.')}
+    else{await FB.addDoc(FB.collection(FB.db,'products'),{...data,createdAt:now()});ok('Product added.')}
+    closeModal('mo-product');
+  }catch(e2){err('Could not save product. Please try again.',e2)}
+}
+async function delP(id){
+  if(!confirm('Delete this product?'))return;
+  try{await FB.deleteDoc(FB.doc(FB.db,'products',id));ok('Product deleted.')}
+  catch(e2){err('Could not delete product. Try again.',e2)}
+}
+
+// BUDGET
+function rBudget(){
+  document.getElementById('bml').textContent=new Date().toLocaleString('en-US',{month:'long',year:'numeric'});
+  document.getElementById('bsb').innerHTML=BL.map(l=>`<div class="bri"><div class="bril">${e(l)}</div><input class="brii" type="number" min="0" step="100" id="bi-${l.replace(/\s+/g,'-')}" value="${S.budgets[l]||''}" placeholder="0.00"/></div>`).join('');
+}
+async function saveBudgets(){
+  try{
+    const u={};for(const l of BL){const el=document.getElementById('bi-'+l.replace(/\s+/g,'-'));u[l]=parseFloat(el?.value)||0}
+    await FB.setDoc(FB.doc(FB.db,'budgets',mkey()),{...S.budgets,...u});ok('Budgets saved.');go('dashboard');
+  }catch(e2){err('Could not save budgets. Check your connection and try again.',e2)}
+}
+
+// CONFIRM MODAL
+function showConfirm(als){
+  document.getElementById('ci').innerHTML=als.map(a=>`<div class="mi"><div class="md"></div><div class="mitx">${e(a.productName)} — ${e(a.note||'flagged urgent')}</div></div>`).join('');
+  openModal('mo-confirm');
+}
+async function closeConfirm(yes){
+  closeModal('mo-confirm');
+  if(yes){for(const a of S.alerts.filter(x=>x.status==='urgent'))await FB.updateDoc(FB.doc(FB.db,'alerts',a.id),{status:'ordered'});await doFinalize()}
+}
+
+// MODAL / SIDEBAR
+function openModal(id){document.getElementById(id)?.classList.add('on')}
+function closeModal(id){document.getElementById(id)?.classList.remove('on')}
+function toggleSB(){document.getElementById('sb').classList.toggle('op');document.getElementById('sbo').classList.toggle('sh')}
+function closeSB(){document.getElementById('sb').classList.remove('op');document.getElementById('sbo').classList.remove('sh')}
+
+// LOADING
+function hideLoad(){const el=document.getElementById('ls');el.classList.add('out');setTimeout(()=>el.style.display='none',400);render('dashboard')}
+
+// TOAST
+let tid=0;
+function toast(type,title,msg,e2){
+  const id='t'+ ++tid;
+  const ed=e2?'['+new Date().toISOString()+'] '+(e2.code||'')+' '+(e2.message||''):'';
+  document.getElementById('tc').insertAdjacentHTML('beforeend',`<div class="tst ${type}" id="${id}"><div class="ttt"><div class="ttn">${e(title)}</div><button class="tcl" onclick="rt('${id}')">✕</button></div><div class="tmg">${e(msg)}</div>${ed?`<div class="tcp" onclick="cpe('${e(ed)}')">📋 Copy error details to share</div>`:''}</div>`);
+  setTimeout(()=>rt(id),type==='err'?8000:4000);
+}
+function rt(id){document.getElementById(id)?.remove()}
+function cpe(d){navigator.clipboard.writeText(d).then(()=>ok('Error details copied.'))}
+function err(msg,e2){toast('err','Something went wrong',msg,e2)}
+function ok(msg){toast('ok','Done',msg)}
+function note(msg){toast('','Note',msg)}
+
+// UTILS
+function mkey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function now(){return new Date().toISOString()}
+function fmt(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n||0)}
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):s}
+function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch{return s||''}}
+
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'){document.querySelectorAll('.mo.on').forEach(m=>m.classList.remove('on'));closeSB()}
+});
+</script>
+</body>
+</html>
