@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -101,6 +103,8 @@ input,select,textarea{font-family:inherit}
 .PG.on{display:block;height:calc(100vh - var(--hh));overflow-y:auto}
 #pg-quickcount{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none}
 #pg-quickcount.on{display:block}
+#pg-qrcodes{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none;padding:20px}
+#pg-qrcodes.on{display:block}
 #qc-root{padding:20px}
 /* SHARED */
 .PH{margin-bottom:20px}
@@ -593,6 +597,32 @@ input,select,textarea{font-family:inherit}
 .QC-done-stat{background:var(--s2);border-radius:var(--r2);padding:12px 8px;text-align:center}
 .QC-done-stat-val{font-size:20px;font-weight:700;color:var(--txt)}
 .QC-done-stat-lbl{font-size:9px;color:var(--tm);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
+
+/* ── QR CODES & SCANNER ──────────────────────────────────────────── */
+.QC-scan-btn{width:38px;height:38px;border-radius:var(--r1);background:var(--nvy);color:var(--gl);font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:none;cursor:pointer;transition:opacity .14s}
+.QC-scan-btn:hover{opacity:.85}
+.QR-wrap{max-width:1000px;margin:0 auto}
+.QR-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.QR-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.QR-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px;text-align:center;box-shadow:var(--sh1)}
+.QR-card-canvas{display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.QR-card-name{font-size:11px;font-weight:600;color:var(--txt);line-height:1.3;min-height:28px;display:flex;align-items:center;justify-content:center}
+.QR-card-pn{font-size:10px;color:var(--tm);margin-top:2px}
+@media print{
+  .SB,.TB,.VBN,.AST-fab,#scan-fab,.QR-toolbar{display:none!important}
+  #pg-qrcodes{position:static!important;padding:0!important}
+  .QR-grid{grid-template-columns:repeat(3,1fr)}
+  .QR-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+}
+/* SCANNER MODAL */
+.SCM{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column}
+.SCM.on{display:flex}
+.SCM-box{width:100%;max-width:420px;background:#fff;border-radius:var(--r3);overflow:hidden;margin:20px}
+.SCM-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr)}
+.SCM-title{font-family:"Cormorant Garamond",serif;font-size:18px;font-weight:600;color:var(--txt)}
+.SCM-close{font-size:18px;color:var(--tm);cursor:pointer;padding:4px 8px}
+#scm-reader{width:100%}
+.SCM-status{padding:12px 18px;font-size:12px;color:var(--tm);text-align:center}
 </style>
 </head>
 <body>
@@ -632,6 +662,7 @@ input,select,textarea{font-family:inherit}
       <div class="NI on"  data-p="dashboard"     onclick="go('dashboard')"><span class="ic">&#8862;</span>Dashboard</div>
       <div class="NI"     data-p="inventory"     onclick="go('inventory')"><span class="ic">&#128230;</span>Inventory Count</div>
       <div class="NI"     data-p="quickcount"    onclick="go('quickcount')"><span class="ic">&#9889;</span>Quick Count</div>
+      <div class="NI"     data-p="qrcodes"      onclick="go('qrcodes')"><span class="ic">&#128241;</span>QR Codes</div>
       <div class="NI"     data-p="order"         onclick="go('order')"><span class="ic">&#128722;</span>Order Summary</div>
       <div class="nh" style="margin-top:6px">Management</div>
       <div class="NI"     data-p="alerts"        onclick="go('alerts')"><span class="ic">&#128276;</span>Urgent Alerts<span class="bd hi" id="nb">0</span></div>
@@ -811,6 +842,11 @@ input,select,textarea{font-family:inherit}
     <div class="PG" id="pg-quickcount">
       <div id="qc-root"></div>
     </div>
+
+    <!-- QR CODES -->
+    <div class="PG" id="pg-qrcodes">
+      <div id="qr-root"></div>
+    </div>
 <!-- MODALS -->
 <div class="MO" id="MO-confirm">
   <div class="MS">
@@ -865,6 +901,10 @@ input,select,textarea{font-family:inherit}
     <div class="MAC"><div class="MB sec" onclick="closeMO('MO-pdf')">Cancel</div><div class="MB pri hi" id="pdf-confirm-btn" onclick="confirmPdfImport()">Import Products</div></div>
   </div>
 </div>
+<!-- SCAN FAB -->
+<button class="AST-fab" id="scan-fab" onclick="openScanner()" style="right:96px;background:linear-gradient(135deg,#1a6e2e,#2d9e45);border-color:#5fc97a">
+  <span class="AST-fab-icon">&#128247;</span>
+</button>
 <!-- ASSISTANT FAB + DRAWER -->
 <button class="AST-fab" id="ast-fab" onclick="astToggle()">
   <span class="AST-fab-icon">&#128718;</span>
@@ -934,6 +974,17 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
+<!-- SCANNER MODAL -->
+<div class="SCM" id="scm-modal">
+  <div class="SCM-box">
+    <div class="SCM-hdr">
+      <div class="SCM-title">&#128247; Scan Product</div>
+      <div class="SCM-close" onclick="closeScanner()">&#10005;</div>
+    </div>
+    <div id="scm-reader"></div>
+    <div class="SCM-status" id="scm-status">Point camera at a product QR code</div>
+  </div>
+</div>
 <div class="TC" id="TC"></div>
 <script>
 'use strict';
@@ -1098,7 +1149,7 @@ function go(p){
   document.querySelectorAll('.NI').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p)?.classList.add('on');
   document.querySelector('[data-p="'+p+'"]')?.classList.add('on');
-  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count'};
+  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',qrcodes:'QR Codes'};
   document.getElementById('TBT').textContent=T[p]||p;
   closeSB();render(p);
   // Reset all scroll positions on page change
@@ -1119,6 +1170,7 @@ function render(p){
   else if(p==='ordersettings')rOrderSettings();
   else if(p==='budget')rBudget();
   else if(p==='quickcount')rQuickCount();
+  else if(p==='qrcodes')rQrCodes();
 }
 
 // ── DASHBOARD ──────────────────────────────────────────
@@ -2453,6 +2505,10 @@ function qcRenderList(root) {
   searchInp.addEventListener('input', function() { qcSearch(this.value); });
   searchBar.appendChild(searchIcon);
   searchBar.appendChild(searchInp);
+  const scanBtn = qcEl('button', {cls: 'QC-scan-btn', html: '&#128247;'});
+  scanBtn.title = 'Scan barcode/QR';
+  scanBtn.addEventListener('click', function(){ openScanner(); });
+  searchBar.appendChild(scanBtn);
   wrap.appendChild(searchBar);
 
   // Filter row
@@ -2764,6 +2820,188 @@ function qcRenderDone(root) {
   done.appendChild(ordBtn);
   wrap.appendChild(done);
   root.appendChild(wrap);
+}
+
+</script>
+
+
+<script>
+'use strict';
+// ── QR CODES PAGE ────────────────────────────────────────────────────
+function rQrCodes() {
+  const root = document.getElementById('qr-root');
+  if (!root) return;
+  root.innerHTML = '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'QR-wrap';
+
+  // Header
+  const ph = document.createElement('div');
+  ph.className = 'PH fbet';
+  ph.innerHTML = '<div><div class="PT">QR Codes</div><div class="PD">Print and stick on shelves &middot; scan during Quick Count to jump straight to a product</div></div>';
+  const toolbar = document.createElement('div');
+  toolbar.style.display = 'flex';
+  toolbar.style.gap = '8px';
+  const printBtn = document.createElement('button');
+  printBtn.className = 'btn btn-g btn-sm';
+  printBtn.innerHTML = '&#128424; Print All';
+  printBtn.addEventListener('click', function(){ window.print(); });
+  toolbar.appendChild(printBtn);
+  ph.appendChild(toolbar);
+  wrap.appendChild(ph);
+
+  const grid = document.createElement('div');
+  grid.className = 'QR-grid';
+  wrap.appendChild(grid);
+  root.appendChild(wrap);
+
+  const prods = S.products.slice().sort(function(a,b){
+    return (a.vendorName||'').localeCompare(b.vendorName||'') || (a.name||'').localeCompare(b.name||'');
+  });
+
+  if (!prods.length) {
+    grid.innerHTML = '<div class="emp"><div class="eic">📦</div>No products yet.</div>';
+    return;
+  }
+
+  prods.forEach(function(p) {
+    const card = document.createElement('div');
+    card.className = 'QR-card';
+    const canvasWrap = document.createElement('div');
+    canvasWrap.className = 'QR-card-canvas';
+    card.appendChild(canvasWrap);
+
+    const name = document.createElement('div');
+    name.className = 'QR-card-name';
+    name.textContent = p.name;
+    card.appendChild(name);
+
+    const pn = document.createElement('div');
+    pn.className = 'QR-card-pn';
+    pn.textContent = (p.partNumber ? '#' + p.partNumber + ' · ' : '') + qcEmoji(p);
+    card.appendChild(pn);
+
+    grid.appendChild(card);
+
+    // Generate QR code encoding the product ID
+    // Payload format: "JWQC:<productId>" so the scanner can identify it
+    new QRCode(canvasWrap, {
+      text: 'JWQC:' + p.id,
+      width: 120,
+      height: 120,
+      colorDark: '#1E2D4A',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  });
+}
+
+// ── SCANNER ──────────────────────────────────────────────────────────
+let scmInstance = null;
+let scmActive = false;
+
+function openScanner() {
+  if (typeof S === 'undefined' || !S.products || !S.products.length) {
+    showNote('Products are still loading, try again in a moment.');
+    return;
+  }
+  document.getElementById('scm-modal').classList.add('on');
+  document.getElementById('scm-status').textContent = 'Point camera at a product QR code';
+  startScanner();
+}
+
+function closeScanner() {
+  document.getElementById('scm-modal').classList.remove('on');
+  stopScanner();
+}
+
+function startScanner() {
+  if (scmActive) return;
+  if (typeof Html5Qrcode === 'undefined') {
+    document.getElementById('scm-status').textContent = 'Scanner library failed to load. Check your connection.';
+    return;
+  }
+  scmInstance = new Html5Qrcode('scm-reader');
+  scmActive = true;
+  const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+  Html5Qrcode.getCameras().then(function(devices) {
+    let cameraId = devices && devices.length ? devices[devices.length - 1].id : null;
+    // Prefer back camera on mobile
+    const back = devices && devices.find(function(d){ return /back|rear|environment/i.test(d.label); });
+    if (back) cameraId = back.id;
+    const target = cameraId || { facingMode: 'environment' };
+    scmInstance.start(target, config, onScanSuccess, onScanFailure).catch(function(err) {
+      document.getElementById('scm-status').textContent = 'Camera error: ' + (err.message || err) + '. Check camera permissions.';
+      scmActive = false;
+    });
+  }).catch(function(err) {
+    // Fallback: try environment-facing camera directly
+    scmInstance.start({ facingMode: 'environment' }, config, onScanSuccess, onScanFailure).catch(function(err2) {
+      document.getElementById('scm-status').textContent = 'Camera not available: ' + (err2.message || err2);
+      scmActive = false;
+    });
+  });
+}
+
+function stopScanner() {
+  if (scmInstance && scmActive) {
+    scmInstance.stop().then(function() {
+      scmInstance.clear();
+      scmInstance = null;
+      scmActive = false;
+    }).catch(function() {
+      scmActive = false;
+    });
+  }
+}
+
+function onScanFailure() {
+  // Called continuously while no code is found — ignore
+}
+
+function onScanSuccess(decodedText) {
+  // Expected format: JWQC:<productId>
+  let productId = null;
+  if (decodedText.indexOf('JWQC:') === 0) {
+    productId = decodedText.slice(5);
+  } else {
+    // Also accept raw product ID or part number match as fallback
+    productId = decodedText.trim();
+  }
+
+  let product = S.products.find(function(p){ return p.id === productId; });
+  if (!product) {
+    // Try matching by part number
+    product = S.products.find(function(p){ return p.partNumber && p.partNumber === decodedText.trim(); });
+  }
+
+  if (!product) {
+    document.getElementById('scm-status').textContent = 'Unrecognized code — product not found.';
+    return;
+  }
+
+  document.getElementById('scm-status').textContent = '✓ Found: ' + product.name;
+  closeScanner();
+
+  // If not currently in Quick Count, navigate there first with a location prompt
+  if (S.page !== 'quickcount') {
+    go('quickcount');
+    QC.view = 'select';
+    rQuickCount();
+    showNote('Select a location, then scan again or search "' + product.name.slice(0, 20) + '"');
+    return;
+  }
+
+  // If a location is selected, jump straight to the counter for this product
+  if (QC.loc) {
+    QC.filter = 'all';
+    qcOpenCounter(product.id);
+  } else {
+    QC.view = 'select';
+    rQuickCount();
+    showNote('Select a location first, then scan again.');
+  }
 }
 
 </script>
