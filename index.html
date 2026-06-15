@@ -104,8 +104,8 @@ input,select,textarea{font-family:inherit}
 .PG.on{display:block;height:calc(100vh - var(--hh));overflow-y:auto}
 #pg-quickcount{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none}
 #pg-quickcount.on{display:block}
-#pg-boxcount{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none;padding:20px}
-#pg-boxcount.on{display:block}
+#pg-qrcodes{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none;padding:20px}
+#pg-qrcodes.on{display:block}
 #qc-root{padding:20px}
 /* SHARED */
 .PH{margin-bottom:20px}
@@ -609,9 +609,6 @@ input,select,textarea{font-family:inherit}
 .QR-card-canvas{display:flex;align-items:center;justify-content:center;margin-bottom:8px}
 .QR-card-name{font-size:11px;font-weight:600;color:var(--txt);line-height:1.3;min-height:28px;display:flex;align-items:center;justify-content:center}
 .QR-card-pn{font-size:10px;color:var(--tm);margin-top:2px}
-@media print{
-  .SB,.TB,.VBN,.AST-fab,#scan-fab,.BX-toolbar,.BX-tabs{display:none!important}
-  #pg-boxcount{position:static!important;padding:0!important}
 }
 /* SCANNER MODAL */
 .SCM{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column}
@@ -623,36 +620,29 @@ input,select,textarea{font-family:inherit}
 #scm-reader{width:100%}
 .SCM-status{padding:12px 18px;font-size:12px;color:var(--tm);text-align:center}
 
-/* ── BOX COUNT ────────────────────────────────────────────────────── */
-.BX-wrap{max-width:520px;margin:0 auto}
-.BX-tabs{display:flex;border-bottom:1px solid var(--bds);margin-bottom:16px}
-.BX-tab{flex:1;padding:11px 8px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tm);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
-.BX-tab.on{color:var(--gd);border-bottom-color:var(--gold)}
-/* PRINT TAB */
-.BX-print-row{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;box-shadow:var(--sh1)}
-.BX-print-qr{width:40px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--bds);border-radius:6px;overflow:hidden}
-.BX-print-info{flex:1;min-width:0}
-.BX-print-name{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.BX-print-meta{font-size:10px;color:var(--tm);margin-top:1px}
-.BX-print-copies{width:54px;padding:7px 8px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);font-size:13px;text-align:center;color:var(--txt);outline:none;flex-shrink:0}
-.BX-print-copies:focus{border-color:var(--gold)}
-/* SCAN TAB */
-.BX-scan-loc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.BX-loc-pick{background:var(--sur);border:2px solid var(--bdr);border-radius:var(--r2);padding:14px;text-align:center;cursor:pointer;transition:all .15s}
-.BX-loc-pick.sel{border-color:var(--nvy);background:var(--gt)}
-.BX-loc-pick-icon{font-size:26px;margin-bottom:6px}
-.BX-loc-pick-name{font-size:12px;font-weight:600;color:var(--txt)}
-.BX-cam-wrap{position:relative;background:#000;border-radius:var(--r2);overflow:hidden;margin-bottom:14px;aspect-ratio:1/1}
-.BX-cam-wrap video{width:100%;height:100%;object-fit:cover}
-.BX-cam-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.BX-cam-box{width:65%;height:65%;border:3px solid var(--gl);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.35)}
-.BX-cam-flash{position:absolute;inset:0;background:var(--grn);opacity:0;transition:opacity .15s}
-.BX-cam-flash.show{opacity:.45}
-.BX-tally-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh1)}
-.BX-tally-name{font-size:12px;font-weight:500;color:var(--txt);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.BX-tally-adj{width:28px;height:28px;border-radius:50%;background:var(--s2);border:1px solid var(--bdr);font-size:15px;font-weight:700;color:var(--txt);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;user-select:none}
-.BX-tally-adj:active{background:var(--gt)}
-.BX-tally-count{font-size:15px;font-weight:700;color:var(--nvy);min-width:28px;text-align:center;flex-shrink:0}
+/* ── QR CODES PAGE (print) ───────────────────────────────────────── */
+.QRP-wrap{max-width:520px;margin:0 auto}
+.QRP-row{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;box-shadow:var(--sh1)}
+.QRP-qr{width:40px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--bds);border-radius:6px;overflow:hidden}
+.QRP-info{flex:1;min-width:0}
+.QRP-name{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.QRP-meta{font-size:10px;color:var(--tm);margin-top:1px}
+.QRP-copies{width:54px;padding:7px 8px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);font-size:13px;text-align:center;color:var(--txt);outline:none;flex-shrink:0}
+.QRP-copies:focus{border-color:var(--gold)}
+
+/* ── QUICK COUNT — SCAN MODE ─────────────────────────────────────── */
+.QC-mode-tabs{display:flex;border-bottom:1px solid var(--bds);margin-bottom:14px}
+.QC-mode-tab{flex:1;padding:10px 8px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tm);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.QC-mode-tab.on{color:var(--gd);border-bottom-color:var(--gold)}
+.QC-cam-wrap{position:relative;background:#000;border-radius:var(--r2);overflow:hidden;margin-bottom:14px;aspect-ratio:1/1}
+.QC-cam-wrap video{width:100%;height:100%;object-fit:cover}
+.QC-cam-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.QC-cam-box{width:65%;height:65%;border:3px solid var(--gl);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.35)}
+.QC-cam-flash{position:absolute;inset:0;background:var(--grn);opacity:0;transition:opacity .15s}
+.QC-cam-flash.show{opacity:.45}
+.QC-scan-tally-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh1)}
+.QC-scan-tally-name{font-size:12px;font-weight:500;color:var(--txt);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.QC-scan-tally-count{font-size:15px;font-weight:700;color:var(--nvy);min-width:28px;text-align:center;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -692,7 +682,7 @@ input,select,textarea{font-family:inherit}
       <div class="NI on"  data-p="dashboard"     onclick="go('dashboard')"><span class="ic">&#8862;</span>Dashboard</div>
       <div class="NI"     data-p="inventory"     onclick="go('inventory')"><span class="ic">&#128230;</span>Inventory Count</div>
       <div class="NI"     data-p="quickcount"    onclick="go('quickcount')"><span class="ic">&#9889;</span>Quick Count</div>
-      <div class="NI"     data-p="boxcount"     onclick="go('boxcount')"><span class="ic">&#128230;</span>Box Count</div>
+      <div class="NI"     data-p="qrcodes"      onclick="go('qrcodes')"><span class="ic">&#128241;</span>QR Codes</div>
       <div class="NI"     data-p="order"         onclick="go('order')"><span class="ic">&#128722;</span>Order Summary</div>
       <div class="nh" style="margin-top:6px">Management</div>
       <div class="NI"     data-p="alerts"        onclick="go('alerts')"><span class="ic">&#128276;</span>Urgent Alerts<span class="bd hi" id="nb">0</span></div>
@@ -874,8 +864,8 @@ input,select,textarea{font-family:inherit}
     </div>
 
     <!-- BOX COUNT -->
-    <div class="PG" id="pg-boxcount">
-      <div id="bx-root"></div>
+    <div class="PG" id="pg-qrcodes">
+      <div id="qr-root"></div>
     </div>
 <!-- MODALS -->
 <div class="MO" id="MO-confirm">
@@ -1175,12 +1165,13 @@ function go(p){
   if(S.page==='inventory'&&S.invDirty&&p!=='inventory'){
     if(!confirm('You have unsaved inventory counts. Leave without saving?'))return;
   }
+  if(S.page==='quickcount'&&p!=='quickcount'&&typeof QC!=='undefined'&&QC.scanning){ qcStopScan(); }
   S.page=p;
   document.querySelectorAll('.PG').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.NI').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p)?.classList.add('on');
   document.querySelector('[data-p="'+p+'"]')?.classList.add('on');
-  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',boxcount:'Box Count'};
+  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',qrcodes:'QR Codes'};
   document.getElementById('TBT').textContent=T[p]||p;
   closeSB();render(p);
   // Reset all scroll positions on page change
@@ -1201,7 +1192,7 @@ function render(p){
   else if(p==='ordersettings')rOrderSettings();
   else if(p==='budget')rBudget();
   else if(p==='quickcount')rQuickCount();
-  else if(p==='boxcount')rBoxCount();
+  else if(p==='qrcodes')rQrCodes();
 }
 
 // ── DASHBOARD ──────────────────────────────────────────
@@ -2396,11 +2387,19 @@ window.addEventListener('beforeunload',ev=>{if(S.invDirty){ev.preventDefault();e
 const QC = {
   loc: null,
   view: 'select',
+  mode: 'manual',  // 'manual' | 'scan'
   filter: 'all',
   search: '',
   productId: null,
   products: [],
   idx: 0,
+  // scan mode state
+  scanning: false,
+  scanSeen: null,   // Set of productIds scanned this session
+  stream: null,
+  rafId: null,
+  lastCode: null,
+  saveTimer: null,
 };
 
 function rQuickCount() {
@@ -2526,6 +2525,22 @@ function qcRenderList(root) {
   banner.appendChild(bl); banner.appendChild(changeBtn);
   wrap.appendChild(banner);
 
+  // Mode tabs — Manual / Scan QR
+  const modeTabs = qcEl('div', {cls: 'QC-mode-tabs'});
+  [['manual','Manual'],['scan','Scan QR']].forEach(function(m){
+    const tab = qcEl('div', {cls: 'QC-mode-tab' + (QC.mode === m[0] ? ' on' : ''), txt: m[1]});
+    tab.addEventListener('click', function(){ qcSetMode(m[0]); });
+    modeTabs.appendChild(tab);
+  });
+  wrap.appendChild(modeTabs);
+
+  if (QC.mode === 'scan') {
+    qcRenderScanUI(wrap);
+    root.appendChild(wrap);
+    if (QC.scanning) qcStartScan();
+    return;
+  }
+
   // Search bar — built once, never rebuilt
   const searchBar = qcEl('div', {cls: 'QC-search-bar'});
   const searchIcon = qcEl('span');
@@ -2536,10 +2551,6 @@ function qcRenderList(root) {
   searchInp.addEventListener('input', function() { qcSearch(this.value); });
   searchBar.appendChild(searchIcon);
   searchBar.appendChild(searchInp);
-  const scanBtn = qcEl('button', {cls: 'QC-scan-btn', html: '&#128247;'});
-  scanBtn.title = 'Scan barcode/QR';
-  scanBtn.addEventListener('click', function(){ openScanner(); });
-  searchBar.appendChild(scanBtn);
   wrap.appendChild(searchBar);
 
   // Filter row
@@ -2569,6 +2580,13 @@ function qcRenderList(root) {
     const inp = document.getElementById('qc-search-inp');
     if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
   }
+}
+
+function qcSetMode(mode) {
+  if (QC.mode === 'scan' && mode !== 'scan') qcStopScan();
+  QC.mode = mode;
+  if (mode === 'scan' && !QC.scanSeen) QC.scanSeen = new Set();
+  qcRenderList(document.getElementById('qc-root'));
 }
 
 function qcSearch(val) {
@@ -2812,7 +2830,182 @@ function qcSkip() {
 }
 
 function qcBackToList() { QC.view = 'list'; rQuickCount(); }
-function qcBackToSelect() { QC.view = 'select'; rQuickCount(); }
+function qcBackToSelect() {
+  qcStopScan();
+  QC.mode = 'manual';
+  QC.scanSeen = null;
+  QC.view = 'select';
+  rQuickCount();
+}
+
+function qcRenderScanUI(wrap) {
+  const camWrap = qcEl('div', {cls: 'QC-cam-wrap'});
+  const video = qcEl('video', {id: 'qc-video'});
+  video.setAttribute('playsinline', 'true');
+  video.setAttribute('muted', 'true');
+  const overlay = qcEl('div', {cls: 'QC-cam-overlay'});
+  overlay.innerHTML = '<div class="QC-cam-box"></div>';
+  const flash = qcEl('div', {cls: 'QC-cam-flash', id: 'qc-flash'});
+  camWrap.appendChild(video); camWrap.appendChild(overlay); camWrap.appendChild(flash);
+  wrap.appendChild(camWrap);
+
+  const btnRow = qcEl('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:14px';
+  const camBtn = qcEl('button', {cls: 'btn btn-g', id: 'qc-cam-btn', txt: QC.scanning ? '⏸ Pause Camera' : '▶ Start Scanning'});
+  camBtn.style.flex = '1';
+  camBtn.addEventListener('click', function(){ QC.scanning ? qcStopScan() : qcStartScan(); });
+  btnRow.appendChild(camBtn);
+  wrap.appendChild(btnRow);
+
+  const status = qcEl('div', {id: 'qc-scan-status', cls: 'PD mb16'});
+  status.style.textAlign = 'center';
+  status.textContent = QC.scanning ? "Move the camera over each box's QR code..." : 'Tap "Start Scanning" and allow camera access.';
+  wrap.appendChild(status);
+
+  const tallyTitle = qcEl('div', {cls: 'CT mb8', txt: 'Counted this session'});
+  wrap.appendChild(tallyTitle);
+
+  const tallyC = qcEl('div', {id: 'qc-scan-tally'});
+  wrap.appendChild(tallyC);
+  qcRenderScanTally();
+}
+
+function qcRenderScanTally() {
+  const tallyC = document.getElementById('qc-scan-tally');
+  if (!tallyC) return;
+  tallyC.innerHTML = '';
+  if (!QC.scanSeen || !QC.scanSeen.size) {
+    tallyC.innerHTML = '<div class="emp"><div class="eic">📷</div>Nothing scanned yet.</div>';
+    return;
+  }
+  QC.scanSeen.forEach(function(pid) {
+    const p = S.products.find(function(x){ return x.id === pid; });
+    if (!p) return;
+    const card = qcEl('div', {cls: 'QC-scan-tally-card'});
+    const nm = qcEl('div', {cls: 'QC-scan-tally-name', txt: p.name});
+    const cnt = qcEl('div', {cls: 'QC-scan-tally-count', txt: String(S.invLoc[QC.loc][pid] || 0)});
+    card.appendChild(nm); card.appendChild(cnt);
+    tallyC.appendChild(card);
+  });
+}
+
+// ── CAMERA + jsQR (rising-edge detection) ───────────────────────────
+let qcCanvas = null;
+
+function qcStartScan() {
+  if (typeof jsQR === 'undefined') {
+    const s = document.getElementById('qc-scan-status');
+    if (s) s.textContent = 'Scanner library failed to load. Check your connection.';
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function(stream) {
+    QC.stream = stream;
+    const video = document.getElementById('qc-video');
+    if (!video) { stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+    video.srcObject = stream;
+    video.play();
+    QC.scanning = true;
+    QC.lastCode = null;
+    const btn = document.getElementById('qc-cam-btn');
+    if (btn) btn.textContent = '⏸ Pause Camera';
+    const status = document.getElementById('qc-scan-status');
+    if (status) status.textContent = "Move the camera over each box's QR code...";
+    qcScanLoop();
+  }).catch(function(err) {
+    const status = document.getElementById('qc-scan-status');
+    if (status) status.textContent = 'Camera error: ' + (err.message || err) + '. Check camera permissions in Safari settings.';
+  });
+}
+
+function qcStopScan() {
+  QC.scanning = false;
+  QC.lastCode = null;
+  if (QC.rafId) { cancelAnimationFrame(QC.rafId); QC.rafId = null; }
+  if (QC.stream) { QC.stream.getTracks().forEach(function(t){ t.stop(); }); QC.stream = null; }
+  const btn = document.getElementById('qc-cam-btn');
+  if (btn) btn.textContent = '▶ Start Scanning';
+  const status = document.getElementById('qc-scan-status');
+  if (status) status.textContent = 'Camera paused.';
+}
+
+function qcScanLoop() {
+  if (!QC.scanning) return;
+  const video = document.getElementById('qc-video');
+  if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+    QC.rafId = requestAnimationFrame(qcScanLoop);
+    return;
+  }
+  const canvas = qcCanvas || (qcCanvas = document.createElement('canvas'));
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  let imageData;
+  try { imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); }
+  catch (e) { QC.rafId = requestAnimationFrame(qcScanLoop); return; }
+  const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+
+  if (code && code.data) {
+    if (code.data !== QC.lastCode) qcOnScanDetect(code.data);
+    QC.lastCode = code.data;
+  } else {
+    QC.lastCode = null;
+  }
+
+  QC.rafId = requestAnimationFrame(qcScanLoop);
+}
+
+function qcFlash() {
+  const f = document.getElementById('qc-flash');
+  if (!f) return;
+  f.classList.add('show');
+  setTimeout(function(){ f.classList.remove('show'); }, 180);
+}
+
+function qcOnScanDetect(text) {
+  if (text.indexOf('JWQC:') !== 0) {
+    const status = document.getElementById('qc-scan-status');
+    if (status) status.textContent = '⚠ Unrecognized QR code.';
+    return;
+  }
+  const productId = text.slice(5);
+  const product = S.products.find(function(p){ return p.id === productId; });
+  if (!product) {
+    const status = document.getElementById('qc-scan-status');
+    if (status) status.textContent = '⚠ Product not found for this QR.';
+    return;
+  }
+
+  qcFlash();
+  let newVal;
+  if (QC.scanSeen.has(productId)) {
+    newVal = (S.invLoc[QC.loc][productId] || 0) + 1;
+  } else {
+    newVal = 1;
+    QC.scanSeen.add(productId);
+  }
+  S.invLoc[QC.loc][productId] = newVal;
+  S.invDirty = true;
+
+  const status = document.getElementById('qc-scan-status');
+  if (status) status.textContent = '✓ ' + product.name + ' — ' + newVal;
+  qcRenderScanTally();
+  qcScheduleSave();
+}
+
+function qcScheduleSave() {
+  if (QC.saveTimer) clearTimeout(QC.saveTimer);
+  QC.saveTimer = setTimeout(qcSaveInv, 1200);
+}
+
+async function qcSaveInv() {
+  try {
+    const payload = Object.assign({}, S.invLoc[QC.loc], { savedAt: now(), savedBy: S.managerName });
+    await FB.setDoc(FB.doc(FB.db, 'inventory', mkey() + '_' + QC.loc), payload);
+    S.invDirty = false; S.lastSaved = now();
+  } catch (err) { /* non-blocking */ }
+}
+
 function qcFinish() { QC.view = 'done'; rQuickCount(); }
 
 // ── DONE VIEW ────────────────────────────────────────────────────────
@@ -2973,64 +3166,25 @@ function onScanSuccess(decodedText) {
 
 
 
+
+
+
 <script>
 'use strict';
-// ── BOX COUNT MODULE ─────────────────────────────────────────────────
-// One QR per product (JWQC:<productId>), printed multiple times (one
-// sticker per physical case). Scanning increments a tally per product;
-// the tally is then applied to the inventory count for the location.
-const BX = {
-  tab: 'scan',       // 'scan' | 'print'
-  scanLoc: null,
-  scanning: false,
-  tally: {},         // {productId: count}
-  lastCode: null,    // rising-edge detection: code seen in previous frame
-  stream: null,
-  rafId: null,
-  search: '',
-};
+// ── QR CODES PAGE (print only) ──────────────────────────────────────
+const QRP = { search: '' };
 
-function rBoxCount() {
-  const root = document.getElementById('bx-root');
+function rQrCodes() {
+  const root = document.getElementById('qr-root');
   if (!root) return;
   root.innerHTML = '';
   const wrap = document.createElement('div');
-  wrap.className = 'BX-wrap';
+  wrap.className = 'QRP-wrap';
 
   const ph = document.createElement('div');
   ph.className = 'PH';
-  ph.innerHTML = '<div class="PT">Box Count</div><div class="PD">Print a QR per product, stick one on each case &middot; scan to count automatically</div>';
+  ph.innerHTML = '<div class="PT">QR Codes</div><div class="PD">Print a QR per product, stick one on each case &middot; scan in Quick Count to count automatically</div>';
   wrap.appendChild(ph);
-
-  const tabs = document.createElement('div');
-  tabs.className = 'BX-tabs';
-  [['scan','Scan Count'],['print','Print QR Codes']].forEach(function(t){
-    const el = document.createElement('div');
-    el.className = 'BX-tab' + (BX.tab === t[0] ? ' on' : '');
-    el.textContent = t[1];
-    el.addEventListener('click', function(){ bxTab(t[0]); });
-    tabs.appendChild(el);
-  });
-  wrap.appendChild(tabs);
-
-  const body = document.createElement('div');
-  body.id = 'bx-body';
-  wrap.appendChild(body);
-  root.appendChild(wrap);
-
-  if (BX.tab === 'print') bxRenderPrint(body);
-  else bxRenderScan(body);
-}
-
-function bxTab(t) {
-  if (BX.tab === 'scan' && BX.scanning) bxStopCamera();
-  BX.tab = t;
-  rBoxCount();
-}
-
-// ── PRINT QR CODES TAB ───────────────────────────────────────────────
-function bxRenderPrint(body) {
-  body.innerHTML = '';
 
   const searchBar = document.createElement('div');
   searchBar.className = 'search-bar-row';
@@ -3039,32 +3193,33 @@ function bxRenderPrint(body) {
   sw.innerHTML = '<span class="search-icon">&#128269;</span>';
   const sinp = document.createElement('input');
   sinp.className = 'search-inp'; sinp.placeholder = 'Search products...';
-  sinp.value = BX.search;
-  sinp.addEventListener('input', function(){ BX.search = this.value; bxRenderPrintList(); });
+  sinp.value = QRP.search;
+  sinp.addEventListener('input', function(){ QRP.search = this.value; qrRenderList(); });
   sw.appendChild(sinp);
   searchBar.appendChild(sw);
-  body.appendChild(searchBar);
+  wrap.appendChild(searchBar);
 
   const note = document.createElement('div');
   note.className = 'PD mb16';
   note.textContent = 'Set how many copies (= boxes you have) and print. Stick one QR on each physical case.';
-  body.appendChild(note);
+  wrap.appendChild(note);
 
   const listC = document.createElement('div');
-  listC.id = 'bx-print-list';
-  body.appendChild(listC);
+  listC.id = 'qr-list';
+  wrap.appendChild(listC);
 
-  bxRenderPrintList();
+  root.appendChild(wrap);
+  qrRenderList();
 }
 
-function bxRenderPrintList() {
-  const listC = document.getElementById('bx-print-list');
+function qrRenderList() {
+  const listC = document.getElementById('qr-list');
   if (!listC) return;
   listC.innerHTML = '';
 
   let prods = S.products.slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
-  if (BX.search) {
-    const q = BX.search.toLowerCase();
+  if (QRP.search) {
+    const q = QRP.search.toLowerCase();
     prods = prods.filter(function(p){ return (p.name||'').toLowerCase().includes(q); });
   }
   if (!prods.length) {
@@ -3074,25 +3229,25 @@ function bxRenderPrintList() {
 
   prods.forEach(function(p) {
     const row = document.createElement('div');
-    row.className = 'BX-print-row';
+    row.className = 'QRP-row';
 
     const qrDiv = document.createElement('div');
-    qrDiv.className = 'BX-print-qr';
+    qrDiv.className = 'QRP-qr';
     row.appendChild(qrDiv);
     new QRCode(qrDiv, { text: 'JWQC:' + p.id, width: 36, height: 36, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 
     const info = document.createElement('div');
-    info.className = 'BX-print-info';
+    info.className = 'QRP-info';
     const nm = document.createElement('div');
-    nm.className = 'BX-print-name'; nm.textContent = p.name;
+    nm.className = 'QRP-name'; nm.textContent = p.name;
     const mt = document.createElement('div');
-    mt.className = 'BX-print-meta'; mt.textContent = (p.partNumber ? '#' + p.partNumber : '') + ' · ' + qcEmoji(p);
+    mt.className = 'QRP-meta'; mt.textContent = (p.partNumber ? '#' + p.partNumber : '') + ' · ' + qcEmoji(p);
     info.appendChild(nm); info.appendChild(mt);
     row.appendChild(info);
 
     const copies = document.createElement('input');
     copies.type = 'number'; copies.min = '1'; copies.value = '1';
-    copies.className = 'BX-print-copies';
+    copies.className = 'QRP-copies';
     row.appendChild(copies);
 
     const printBtn = document.createElement('button');
@@ -3100,7 +3255,7 @@ function bxRenderPrintList() {
     printBtn.textContent = 'Print';
     printBtn.addEventListener('click', function(){
       const n = Math.max(1, parseInt(copies.value) || 1);
-      bxPrintProduct(p, n);
+      qrPrintProduct(p, n);
     });
     row.appendChild(printBtn);
 
@@ -3108,7 +3263,7 @@ function bxRenderPrintList() {
   });
 }
 
-function bxPrintProduct(p, copies) {
+function qrPrintProduct(p, copies) {
   const w = window.open('', '_blank');
   let html = '<html><head><title>QR - ' + p.name + '</title><style>' +
     'body{font-family:sans-serif;margin:20px}' +
@@ -3136,266 +3291,6 @@ function bxPrintProduct(p, copies) {
     new QRCode(qrDiv, { text: 'JWQC:' + p.id, width: 100, height: 100, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
   }
   setTimeout(function(){ w.print(); }, 600);
-}
-
-// ── SCAN COUNT TAB ───────────────────────────────────────────────────
-function bxRenderScan(body) {
-  body.innerHTML = '';
-
-  if (!BX.scanLoc) {
-    const sub = document.createElement('div');
-    sub.className = 'PD mb16';
-    sub.textContent = 'Select the location you are counting.';
-    body.appendChild(sub);
-
-    const grid = document.createElement('div');
-    grid.className = 'BX-scan-loc';
-    [['floor3','📦','Floor 3 Storage'],['tiendita','🏪','La Tiendita']].forEach(function(l){
-      const card = document.createElement('div');
-      card.className = 'BX-loc-pick';
-      card.innerHTML = '<div class="BX-loc-pick-icon">' + l[1] + '</div><div class="BX-loc-pick-name">' + l[2] + '</div>';
-      card.addEventListener('click', function(){ BX.scanLoc = l[0]; BX.tally = {}; rBoxCount(); });
-      grid.appendChild(card);
-    });
-    body.appendChild(grid);
-    return;
-  }
-
-  // Location banner
-  const locName = BX.scanLoc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita';
-  const locIcon = BX.scanLoc === 'floor3' ? '📦' : '🏪';
-  const banner = document.createElement('div');
-  banner.className = 'QC-loc-banner';
-  banner.innerHTML = '<div><div class="QC-loc-banner-lbl">Counting location</div><div class="QC-loc-banner-val">' + locIcon + ' ' + locName + '</div></div>';
-  const changeBtn = document.createElement('button');
-  changeBtn.className = 'QC-loc-banner-btn'; changeBtn.textContent = 'Change';
-  changeBtn.addEventListener('click', function(){ bxStopCamera(); BX.scanLoc = null; BX.tally = {}; rBoxCount(); });
-  banner.appendChild(changeBtn);
-  body.appendChild(banner);
-
-  // Camera
-  const camWrap = document.createElement('div');
-  camWrap.className = 'BX-cam-wrap';
-  const video = document.createElement('video');
-  video.id = 'bx-video'; video.setAttribute('playsinline', 'true'); video.setAttribute('muted', 'true');
-  const overlay = document.createElement('div');
-  overlay.className = 'BX-cam-overlay';
-  overlay.innerHTML = '<div class="BX-cam-box"></div>';
-  const flash = document.createElement('div');
-  flash.className = 'BX-cam-flash'; flash.id = 'bx-flash';
-  camWrap.appendChild(video); camWrap.appendChild(overlay); camWrap.appendChild(flash);
-  body.appendChild(camWrap);
-
-  const camBtnRow = document.createElement('div');
-  camBtnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:16px';
-  const camBtn = document.createElement('button');
-  camBtn.className = 'btn btn-g';
-  camBtn.style.flex = '1';
-  camBtn.id = 'bx-cam-btn';
-  camBtn.textContent = BX.scanning ? '⏸ Pause Camera' : '▶ Start Scanning';
-  camBtn.addEventListener('click', function(){ BX.scanning ? bxStopCamera() : bxStartCamera(); });
-  camBtnRow.appendChild(camBtn);
-  const resetBtn = document.createElement('button');
-  resetBtn.className = 'btn btn-o';
-  resetBtn.textContent = 'Reset';
-  resetBtn.addEventListener('click', function(){
-    if (Object.keys(BX.tally).length && !confirm('Clear all counts for this session?')) return;
-    BX.tally = {}; bxRenderTally();
-  });
-  camBtnRow.appendChild(resetBtn);
-  body.appendChild(camBtnRow);
-
-  const status = document.createElement('div');
-  status.id = 'bx-status';
-  status.className = 'PD mb16';
-  status.style.textAlign = 'center';
-  status.textContent = BX.scanning ? 'Move the camera over each box\'s QR code...' : 'Tap "Start Scanning" and allow camera access.';
-  body.appendChild(status);
-
-  // Tally
-  const tallyTitle = document.createElement('div');
-  tallyTitle.className = 'CT mb8';
-  tallyTitle.textContent = 'Counted this session';
-  body.appendChild(tallyTitle);
-
-  const tallyC = document.createElement('div');
-  tallyC.id = 'bx-tally';
-  body.appendChild(tallyC);
-  bxRenderTally();
-
-  // Apply button
-  const finBtn = document.createElement('button');
-  finBtn.className = 'btn btn-g mt16';
-  finBtn.style.width = '100%';
-  finBtn.innerHTML = '&#10003; Apply to Inventory';
-  finBtn.addEventListener('click', bxFinishScan);
-  body.appendChild(finBtn);
-
-  if (BX.scanning) bxStartCamera();
-}
-
-function bxRenderTally() {
-  const tallyC = document.getElementById('bx-tally');
-  if (!tallyC) return;
-  tallyC.innerHTML = '';
-  const ids = Object.keys(BX.tally);
-  if (!ids.length) {
-    tallyC.innerHTML = '<div class="emp"><div class="eic">📷</div>Nothing scanned yet.</div>';
-    return;
-  }
-  ids.forEach(function(pid) {
-    const p = S.products.find(function(x){ return x.id === pid; });
-    const name = p ? p.name : pid;
-    const card = document.createElement('div');
-    card.className = 'BX-tally-card';
-
-    const minus = document.createElement('div');
-    minus.className = 'BX-tally-adj';
-    minus.textContent = '−';
-    minus.addEventListener('click', function(){ bxAdjustTally(pid, -1); });
-
-    const nm = document.createElement('div');
-    nm.className = 'BX-tally-name'; nm.textContent = name;
-
-    const cnt = document.createElement('div');
-    cnt.className = 'BX-tally-count'; cnt.textContent = String(BX.tally[pid]);
-
-    const plus = document.createElement('div');
-    plus.className = 'BX-tally-adj';
-    plus.textContent = '+';
-    plus.addEventListener('click', function(){ bxAdjustTally(pid, 1); });
-
-    card.appendChild(minus); card.appendChild(nm); card.appendChild(cnt); card.appendChild(plus);
-    tallyC.appendChild(card);
-  });
-}
-
-function bxAdjustTally(pid, delta) {
-  const newVal = (BX.tally[pid] || 0) + delta;
-  if (newVal <= 0) delete BX.tally[pid];
-  else BX.tally[pid] = newVal;
-  bxRenderTally();
-}
-
-// ── CAMERA + jsQR LOOP (rising-edge detection) ─────────────────────────
-function bxStartCamera() {
-  if (typeof jsQR === 'undefined') {
-    document.getElementById('bx-status').textContent = 'Scanner library failed to load. Check your connection.';
-    return;
-  }
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function(stream) {
-    BX.stream = stream;
-    const video = document.getElementById('bx-video');
-    if (!video) { stream.getTracks().forEach(function(t){ t.stop(); }); return; }
-    video.srcObject = stream;
-    video.play();
-    BX.scanning = true;
-    BX.lastCode = null;
-    const btn = document.getElementById('bx-cam-btn');
-    if (btn) btn.textContent = '⏸ Pause Camera';
-    const status = document.getElementById('bx-status');
-    if (status) status.textContent = "Move the camera over each box's QR code...";
-    bxScanLoop();
-  }).catch(function(err) {
-    const status = document.getElementById('bx-status');
-    if (status) status.textContent = 'Camera error: ' + (err.message || err) + '. Check camera permissions in Safari settings.';
-  });
-}
-
-function bxStopCamera() {
-  BX.scanning = false;
-  BX.lastCode = null;
-  if (BX.rafId) { cancelAnimationFrame(BX.rafId); BX.rafId = null; }
-  if (BX.stream) { BX.stream.getTracks().forEach(function(t){ t.stop(); }); BX.stream = null; }
-  const btn = document.getElementById('bx-cam-btn');
-  if (btn) btn.textContent = '▶ Start Scanning';
-  const status = document.getElementById('bx-status');
-  if (status) status.textContent = 'Camera paused.';
-}
-
-function bxScanLoop() {
-  if (!BX.scanning) return;
-  const video = document.getElementById('bx-video');
-  if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
-    BX.rafId = requestAnimationFrame(bxScanLoop);
-    return;
-  }
-  const canvas = bxCanvas || (bxCanvas = document.createElement('canvas'));
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  let imageData;
-  try { imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); }
-  catch (e) { BX.rafId = requestAnimationFrame(bxScanLoop); return; }
-  const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-
-  if (code && code.data) {
-    // Rising-edge: only count when this code wasn't visible in the previous frame
-    if (code.data !== BX.lastCode) {
-      bxOnDetect(code.data);
-    }
-    BX.lastCode = code.data;
-  } else {
-    BX.lastCode = null;
-  }
-
-  BX.rafId = requestAnimationFrame(bxScanLoop);
-}
-let bxCanvas = null;
-
-function bxFlash() {
-  const f = document.getElementById('bx-flash');
-  if (!f) return;
-  f.classList.add('show');
-  setTimeout(function(){ f.classList.remove('show'); }, 180);
-}
-
-function bxOnDetect(text) {
-  if (text.indexOf('JWQC:') !== 0) {
-    const status = document.getElementById('bx-status');
-    if (status) status.textContent = '⚠ Unrecognized QR code.';
-    return;
-  }
-  const productId = text.slice(5);
-  const product = S.products.find(function(p){ return p.id === productId; });
-  if (!product) {
-    const status = document.getElementById('bx-status');
-    if (status) status.textContent = '⚠ Product not found for this QR.';
-    return;
-  }
-
-  bxFlash();
-  BX.tally[productId] = (BX.tally[productId] || 0) + 1;
-  const status = document.getElementById('bx-status');
-  if (status) status.textContent = '✓ ' + product.name + ' — ' + BX.tally[productId];
-  bxRenderTally();
-}
-
-// ── APPLY TO INVENTORY ───────────────────────────────────────────────
-async function bxFinishScan() {
-  bxStopCamera();
-  const loc = BX.scanLoc;
-  const ids = Object.keys(BX.tally);
-  if (!ids.length) { showNote('Nothing scanned yet.'); return; }
-
-  const names = [];
-  ids.forEach(function(pid) {
-    const product = S.products.find(function(p){ return p.id === pid; });
-    S.invLoc[loc][pid] = BX.tally[pid];
-    names.push((product ? product.name : pid) + ': ' + BX.tally[pid]);
-  });
-  S.invDirty = true;
-
-  try {
-    const payload = Object.assign({}, S.invLoc[loc], { savedAt: now(), savedBy: S.managerName });
-    await FB.setDoc(FB.doc(FB.db, 'inventory', mkey() + '_' + loc), payload);
-    S.invDirty = false; S.lastSaved = now();
-  } catch (err) { /* non-blocking, S.invDirty stays true */ }
-
-  showOk(ids.length + ' product(s) updated — ' + names.join(', '));
-  BX.tally = {};
-  setTimeout(runSmartAlerts, 400);
 }
 
 </script>
