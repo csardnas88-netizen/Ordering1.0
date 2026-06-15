@@ -104,8 +104,6 @@ input,select,textarea{font-family:inherit}
 .PG.on{display:block;height:calc(100vh - var(--hh));overflow-y:auto}
 #pg-quickcount{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none}
 #pg-quickcount.on{display:block}
-#pg-qrcodes{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none;padding:20px}
-#pg-qrcodes.on{display:block}
 #pg-boxcount{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none;padding:20px}
 #pg-boxcount.on{display:block}
 #qc-root{padding:20px}
@@ -612,10 +610,8 @@ input,select,textarea{font-family:inherit}
 .QR-card-name{font-size:11px;font-weight:600;color:var(--txt);line-height:1.3;min-height:28px;display:flex;align-items:center;justify-content:center}
 .QR-card-pn{font-size:10px;color:var(--tm);margin-top:2px}
 @media print{
-  .SB,.TB,.VBN,.AST-fab,#scan-fab,.QR-toolbar{display:none!important}
-  #pg-qrcodes{position:static!important;padding:0!important}
-  .QR-grid{grid-template-columns:repeat(3,1fr)}
-  .QR-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+  .SB,.TB,.VBN,.AST-fab,#scan-fab,.BX-toolbar,.BX-tabs{display:none!important}
+  #pg-boxcount{position:static!important;padding:0!important}
 }
 /* SCANNER MODAL */
 .SCM{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column}
@@ -706,7 +702,6 @@ input,select,textarea{font-family:inherit}
       <div class="NI on"  data-p="dashboard"     onclick="go('dashboard')"><span class="ic">&#8862;</span>Dashboard</div>
       <div class="NI"     data-p="inventory"     onclick="go('inventory')"><span class="ic">&#128230;</span>Inventory Count</div>
       <div class="NI"     data-p="quickcount"    onclick="go('quickcount')"><span class="ic">&#9889;</span>Quick Count</div>
-      <div class="NI"     data-p="qrcodes"      onclick="go('qrcodes')"><span class="ic">&#128241;</span>QR Codes</div>
       <div class="NI"     data-p="boxcount"     onclick="go('boxcount')"><span class="ic">&#128230;</span>Box Count</div>
       <div class="NI"     data-p="order"         onclick="go('order')"><span class="ic">&#128722;</span>Order Summary</div>
       <div class="nh" style="margin-top:6px">Management</div>
@@ -886,11 +881,6 @@ input,select,textarea{font-family:inherit}
     <!-- QUICK COUNT -->
     <div class="PG" id="pg-quickcount">
       <div id="qc-root"></div>
-    </div>
-
-    <!-- QR CODES -->
-    <div class="PG" id="pg-qrcodes">
-      <div id="qr-root"></div>
     </div>
 
     <!-- BOX COUNT -->
@@ -1211,7 +1201,7 @@ function go(p){
   document.querySelectorAll('.NI').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p)?.classList.add('on');
   document.querySelector('[data-p="'+p+'"]')?.classList.add('on');
-  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',qrcodes:'QR Codes',boxcount:'Box Count'};
+  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',boxcount:'Box Count'};
   document.getElementById('TBT').textContent=T[p]||p;
   closeSB();render(p);
   // Reset all scroll positions on page change
@@ -1232,7 +1222,6 @@ function render(p){
   else if(p==='ordersettings')rOrderSettings();
   else if(p==='budget')rBudget();
   else if(p==='quickcount')rQuickCount();
-  else if(p==='qrcodes')rQrCodes();
   else if(p==='boxcount')rBoxCount();
 }
 
@@ -2890,76 +2879,6 @@ function qcRenderDone(root) {
 
 <script>
 'use strict';
-// ── QR CODES PAGE ────────────────────────────────────────────────────
-function rQrCodes() {
-  const root = document.getElementById('qr-root');
-  if (!root) return;
-  root.innerHTML = '';
-
-  const wrap = document.createElement('div');
-  wrap.className = 'QR-wrap';
-
-  // Header
-  const ph = document.createElement('div');
-  ph.className = 'PH fbet';
-  ph.innerHTML = '<div><div class="PT">QR Codes</div><div class="PD">Print and stick on shelves &middot; scan during Quick Count to jump straight to a product</div></div>';
-  const toolbar = document.createElement('div');
-  toolbar.style.display = 'flex';
-  toolbar.style.gap = '8px';
-  const printBtn = document.createElement('button');
-  printBtn.className = 'btn btn-g btn-sm';
-  printBtn.innerHTML = '&#128424; Print All';
-  printBtn.addEventListener('click', function(){ window.print(); });
-  toolbar.appendChild(printBtn);
-  ph.appendChild(toolbar);
-  wrap.appendChild(ph);
-
-  const grid = document.createElement('div');
-  grid.className = 'QR-grid';
-  wrap.appendChild(grid);
-  root.appendChild(wrap);
-
-  const prods = S.products.slice().sort(function(a,b){
-    return (a.vendorName||'').localeCompare(b.vendorName||'') || (a.name||'').localeCompare(b.name||'');
-  });
-
-  if (!prods.length) {
-    grid.innerHTML = '<div class="emp"><div class="eic">📦</div>No products yet.</div>';
-    return;
-  }
-
-  prods.forEach(function(p) {
-    const card = document.createElement('div');
-    card.className = 'QR-card';
-    const canvasWrap = document.createElement('div');
-    canvasWrap.className = 'QR-card-canvas';
-    card.appendChild(canvasWrap);
-
-    const name = document.createElement('div');
-    name.className = 'QR-card-name';
-    name.textContent = p.name;
-    card.appendChild(name);
-
-    const pn = document.createElement('div');
-    pn.className = 'QR-card-pn';
-    pn.textContent = (p.partNumber ? '#' + p.partNumber + ' · ' : '') + qcEmoji(p);
-    card.appendChild(pn);
-
-    grid.appendChild(card);
-
-    // Generate QR code encoding the product ID
-    // Payload format: "JWQC:<productId>" so the scanner can identify it
-    new QRCode(canvasWrap, {
-      text: 'JWQC:' + p.id,
-      width: 120,
-      height: 120,
-      colorDark: '#1E2D4A',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  });
-}
-
 // ── SCANNER ──────────────────────────────────────────────────────────
 let scmInstance = null;
 let scmActive = false;
@@ -3024,16 +2943,21 @@ function onScanFailure() {
 }
 
 function onScanSuccess(decodedText) {
-  // Expected format: JWQC:<productId>
+  // Accepted formats:
+  //   JWBOX:<boxId>    -> resolve to the box's product, then open its counter
+  //   raw part number  -> fallback match
   let productId = null;
-  if (decodedText.indexOf('JWQC:') === 0) {
-    productId = decodedText.slice(5);
+  let product = null;
+
+  if (decodedText.indexOf('JWBOX:') === 0) {
+    const boxId = decodedText.slice(6);
+    const box = bxLoad().find(function(b){ return b.id === boxId; });
+    if (box) productId = box.productId;
   } else {
-    // Also accept raw product ID or part number match as fallback
     productId = decodedText.trim();
   }
 
-  let product = S.products.find(function(p){ return p.id === productId; });
+  if (productId) product = S.products.find(function(p){ return p.id === productId; });
   if (!product) {
     // Try matching by part number
     product = S.products.find(function(p){ return p.partNumber && p.partNumber === decodedText.trim(); });
