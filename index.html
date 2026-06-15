@@ -628,20 +628,15 @@ input,select,textarea{font-family:inherit}
 .BX-tabs{display:flex;border-bottom:1px solid var(--bds);margin-bottom:16px}
 .BX-tab{flex:1;padding:11px 8px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tm);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
 .BX-tab.on{color:var(--gd);border-bottom-color:var(--gold)}
-/* MANAGE BOXES */
-.BX-add-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;margin-bottom:16px;box-shadow:var(--sh1)}
-.BX-add-row{display:flex;gap:8px;margin-bottom:10px}
-.BX-add-row select,.BX-add-row input{flex:1;padding:9px 11px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);font-size:13px;color:var(--txt);outline:none}
-.BX-add-row select:focus,.BX-add-row input:focus{border-color:var(--gold)}
-.BX-group-hdr{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gd);padding:8px 0 6px;border-bottom:2px solid var(--gt);margin:16px 0 8px;display:flex;justify-content:space-between}
-.BX-box-row{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;box-shadow:var(--sh1)}
-.BX-box-qr{width:40px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--bds);border-radius:6px;overflow:hidden}
-.BX-box-info{flex:1;min-width:0}
-.BX-box-name{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.BX-box-meta{font-size:10px;color:var(--tm);margin-top:1px}
-.BX-box-actions{display:flex;gap:5px;flex-shrink:0}
-.BX-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-/* SCAN COUNT */
+/* PRINT TAB */
+.BX-print-row{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;box-shadow:var(--sh1)}
+.BX-print-qr{width:40px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--bds);border-radius:6px;overflow:hidden}
+.BX-print-info{flex:1;min-width:0}
+.BX-print-name{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.BX-print-meta{font-size:10px;color:var(--tm);margin-top:1px}
+.BX-print-copies{width:54px;padding:7px 8px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);font-size:13px;text-align:center;color:var(--txt);outline:none;flex-shrink:0}
+.BX-print-copies:focus{border-color:var(--gold)}
+/* SCAN TAB */
 .BX-scan-loc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .BX-loc-pick{background:var(--sur);border:2px solid var(--bdr);border-radius:var(--r2);padding:14px;text-align:center;cursor:pointer;transition:all .15s}
 .BX-loc-pick.sel{border-color:var(--nvy);background:var(--gt)}
@@ -653,16 +648,11 @@ input,select,textarea{font-family:inherit}
 .BX-cam-box{width:65%;height:65%;border:3px solid var(--gl);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.35)}
 .BX-cam-flash{position:absolute;inset:0;background:var(--grn);opacity:0;transition:opacity .15s}
 .BX-cam-flash.show{opacity:.45}
-.BX-tally-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--sh1)}
+.BX-tally-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh1)}
 .BX-tally-name{font-size:12px;font-weight:500;color:var(--txt);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.BX-tally-count{font-size:13px;font-weight:700;flex-shrink:0;margin-left:10px}
-.BX-tally-ok{color:var(--grn)}
-.BX-tally-partial{color:var(--amb)}
-.BX-tally-none{color:var(--tm)}
-.BX-summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.BX-sum-stat{background:var(--s2);border-radius:var(--r2);padding:12px 8px;text-align:center}
-.BX-sum-val{font-size:22px;font-weight:700;color:var(--txt)}
-.BX-sum-lbl{font-size:9px;color:var(--tm);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
+.BX-tally-adj{width:28px;height:28px;border-radius:50%;background:var(--s2);border:1px solid var(--bdr);font-size:15px;font-weight:700;color:var(--txt);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;user-select:none}
+.BX-tally-adj:active{background:var(--gt)}
+.BX-tally-count{font-size:15px;font-weight:700;color:var(--nvy);min-width:28px;text-align:center;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -1014,17 +1004,6 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
-<!-- BOX LOCATION MISMATCH MODAL -->
-<div class="MO" id="MO-boxmove">
-  <div class="MS">
-    <div class="MH"></div>
-    <div class="MTL">Box in a different location</div>
-    <div class="MSB" id="bxm-msg"></div>
-    <div class="MAC">
-      <div class="MB sec" onclick="bxMoveCancel()">No, skip</div>
-      <div class="MB pri" onclick="bxMoveConfirm()">Yes, move it here</div>
-    </div>
-  </div>
 </div>
 <!-- SCANNER MODAL -->
 <div class="SCM" id="scm-modal">
@@ -2944,15 +2923,13 @@ function onScanFailure() {
 
 function onScanSuccess(decodedText) {
   // Accepted formats:
-  //   JWBOX:<boxId>    -> resolve to the box's product, then open its counter
-  //   raw part number  -> fallback match
+  //   JWQC:<productId>  -> the product's printed QR code
+  //   raw part number   -> fallback match
   let productId = null;
   let product = null;
 
-  if (decodedText.indexOf('JWBOX:') === 0) {
-    const boxId = decodedText.slice(6);
-    const box = bxLoad().find(function(b){ return b.id === boxId; });
-    if (box) productId = box.productId;
+  if (decodedText.indexOf('JWQC:') === 0) {
+    productId = decodedText.slice(5);
   } else {
     productId = decodedText.trim();
   }
@@ -2994,38 +2971,25 @@ function onScanSuccess(decodedText) {
 </script>
 
 
+
+
 <script>
 'use strict';
 // ── BOX COUNT MODULE ─────────────────────────────────────────────────
-// Data model in localStorage 'jw_boxes': [{id, productId, productName, location, createdAt}]
-const BX_KEY = 'jw_boxes';
+// One QR per product (JWQC:<productId>), printed multiple times (one
+// sticker per physical case). Scanning increments a tally per product;
+// the tally is then applied to the inventory count for the location.
 const BX = {
-  tab: 'scan',       // 'scan' | 'manage'
-  scanLoc: null,     // location being scanned
+  tab: 'scan',       // 'scan' | 'print'
+  scanLoc: null,
   scanning: false,
-  found: {},         // {productId: Set(boxId)}
-  search: '',
+  tally: {},         // {productId: count}
+  lastCode: null,    // rising-edge detection: code seen in previous frame
   stream: null,
   rafId: null,
-  lastCode: null,
-  lastCodeAt: 0,
-  pendingMove: null, // {boxId, newLoc, productName}
+  search: '',
 };
 
-function bxLoad() {
-  try {
-    const raw = localStorage.getItem(BX_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) { return []; }
-}
-function bxSave(boxes) {
-  try { localStorage.setItem(BX_KEY, JSON.stringify(boxes)); } catch (e) {}
-}
-function bxId() {
-  return 'bx' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-// ── MAIN RENDER ──────────────────────────────────────────────────────
 function rBoxCount() {
   const root = document.getElementById('bx-root');
   if (!root) return;
@@ -3035,12 +2999,12 @@ function rBoxCount() {
 
   const ph = document.createElement('div');
   ph.className = 'PH';
-  ph.innerHTML = '<div class="PT">Box Count</div><div class="PD">Put a QR on each physical case &middot; scan to count automatically</div>';
+  ph.innerHTML = '<div class="PT">Box Count</div><div class="PD">Print a QR per product, stick one on each case &middot; scan to count automatically</div>';
   wrap.appendChild(ph);
 
   const tabs = document.createElement('div');
   tabs.className = 'BX-tabs';
-  [['scan','Scan Count'],['manage','Manage Boxes']].forEach(function(t){
+  [['scan','Scan Count'],['print','Print QR Codes']].forEach(function(t){
     const el = document.createElement('div');
     el.className = 'BX-tab' + (BX.tab === t[0] ? ' on' : '');
     el.textContent = t[1];
@@ -3054,7 +3018,7 @@ function rBoxCount() {
   wrap.appendChild(body);
   root.appendChild(wrap);
 
-  if (BX.tab === 'manage') bxRenderManage(body);
+  if (BX.tab === 'print') bxRenderPrint(body);
   else bxRenderScan(body);
 }
 
@@ -3064,267 +3028,113 @@ function bxTab(t) {
   rBoxCount();
 }
 
-// ── MANAGE BOXES TAB ─────────────────────────────────────────────────
-function bxRenderManage(body) {
+// ── PRINT QR CODES TAB ───────────────────────────────────────────────
+function bxRenderPrint(body) {
   body.innerHTML = '';
-  const boxes = bxLoad();
 
-  // Add box card
-  const addCard = document.createElement('div');
-  addCard.className = 'BX-add-card';
-  addCard.innerHTML = '<div class="CT mb8">Add Boxes</div>';
-
-  const row1 = document.createElement('div');
-  row1.className = 'BX-add-row';
-  const prodSel = document.createElement('select');
-  prodSel.id = 'bx-add-product';
-  S.products.slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); }).forEach(function(p){
-    const o = document.createElement('option');
-    o.value = p.id; o.textContent = p.name;
-    prodSel.appendChild(o);
-  });
-  const locSel = document.createElement('select');
-  locSel.id = 'bx-add-location';
-  [['floor3','Floor 3 Storage'],['tiendita','La Tiendita']].forEach(function(l){
-    const o = document.createElement('option'); o.value = l[0]; o.textContent = l[1];
-    locSel.appendChild(o);
-  });
-  row1.appendChild(prodSel);
-  row1.appendChild(locSel);
-  addCard.appendChild(row1);
-
-  const row2 = document.createElement('div');
-  row2.className = 'BX-add-row';
-  const qtyInp = document.createElement('input');
-  qtyInp.type = 'number'; qtyInp.min = '1'; qtyInp.value = '1'; qtyInp.id = 'bx-add-qty';
-  qtyInp.style.maxWidth = '90px'; qtyInp.style.flex = '0 0 90px';
-  const qtyLbl = document.createElement('div');
-  qtyLbl.textContent = 'boxes (each gets its own QR)';
-  qtyLbl.style.cssText = 'flex:1;font-size:11px;color:var(--tm);display:flex;align-items:center';
-  row2.appendChild(qtyInp);
-  row2.appendChild(qtyLbl);
-  addCard.appendChild(row2);
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'btn btn-g';
-  addBtn.style.width = '100%';
-  addBtn.textContent = '+ Add Box(es)';
-  addBtn.addEventListener('click', bxAddBoxes);
-  addCard.appendChild(addBtn);
-  body.appendChild(addCard);
-
-  // Search bar
   const searchBar = document.createElement('div');
   searchBar.className = 'search-bar-row';
   const sw = document.createElement('div');
   sw.className = 'search-wrap';
   sw.innerHTML = '<span class="search-icon">&#128269;</span>';
   const sinp = document.createElement('input');
-  sinp.className = 'search-inp'; sinp.placeholder = 'Search boxes by product...';
+  sinp.className = 'search-inp'; sinp.placeholder = 'Search products...';
   sinp.value = BX.search;
-  sinp.addEventListener('input', function(){ BX.search = this.value; bxRenderBoxList(); });
+  sinp.addEventListener('input', function(){ BX.search = this.value; bxRenderPrintList(); });
   sw.appendChild(sinp);
   searchBar.appendChild(sw);
   body.appendChild(searchBar);
 
-  // List container
+  const note = document.createElement('div');
+  note.className = 'PD mb16';
+  note.textContent = 'Set how many copies (= boxes you have) and print. Stick one QR on each physical case.';
+  body.appendChild(note);
+
   const listC = document.createElement('div');
-  listC.id = 'bx-list';
+  listC.id = 'bx-print-list';
   body.appendChild(listC);
 
-  // Toolbar
-  const tb = document.createElement('div');
-  tb.className = 'BX-toolbar';
-  const exportBtn = document.createElement('button');
-  exportBtn.className = 'btn btn-o btn-sm';
-  exportBtn.innerHTML = '&#128190; Export JSON';
-  exportBtn.addEventListener('click', bxExport);
-  const importBtn = document.createElement('button');
-  importBtn.className = 'btn btn-o btn-sm';
-  importBtn.innerHTML = '&#128193; Import JSON';
-  const importInp = document.createElement('input');
-  importInp.type = 'file'; importInp.accept = '.json'; importInp.style.display = 'none';
-  importInp.addEventListener('change', bxImport);
-  importBtn.addEventListener('click', function(){ importInp.click(); });
-  const printBtn = document.createElement('button');
-  printBtn.className = 'btn btn-pdf btn-sm';
-  printBtn.innerHTML = '&#128424; Print All QRs';
-  printBtn.addEventListener('click', bxPrintAll);
-  tb.appendChild(printBtn);
-  tb.appendChild(exportBtn);
-  tb.appendChild(importBtn);
-  tb.appendChild(importInp);
-  body.appendChild(tb);
-
-  bxRenderBoxList();
+  bxRenderPrintList();
 }
 
-function bxRenderBoxList() {
-  const listC = document.getElementById('bx-list');
+function bxRenderPrintList() {
+  const listC = document.getElementById('bx-print-list');
   if (!listC) return;
   listC.innerHTML = '';
-  let boxes = bxLoad();
 
+  let prods = S.products.slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
   if (BX.search) {
     const q = BX.search.toLowerCase();
-    boxes = boxes.filter(function(b){ return (b.productName||'').toLowerCase().includes(q); });
+    prods = prods.filter(function(p){ return (p.name||'').toLowerCase().includes(q); });
   }
-
-  if (!boxes.length) {
-    const emp = document.createElement('div');
-    emp.className = 'emp';
-    emp.innerHTML = '<div class="eic">📦</div>No boxes registered yet. Add some above.';
-    listC.appendChild(emp);
+  if (!prods.length) {
+    listC.innerHTML = '<div class="emp"><div class="eic">📦</div>No products found.</div>';
     return;
   }
 
-  const groups = { floor3: [], tiendita: [] };
-  boxes.forEach(function(b){ (groups[b.location] || (groups[b.location] = [])).push(b); });
+  prods.forEach(function(p) {
+    const row = document.createElement('div');
+    row.className = 'BX-print-row';
 
-  Object.keys(groups).forEach(function(loc){
-    const list = groups[loc];
-    if (!list.length) return;
-    const locName = loc === 'floor3' ? '📦 Floor 3 Storage' : '🏪 La Tiendita';
-    const hdr = document.createElement('div');
-    hdr.className = 'BX-group-hdr';
-    hdr.innerHTML = '<span>' + locName + '</span><span>' + list.length + ' box' + (list.length !== 1 ? 'es' : '') + '</span>';
-    listC.appendChild(hdr);
+    const qrDiv = document.createElement('div');
+    qrDiv.className = 'BX-print-qr';
+    row.appendChild(qrDiv);
+    new QRCode(qrDiv, { text: 'JWQC:' + p.id, width: 36, height: 36, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 
-    list.forEach(function(b){
-      const row = document.createElement('div');
-      row.className = 'BX-box-row';
+    const info = document.createElement('div');
+    info.className = 'BX-print-info';
+    const nm = document.createElement('div');
+    nm.className = 'BX-print-name'; nm.textContent = p.name;
+    const mt = document.createElement('div');
+    mt.className = 'BX-print-meta'; mt.textContent = (p.partNumber ? '#' + p.partNumber : '') + ' · ' + qcEmoji(p);
+    info.appendChild(nm); info.appendChild(mt);
+    row.appendChild(info);
 
-      const qrDiv = document.createElement('div');
-      qrDiv.className = 'BX-box-qr';
-      row.appendChild(qrDiv);
-      new QRCode(qrDiv, { text: 'JWBOX:' + b.id, width: 36, height: 36, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    const copies = document.createElement('input');
+    copies.type = 'number'; copies.min = '1'; copies.value = '1';
+    copies.className = 'BX-print-copies';
+    row.appendChild(copies);
 
-      const info = document.createElement('div');
-      info.className = 'BX-box-info';
-      const nm = document.createElement('div');
-      nm.className = 'BX-box-name';
-      nm.textContent = b.productName || '(unknown product)';
-      const mt = document.createElement('div');
-      mt.className = 'BX-box-meta';
-      mt.textContent = 'ID: ' + b.id.slice(-6);
-      info.appendChild(nm); info.appendChild(mt);
-      row.appendChild(info);
-
-      const actions = document.createElement('div');
-      actions.className = 'BX-box-actions';
-      const moveBtn = document.createElement('button');
-      moveBtn.className = 'btn btn-o btn-sm';
-      moveBtn.textContent = loc === 'floor3' ? '→ Tiendita' : '→ Floor 3';
-      moveBtn.addEventListener('click', function(){ bxMoveBoxManual(b.id, loc === 'floor3' ? 'tiendita' : 'floor3'); });
-      const delBtn = document.createElement('button');
-      delBtn.className = 'btn btn-d btn-sm';
-      delBtn.textContent = 'Delete';
-      delBtn.addEventListener('click', function(){ bxDeleteBox(b.id); });
-      actions.appendChild(moveBtn);
-      actions.appendChild(delBtn);
-      row.appendChild(actions);
-
-      listC.appendChild(row);
+    const printBtn = document.createElement('button');
+    printBtn.className = 'btn btn-pdf btn-sm';
+    printBtn.textContent = 'Print';
+    printBtn.addEventListener('click', function(){
+      const n = Math.max(1, parseInt(copies.value) || 1);
+      bxPrintProduct(p, n);
     });
+    row.appendChild(printBtn);
+
+    listC.appendChild(row);
   });
 }
 
-function bxAddBoxes() {
-  const prodSel = document.getElementById('bx-add-product');
-  const locSel = document.getElementById('bx-add-location');
-  const qtyInp = document.getElementById('bx-add-qty');
-  if (!prodSel || !prodSel.value) { showNote('Select a product first.'); return; }
-  const product = S.products.find(function(p){ return p.id === prodSel.value; });
-  if (!product) return;
-  const loc = locSel.value;
-  const qty = Math.max(1, parseInt(qtyInp.value) || 1);
-  const boxes = bxLoad();
-  for (let i = 0; i < qty; i++) {
-    boxes.push({ id: bxId(), productId: product.id, productName: product.name, location: loc, createdAt: now() });
-  }
-  bxSave(boxes);
-  showOk(qty + ' box' + (qty !== 1 ? 'es' : '') + ' added for ' + product.name + '.');
-  bxRenderBoxList();
-}
-
-function bxDeleteBox(id) {
-  if (!confirm('Delete this box QR? You will need to reprint a new one if you remove the physical label.')) return;
-  let boxes = bxLoad();
-  boxes = boxes.filter(function(b){ return b.id !== id; });
-  bxSave(boxes);
-  bxRenderBoxList();
-}
-
-function bxMoveBoxManual(id, newLoc) {
-  const boxes = bxLoad();
-  const b = boxes.find(function(x){ return x.id === id; });
-  if (!b) return;
-  b.location = newLoc;
-  bxSave(boxes);
-  bxRenderBoxList();
-  showOk('Box moved to ' + (newLoc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita') + '.');
-}
-
-function bxExport() {
-  const boxes = bxLoad();
-  const blob = new Blob([JSON.stringify(boxes, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'jw_boxes_backup_' + mkey() + '.json';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showOk('Box backup downloaded.');
-}
-
-function bxImport(ev) {
-  const file = ev.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) throw new Error('Invalid format');
-      if (!confirm('Import ' + data.length + ' boxes? This will REPLACE your current box list.')) return;
-      bxSave(data);
-      bxRenderBoxList();
-      showOk(data.length + ' boxes imported.');
-    } catch (err) {
-      showErr('Could not import file. Make sure it is a valid box backup JSON.', err);
-    }
-  };
-  reader.readAsText(file);
-  ev.target.value = '';
-}
-
-function bxPrintAll() {
-  const boxes = bxLoad();
-  if (!boxes.length) { showNote('No boxes to print.'); return; }
+function bxPrintProduct(p, copies) {
   const w = window.open('', '_blank');
-  let html = '<html><head><title>Box QR Codes</title><style>' +
+  let html = '<html><head><title>QR - ' + p.name + '</title><style>' +
     'body{font-family:sans-serif;margin:20px}' +
     '.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}' +
     '.card{border:1px solid #ccc;border-radius:8px;padding:10px;text-align:center;break-inside:avoid}' +
     '.card .qr{margin:0 auto 6px}' +
     '.card .nm{font-size:11px;font-weight:600;line-height:1.3;min-height:28px}' +
-    '.card .loc{font-size:9px;color:#888;margin-top:2px}' +
+    '.card .pn{font-size:9px;color:#888;margin-top:2px}' +
     '</style></head><body><div class="grid" id="g"></div></body></html>';
   w.document.write(html);
   w.document.close();
   const g = w.document.getElementById('g');
-  boxes.forEach(function(b){
+  for (let i = 0; i < copies; i++) {
     const card = w.document.createElement('div');
     card.className = 'card';
     const qrDiv = w.document.createElement('div');
     qrDiv.className = 'qr';
     card.appendChild(qrDiv);
     const nm = w.document.createElement('div');
-    nm.className = 'nm'; nm.textContent = b.productName || '';
-    const loc = w.document.createElement('div');
-    loc.className = 'loc'; loc.textContent = (b.location === 'floor3' ? 'Floor 3' : 'Tiendita') + ' · ' + b.id.slice(-6);
-    card.appendChild(nm); card.appendChild(loc);
+    nm.className = 'nm'; nm.textContent = p.name;
+    const pn = w.document.createElement('div');
+    pn.className = 'pn'; pn.textContent = p.partNumber ? '#' + p.partNumber : '';
+    card.appendChild(nm); card.appendChild(pn);
     g.appendChild(card);
-    new QRCode(qrDiv, { text: 'JWBOX:' + b.id, width: 100, height: 100, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  });
+    new QRCode(qrDiv, { text: 'JWQC:' + p.id, width: 100, height: 100, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  }
   setTimeout(function(){ w.print(); }, 600);
 }
 
@@ -3335,7 +3145,7 @@ function bxRenderScan(body) {
   if (!BX.scanLoc) {
     const sub = document.createElement('div');
     sub.className = 'PD mb16';
-    sub.textContent = 'Select the location you are scanning.';
+    sub.textContent = 'Select the location you are counting.';
     body.appendChild(sub);
 
     const grid = document.createElement('div');
@@ -3344,19 +3154,10 @@ function bxRenderScan(body) {
       const card = document.createElement('div');
       card.className = 'BX-loc-pick';
       card.innerHTML = '<div class="BX-loc-pick-icon">' + l[1] + '</div><div class="BX-loc-pick-name">' + l[2] + '</div>';
-      card.addEventListener('click', function(){ BX.scanLoc = l[0]; BX.found = {}; rBoxCount(); });
+      card.addEventListener('click', function(){ BX.scanLoc = l[0]; BX.tally = {}; rBoxCount(); });
       grid.appendChild(card);
     });
     body.appendChild(grid);
-
-    const boxes = bxLoad();
-    const totalBoxes = boxes.length;
-    if (!totalBoxes) {
-      const note = document.createElement('div');
-      note.className = 'emp';
-      note.innerHTML = '<div class="eic">📦</div>No boxes registered yet.<br><br>Go to "Manage Boxes" to add QR codes for your physical cases first.';
-      body.appendChild(note);
-    }
     return;
   }
 
@@ -3365,10 +3166,10 @@ function bxRenderScan(body) {
   const locIcon = BX.scanLoc === 'floor3' ? '📦' : '🏪';
   const banner = document.createElement('div');
   banner.className = 'QC-loc-banner';
-  banner.innerHTML = '<div><div class="QC-loc-banner-lbl">Scanning location</div><div class="QC-loc-banner-val">' + locIcon + ' ' + locName + '</div></div>';
+  banner.innerHTML = '<div><div class="QC-loc-banner-lbl">Counting location</div><div class="QC-loc-banner-val">' + locIcon + ' ' + locName + '</div></div>';
   const changeBtn = document.createElement('button');
   changeBtn.className = 'QC-loc-banner-btn'; changeBtn.textContent = 'Change';
-  changeBtn.addEventListener('click', function(){ bxStopCamera(); BX.scanLoc = null; rBoxCount(); });
+  changeBtn.addEventListener('click', function(){ bxStopCamera(); BX.scanLoc = null; BX.tally = {}; rBoxCount(); });
   banner.appendChild(changeBtn);
   body.appendChild(banner);
 
@@ -3394,19 +3195,27 @@ function bxRenderScan(body) {
   camBtn.textContent = BX.scanning ? '⏸ Pause Camera' : '▶ Start Scanning';
   camBtn.addEventListener('click', function(){ BX.scanning ? bxStopCamera() : bxStartCamera(); });
   camBtnRow.appendChild(camBtn);
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'btn btn-o';
+  resetBtn.textContent = 'Reset';
+  resetBtn.addEventListener('click', function(){
+    if (Object.keys(BX.tally).length && !confirm('Clear all counts for this session?')) return;
+    BX.tally = {}; bxRenderTally();
+  });
+  camBtnRow.appendChild(resetBtn);
   body.appendChild(camBtnRow);
 
   const status = document.createElement('div');
   status.id = 'bx-status';
   status.className = 'PD mb16';
   status.style.textAlign = 'center';
-  status.textContent = BX.scanning ? 'Point camera at a box QR code...' : 'Tap "Start Scanning" and allow camera access.';
+  status.textContent = BX.scanning ? 'Move the camera over each box\'s QR code...' : 'Tap "Start Scanning" and allow camera access.';
   body.appendChild(status);
 
   // Tally
   const tallyTitle = document.createElement('div');
   tallyTitle.className = 'CT mb8';
-  tallyTitle.textContent = 'Tally for ' + locName;
+  tallyTitle.textContent = 'Counted this session';
   body.appendChild(tallyTitle);
 
   const tallyC = document.createElement('div');
@@ -3414,11 +3223,11 @@ function bxRenderScan(body) {
   body.appendChild(tallyC);
   bxRenderTally();
 
-  // Finish button
+  // Apply button
   const finBtn = document.createElement('button');
   finBtn.className = 'btn btn-g mt16';
   finBtn.style.width = '100%';
-  finBtn.innerHTML = '&#10003; Finish &amp; Apply to Inventory';
+  finBtn.innerHTML = '&#10003; Apply to Inventory';
   finBtn.addEventListener('click', bxFinishScan);
   body.appendChild(finBtn);
 
@@ -3429,32 +3238,46 @@ function bxRenderTally() {
   const tallyC = document.getElementById('bx-tally');
   if (!tallyC) return;
   tallyC.innerHTML = '';
-  const boxes = bxLoad().filter(function(b){ return b.location === BX.scanLoc; });
-  if (!boxes.length) {
-    tallyC.innerHTML = '<div class="emp"><div class="eic">📦</div>No boxes registered for this location yet.</div>';
+  const ids = Object.keys(BX.tally);
+  if (!ids.length) {
+    tallyC.innerHTML = '<div class="emp"><div class="eic">📷</div>Nothing scanned yet.</div>';
     return;
   }
-  const byProduct = {};
-  boxes.forEach(function(b){
-    if (!byProduct[b.productId]) byProduct[b.productId] = { name: b.productName, total: 0 };
-    byProduct[b.productId].total++;
-  });
-  Object.keys(byProduct).forEach(function(pid){
-    const info = byProduct[pid];
-    const found = (BX.found[pid] ? BX.found[pid].size : 0);
+  ids.forEach(function(pid) {
+    const p = S.products.find(function(x){ return x.id === pid; });
+    const name = p ? p.name : pid;
     const card = document.createElement('div');
     card.className = 'BX-tally-card';
+
+    const minus = document.createElement('div');
+    minus.className = 'BX-tally-adj';
+    minus.textContent = '−';
+    minus.addEventListener('click', function(){ bxAdjustTally(pid, -1); });
+
     const nm = document.createElement('div');
-    nm.className = 'BX-tally-name'; nm.textContent = info.name;
+    nm.className = 'BX-tally-name'; nm.textContent = name;
+
     const cnt = document.createElement('div');
-    cnt.className = 'BX-tally-count ' + (found === 0 ? 'BX-tally-none' : found >= info.total ? 'BX-tally-ok' : 'BX-tally-partial');
-    cnt.textContent = found + ' / ' + info.total;
-    card.appendChild(nm); card.appendChild(cnt);
+    cnt.className = 'BX-tally-count'; cnt.textContent = String(BX.tally[pid]);
+
+    const plus = document.createElement('div');
+    plus.className = 'BX-tally-adj';
+    plus.textContent = '+';
+    plus.addEventListener('click', function(){ bxAdjustTally(pid, 1); });
+
+    card.appendChild(minus); card.appendChild(nm); card.appendChild(cnt); card.appendChild(plus);
     tallyC.appendChild(card);
   });
 }
 
-// ── CAMERA + jsQR LOOP ───────────────────────────────────────────────
+function bxAdjustTally(pid, delta) {
+  const newVal = (BX.tally[pid] || 0) + delta;
+  if (newVal <= 0) delete BX.tally[pid];
+  else BX.tally[pid] = newVal;
+  bxRenderTally();
+}
+
+// ── CAMERA + jsQR LOOP (rising-edge detection) ─────────────────────────
 function bxStartCamera() {
   if (typeof jsQR === 'undefined') {
     document.getElementById('bx-status').textContent = 'Scanner library failed to load. Check your connection.';
@@ -3467,10 +3290,11 @@ function bxStartCamera() {
     video.srcObject = stream;
     video.play();
     BX.scanning = true;
+    BX.lastCode = null;
     const btn = document.getElementById('bx-cam-btn');
     if (btn) btn.textContent = '⏸ Pause Camera';
     const status = document.getElementById('bx-status');
-    if (status) status.textContent = 'Point camera at a box QR code...';
+    if (status) status.textContent = "Move the camera over each box's QR code...";
     bxScanLoop();
   }).catch(function(err) {
     const status = document.getElementById('bx-status');
@@ -3480,6 +3304,7 @@ function bxStartCamera() {
 
 function bxStopCamera() {
   BX.scanning = false;
+  BX.lastCode = null;
   if (BX.rafId) { cancelAnimationFrame(BX.rafId); BX.rafId = null; }
   if (BX.stream) { BX.stream.getTracks().forEach(function(t){ t.stop(); }); BX.stream = null; }
   const btn = document.getElementById('bx-cam-btn');
@@ -3504,9 +3329,17 @@ function bxScanLoop() {
   try { imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); }
   catch (e) { BX.rafId = requestAnimationFrame(bxScanLoop); return; }
   const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+
   if (code && code.data) {
-    bxOnDetect(code.data);
+    // Rising-edge: only count when this code wasn't visible in the previous frame
+    if (code.data !== BX.lastCode) {
+      bxOnDetect(code.data);
+    }
+    BX.lastCode = code.data;
+  } else {
+    BX.lastCode = null;
   }
+
   BX.rafId = requestAnimationFrame(bxScanLoop);
 }
 let bxCanvas = null;
@@ -3519,88 +3352,38 @@ function bxFlash() {
 }
 
 function bxOnDetect(text) {
-  const tNow = Date.now();
-  if (text === BX.lastCode && (tNow - BX.lastCodeAt) < 1500) return; // debounce same code
-  BX.lastCode = text; BX.lastCodeAt = tNow;
-
-  if (text.indexOf('JWBOX:') !== 0) return;
-  const boxId = text.slice(6);
-  const boxes = bxLoad();
-  const box = boxes.find(function(b){ return b.id === boxId; });
-  if (!box) {
+  if (text.indexOf('JWQC:') !== 0) {
     const status = document.getElementById('bx-status');
-    if (status) status.textContent = '⚠ Unrecognized box QR.';
+    if (status) status.textContent = '⚠ Unrecognized QR code.';
+    return;
+  }
+  const productId = text.slice(5);
+  const product = S.products.find(function(p){ return p.id === productId; });
+  if (!product) {
+    const status = document.getElementById('bx-status');
+    if (status) status.textContent = '⚠ Product not found for this QR.';
     return;
   }
 
-  if (box.location !== BX.scanLoc) {
-    // Pause camera, prompt to move
-    bxStopCamera();
-    BX.pendingMove = { boxId: box.id, productId: box.productId, productName: box.productName, fromLoc: box.location };
-    const msg = document.getElementById('bxm-msg');
-    const fromName = box.location === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita';
-    const toName = BX.scanLoc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita';
-    msg.textContent = '"' + box.productName + '" is registered in ' + fromName + '. Move it to ' + toName + ' and count it here?';
-    openMO('MO-boxmove');
-    return;
-  }
-
-  // Same location — mark found
   bxFlash();
-  if (!BX.found[box.productId]) BX.found[box.productId] = new Set();
-  const isNew = !BX.found[box.productId].has(box.id);
-  BX.found[box.productId].add(box.id);
-  if (isNew) {
-    const status = document.getElementById('bx-status');
-    if (status) status.textContent = '✓ ' + box.productName;
-    bxRenderTally();
-  }
-}
-
-function bxMoveConfirm() {
-  closeMO('MO-boxmove');
-  const pm = BX.pendingMove;
-  if (pm) {
-    const boxes = bxLoad();
-    const box = boxes.find(function(b){ return b.id === pm.boxId; });
-    if (box) { box.location = BX.scanLoc; bxSave(boxes); }
-    if (!BX.found[pm.productId]) BX.found[pm.productId] = new Set();
-    BX.found[pm.productId].add(pm.boxId);
-    bxRenderTally();
-    showOk('"' + pm.productName + '" moved to ' + (BX.scanLoc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita') + '.');
-  }
-  BX.pendingMove = null;
-  bxStartCamera();
-}
-
-function bxMoveCancel() {
-  closeMO('MO-boxmove');
-  BX.pendingMove = null;
-  bxStartCamera();
+  BX.tally[productId] = (BX.tally[productId] || 0) + 1;
+  const status = document.getElementById('bx-status');
+  if (status) status.textContent = '✓ ' + product.name + ' — ' + BX.tally[productId];
+  bxRenderTally();
 }
 
 // ── APPLY TO INVENTORY ───────────────────────────────────────────────
 async function bxFinishScan() {
   bxStopCamera();
   const loc = BX.scanLoc;
-  const boxes = bxLoad().filter(function(b){ return b.location === loc; });
-  if (!boxes.length) { showNote('No boxes registered for this location.'); return; }
+  const ids = Object.keys(BX.tally);
+  if (!ids.length) { showNote('Nothing scanned yet.'); return; }
 
-  const byProduct = {};
-  boxes.forEach(function(b){
-    if (!byProduct[b.productId]) byProduct[b.productId] = { name: b.productName, total: 0 };
-    byProduct[b.productId].total++;
-  });
-
-  let totalFound = 0, totalRegistered = 0;
-  const missing = [];
-  Object.keys(byProduct).forEach(function(pid){
-    const info = byProduct[pid];
-    const found = (BX.found[pid] ? BX.found[pid].size : 0);
-    totalFound += found; totalRegistered += info.total;
-    if (found < info.total) missing.push(info.name + ' (' + found + '/' + info.total + ')');
-    // Apply to inventory: each found box = 1 case
-    S.invLoc[loc][pid] = found;
+  const names = [];
+  ids.forEach(function(pid) {
+    const product = S.products.find(function(p){ return p.id === pid; });
+    S.invLoc[loc][pid] = BX.tally[pid];
+    names.push((product ? product.name : pid) + ': ' + BX.tally[pid]);
   });
   S.invDirty = true;
 
@@ -3610,9 +3393,8 @@ async function bxFinishScan() {
     S.invDirty = false; S.lastSaved = now();
   } catch (err) { /* non-blocking, S.invDirty stays true */ }
 
-  let msg = totalFound + ' of ' + totalRegistered + ' registered boxes found.';
-  if (missing.length) msg += ' Missing: ' + missing.join(', ') + '.';
-  showOk(msg);
+  showOk(ids.length + ' product(s) updated — ' + names.join(', '));
+  BX.tally = {};
   setTimeout(runSmartAlerts, 400);
 }
 
