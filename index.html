@@ -2941,6 +2941,22 @@ function qcFlash() {
   setTimeout(function(){ f.classList.remove('show'); }, 180);
 }
 
+function qcBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1046, ctx.currentTime);   // C6 — clean, pleasant
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.18);
+  } catch(e) {}
+}
+
 function qcOnScanDetect(text) {
   // Debounce: ignore same code within 1.5 seconds
   const now2 = Date.now();
@@ -2962,6 +2978,7 @@ function qcOnScanDetect(text) {
   }
 
   qcFlash();
+  qcBeep();
   let newVal;
   if (QC.scanSeen.has(productId)) {
     newVal = (S.invLoc[QC.loc][productId] || 0) + 1;
