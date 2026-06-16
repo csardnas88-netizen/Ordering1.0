@@ -599,8 +599,6 @@ input,select,textarea{font-family:inherit}
 .QC-done-stat-lbl{font-size:9px;color:var(--tm);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
 
 /* ── QR CODES & SCANNER ──────────────────────────────────────────── */
-.QC-scan-btn{width:38px;height:38px;border-radius:var(--r1);background:var(--nvy);color:var(--gl);font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:none;cursor:pointer;transition:opacity .14s}
-.QC-scan-btn:hover{opacity:.85}
 .QR-wrap{max-width:1000px;margin:0 auto}
 .QR-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px}
 .QR-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
@@ -920,10 +918,7 @@ input,select,textarea{font-family:inherit}
     <div class="MAC"><div class="MB sec" onclick="closeMO('MO-pdf')">Cancel</div><div class="MB pri hi" id="pdf-confirm-btn" onclick="confirmPdfImport()">Import Products</div></div>
   </div>
 </div>
-<!-- SCAN FAB -->
-<button class="AST-fab" id="scan-fab" onclick="openScanner()" style="right:96px;background:linear-gradient(135deg,#1a6e2e,#2d9e45);border-color:#5fc97a">
-  <span class="AST-fab-icon">&#128247;</span>
-</button>
+
 <!-- ASSISTANT FAB + DRAWER -->
 <button class="AST-fab" id="ast-fab" onclick="astToggle()">
   <span class="AST-fab-icon">&#128718;</span>
@@ -994,11 +989,6 @@ input,select,textarea{font-family:inherit}
 </div>
 
 </div>
-<!-- SCANNER MODAL -->
-<div class="SCM" id="scm-modal">
-  <div class="SCM-box">
-    <div class="SCM-hdr">
-      <div class="SCM-title">&#128247; Scan Product</div>
       <div class="SCM-close" onclick="closeScanner()">&#10005;</div>
     </div>
     <div id="scm-reader"></div>
@@ -3046,118 +3036,7 @@ function qcRenderDone(root) {
 
 
 <script>
-'use strict';
-// ── SCANNER ──────────────────────────────────────────────────────────
-let scmInstance = null;
-let scmActive = false;
 
-function openScanner() {
-  if (typeof S === 'undefined' || !S.products || !S.products.length) {
-    showNote('Products are still loading, try again in a moment.');
-    return;
-  }
-  document.getElementById('scm-modal').classList.add('on');
-  document.getElementById('scm-status').textContent = 'Point camera at a product QR code';
-  startScanner();
-}
-
-function closeScanner() {
-  document.getElementById('scm-modal').classList.remove('on');
-  stopScanner();
-}
-
-function startScanner() {
-  if (scmActive) return;
-  if (typeof Html5Qrcode === 'undefined') {
-    document.getElementById('scm-status').textContent = 'Scanner library failed to load. Check your connection.';
-    return;
-  }
-  scmInstance = new Html5Qrcode('scm-reader');
-  scmActive = true;
-  const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-  Html5Qrcode.getCameras().then(function(devices) {
-    let cameraId = devices && devices.length ? devices[devices.length - 1].id : null;
-    // Prefer back camera on mobile
-    const back = devices && devices.find(function(d){ return /back|rear|environment/i.test(d.label); });
-    if (back) cameraId = back.id;
-    const target = cameraId || { facingMode: 'environment' };
-    scmInstance.start(target, config, onScanSuccess, onScanFailure).catch(function(err) {
-      document.getElementById('scm-status').textContent = 'Camera error: ' + (err.message || err) + '. Check camera permissions.';
-      scmActive = false;
-    });
-  }).catch(function(err) {
-    // Fallback: try environment-facing camera directly
-    scmInstance.start({ facingMode: 'environment' }, config, onScanSuccess, onScanFailure).catch(function(err2) {
-      document.getElementById('scm-status').textContent = 'Camera not available: ' + (err2.message || err2);
-      scmActive = false;
-    });
-  });
-}
-
-function stopScanner() {
-  if (scmInstance && scmActive) {
-    scmInstance.stop().then(function() {
-      scmInstance.clear();
-      scmInstance = null;
-      scmActive = false;
-    }).catch(function() {
-      scmActive = false;
-    });
-  }
-}
-
-function onScanFailure() {
-  // Called continuously while no code is found — ignore
-}
-
-function onScanSuccess(decodedText) {
-  // Accepted formats:
-  //   JWQC:<productId>  -> the product's printed QR code
-  //   raw part number   -> fallback match
-  let productId = null;
-  let product = null;
-
-  if (decodedText.indexOf('JWQC:') === 0) {
-    productId = decodedText.slice(5);
-  } else {
-    productId = decodedText.trim();
-  }
-
-  if (productId) product = S.products.find(function(p){ return p.id === productId; });
-  if (!product) {
-    // Try matching by part number
-    product = S.products.find(function(p){ return p.partNumber && p.partNumber === decodedText.trim(); });
-  }
-
-  if (!product) {
-    document.getElementById('scm-status').textContent = 'Unrecognized code — product not found.';
-    return;
-  }
-
-  document.getElementById('scm-status').textContent = '✓ Found: ' + product.name;
-  closeScanner();
-
-  // If not currently in Quick Count, navigate there first with a location prompt
-  if (S.page !== 'quickcount') {
-    go('quickcount');
-    QC.view = 'select';
-    rQuickCount();
-    showNote('Select a location, then scan again or search "' + product.name.slice(0, 20) + '"');
-    return;
-  }
-
-  // If a location is selected, jump straight to the counter for this product
-  if (QC.loc) {
-    QC.filter = 'all';
-    qcOpenCounter(product.id);
-  } else {
-    QC.view = 'select';
-    rQuickCount();
-    showNote('Select a location first, then scan again.');
-  }
-}
-
-</script>
 
 
 
