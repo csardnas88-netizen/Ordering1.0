@@ -2022,9 +2022,74 @@ async function processPdf(file){
     let txt='';
     for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i);const tc=await pg.getTextContent();txt+=tc.items.map(it=>it.str).join(' ')+'\n';}
     const vendor=document.getElementById('pdf-vendor-sel').value;
-    const products=vendor==='Guest Supply'?parseGS(txt):parseGeneric(txt,vendor);
+    let products;
+    if(vendor==='Guest Supply'){
+      // Auto-detect format: order list (table) vs web list
+      const isOrderFmt=/Cust\s*ID[:\s]+\d|Unit\s+Of\s+Measure|Item\s+No/i.test(txt);
+      products=isOrderFmt?parseGSOrder(txt):parseGS(txt);
+    } else {
+      products=parseGeneric(txt,vendor);
+    }
     S.pdfProducts=products;renderPdfPreview(products,vendor);
   }catch(err){area.innerHTML='';showErr('Could not read the PDF. Make sure it is a valid, text-based PDF file.',err);}
+}
+function parseGSOrder(text){
+  // Parses Guest Supply ORDER format (table with Item No, CS/DR/EA units, full product names)
+  const products=[],seen=new Set();
+  const lines=text.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const unitMap={CS:'Case',DR:'Drum',EA:'Each'};
+  let i=0;
+  while(i<lines.length){
+    // Find part number line: #XXXXXXX (4-7 digits)
+    const partM=lines[i].match(/^#(\d{4,7})\s*$/);
+    if(!partM){i++;continue;}
+    const pn=partM[1];
+    if(seen.has(pn)){i++;continue;}
+    i++;
+    // Next line: MFG #XXXXXXX
+    if(i>=lines.length)break;
+    const mfgM=lines[i].match(/^MFG\s+#(\S+)/i);
+    if(!mfgM){continue;}
+    const mfg=mfgM[1];
+    i++;
+    // Collect description lines until CS/DR/EA qty or next part#
+    const descLines=[];
+    while(i<lines.length){
+      const l=lines[i];
+      if(/^(CS|DR|EA)\s+\d+$/i.test(l))break;      // unit + qty line
+      // MFG refs (#6102152 etc) stripped in name cleanup -- no break needed   
+      if(/^MFG\s+#/i.test(l))break;                  // next MFG line
+      if(/^\d{1,3}$/.test(l)&&parseInt(l)<50)        // row number — skip
+        {i++;continue;}
+      if(/^\d{3}-\d{3}-\d{4}$/.test(l))            // phone number — skip
+        {i++;continue;}
+      if(l.length>1)descLines.push(l);
+      i++;
+    }
+    // Get unit
+    let unit='Case';
+    if(i<lines.length){
+      const uM=lines[i].match(/^(CS|DR|EA)\s+(\d+)$/i);
+      if(uM){unit=unitMap[uM[1].toUpperCase()]||'Case';i++;}
+    }
+    // Build name: join desc lines, strip trailing MFG ref numbers
+    let name=descLines.join(' ')
+      .replace(/,?\s*#[A-Z0-9]{5,}/gi,'')  // strip embedded #XXXXXX refs
+      .replace(/\s{2,}/g,' ').trim();
+    if(!name||name.length<4)continue;
+    if(name.length>120)name=name.slice(0,120).trim();
+    seen.add(pn);
+    const isEq=EQUIP.some(k=>name.toLowerCase().includes(k));
+    products.push({
+      name,partNumber:pn,mfgNumber:mfg,
+      pricePerCase:0,casePack:1,unit,
+      parLevel:isEq?0:1,countMode:isEq?'units':'cases',
+      vendorName:'Guest Supply',
+      budgetLine:guessBudgetLine(name),
+      emoji:guessEmoji(name),photoUrl:''
+    });
+  }
+  return products;
 }
 function parseGS(text){
   const products=[],seen=new Set();
@@ -2120,6 +2185,9 @@ function renderPdfPreview(products,vendor){
   const area=document.getElementById('pdf-preview-area');
   if(!products.length){area.innerHTML='<div style="text-align:center;padding:20px;color:var(--tm)">No products detected. Try a different PDF or add manually.</div>';return;}
   document.getElementById('pdf-confirm-btn').classList.remove('hi');
+  const hasNoPrices=products.every(p=>!p.pricePerCase);
+  if(hasNoPrices)area.innerHTML='<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400E">&#9888; Prices not available in this format — you can set them later in the Product Catalog.</div>';
+  else area.innerHTML='';
   let rows=products.map((p,i)=>
     '<tr>'+
     '<td style="text-align:center"><input type="checkbox" checked id="pc'+i+'" style="width:auto"/></td>'+
