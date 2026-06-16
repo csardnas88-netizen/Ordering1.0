@@ -2031,7 +2031,7 @@ function parseGS(text){
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const fullText=lines.join(' ');
   const partRegex=/Part\s*#[:\s]+(\d{5,7})/gi;
-  const priceRegex=/\$\s*([\d,]+\.?\d{2})\s*\/\s*Case/gi;
+  const priceRegex=/\$\s*([\d,]+\.?\d{2})\s*\/\s*(Case|Drum|Each)/gi;
   const noiseRe=/QTY\s*\d+|\$[\d,\.]+\s*\/\s*Case|MFG\s*#[:\s]+\S+|Shipping\s*Weight[:\s]+[\d\.]+\s*lbs|Added\s*\d{2}\/\d{2}\/\d{4}|Brand\s*Mandate|Limited\s*Stock|Private|Order\s*Guide\s*Lines|Residential\s*Amenities|Items:\s*\d+|List\s*Total[:\s]+\$[\d,\.]+|guestsupply/gi;
   let m;
   while((m=partRegex.exec(fullText))!==null){
@@ -2044,6 +2044,7 @@ function parseGS(text){
     priceRegex.lastIndex=0;
     const priceM=priceRegex.exec(combinedWindow);
     const price=priceM?parseFloat(priceM[1].replace(',','')):0;
+    const unitMatch=priceM?priceM[2]:'Case';const unit=unitMatch||'Case';
     if(!price)continue;
     let clean=before.replace(noiseRe,'').replace(/\s{2,}/g,' ').trim();
     const segs=clean.split(/(?=JW Marriott)|(?=Marriott\s)/i).filter(s=>s.trim().length>5);
@@ -2052,6 +2053,12 @@ function parseGS(text){
       const raw=segs[segs.length-1];
       name=raw.replace(/Aromathera[.…]+\s*Associates/g,'Aromatherapy Associates').replace(/[.…]+/g,'').replace(/\s{2,}/g,' ').trim();
       if(name.length>100)name=name.slice(0,100).trim();
+    }
+    // Fallback: extract brand® + product name from last 2-3 lines before Part #
+    if(!name||name.length<4){
+      const brandRe=/((?:Ecolab|Palmolive|Rubbermaid|Rust-Oleum|Sysco|P&G|Procter)[®™]?\s+[^$\n]{3,60}?)(?:\s+Part|\s*$)/i;
+      const bm=brandRe.exec(before.slice(-300));
+      if(bm)name=bm[1].replace(/[.…]+/g,'').replace(/\s{2,}/g,' ').trim();
     }
     if(!name||name.length<4){
       const li=lines.findIndex(l=>l.includes('Part')&&l.includes(pn));
@@ -2062,7 +2069,7 @@ function parseGS(text){
     const cp=cpM?parseInt(cpM[1].replace(',','')):1;
     seen.add(pn);
     const isEq=EQUIP.some(k=>name.toLowerCase().includes(k));
-    products.push({name:name.trim(),partNumber:pn,pricePerCase:price,casePack:cp,parLevel:isEq?0:1,countMode:isEq?'units':'cases',vendorName:'Guest Supply',budgetLine:guessBudgetLine(name),emoji:guessEmoji(name),photoUrl:''});
+    products.push({name:name.trim(),partNumber:pn,pricePerCase:price,casePack:cp,unit:unit||'Case',parLevel:isEq?0:1,countMode:isEq?'units':'cases',vendorName:'Guest Supply',budgetLine:guessBudgetLine(name),emoji:guessEmoji(name),photoUrl:''});
   }
   return products;
 }
@@ -2082,7 +2089,7 @@ function guessBudgetLine(name){
   const n=name.toLowerCase();
   if(n.includes('iron')||n.includes('hair dryer')||n.includes('hairdryer'))return'Appliances';
   if(n.includes('pen')||n.includes('stylus')||n.includes('notepad'))return'Office Supplies';
-  if(n.includes('detergent')||n.includes('cleaner')||n.includes('disinfect'))return'Cleaning Supplies';
+  if(n.includes('detergent')||n.includes('cleaner')||n.includes('disinfect')||n.includes('stainblaster')||n.includes('laundry')||n.includes('zephair')||n.includes('sour')||n.includes('softener')||n.includes('rubbermaid')||n.includes('mop')||n.includes('rust-oleum'))return'Cleaning Supplies';
   if(n.includes('linen')||n.includes('sheet')||n.includes('towel')||n.includes('pillow'))return'Linen Replacement';
   return'Guest Room Supplies';
 }
