@@ -2884,6 +2884,7 @@ let qcLastCode = null;
 let qcLastCodeAt = 0;
 
 function qcStartScan() {
+  qcInitAudio(); // unlock iOS audio on this user gesture
   if (typeof Html5Qrcode === 'undefined') {
     const s = document.getElementById('qc-scan-status');
     if (s) s.textContent = 'Scanner not available. Please refresh the page.';
@@ -2941,19 +2942,40 @@ function qcFlash() {
   setTimeout(function(){ f.classList.remove('show'); }, 180);
 }
 
+let qcAudioCtx = null;
+
+function qcInitAudio() {
+  // Must be called directly from a user gesture (tap) to unlock iOS audio
+  try {
+    if (!qcAudioCtx) {
+      qcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (qcAudioCtx.state === 'suspended') {
+      qcAudioCtx.resume();
+    }
+    // Prime iOS by playing a silent buffer — unlocks audio for future beeps
+    const buf = qcAudioCtx.createBuffer(1, 1, 22050);
+    const src = qcAudioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(qcAudioCtx.destination);
+    src.start(0);
+  } catch(e) {}
+}
+
 function qcBeep() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    if (!qcAudioCtx) return;
+    if (qcAudioCtx.state === 'suspended') qcAudioCtx.resume();
+    const osc = qcAudioCtx.createOscillator();
+    const gain = qcAudioCtx.createGain();
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(qcAudioCtx.destination);
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(1046, ctx.currentTime);   // C6 — clean, pleasant
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.18);
+    osc.frequency.setValueAtTime(1046, qcAudioCtx.currentTime);
+    gain.gain.setValueAtTime(0.4, qcAudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, qcAudioCtx.currentTime + 0.15);
+    osc.start(qcAudioCtx.currentTime);
+    osc.stop(qcAudioCtx.currentTime + 0.15);
   } catch(e) {}
 }
 
