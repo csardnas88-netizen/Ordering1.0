@@ -11,7 +11,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -2839,19 +2838,19 @@ function qcBackToSelect() {
 }
 
 function qcRenderScanUI(wrap) {
+  // html5-qrcode manages its own video element inside a container div
   const camWrap = qcEl('div', {cls: 'QC-cam-wrap'});
-  const video = qcEl('video', {id: 'qc-video'});
-  video.setAttribute('playsinline', 'true');
-  video.setAttribute('muted', 'true');
-  const overlay = qcEl('div', {cls: 'QC-cam-overlay'});
-  overlay.innerHTML = '<div class="QC-cam-box"></div>';
+  const scanContainer = qcEl('div', {id: 'qc-scanner-container'});
+  scanContainer.style.cssText = 'width:100%;height:100%';
   const flash = qcEl('div', {cls: 'QC-cam-flash', id: 'qc-flash'});
-  camWrap.appendChild(video); camWrap.appendChild(overlay); camWrap.appendChild(flash);
+  camWrap.appendChild(scanContainer);
+  camWrap.appendChild(flash);
   wrap.appendChild(camWrap);
 
   const btnRow = qcEl('div');
   btnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:14px';
-  const camBtn = qcEl('button', {cls: 'btn btn-g', id: 'qc-cam-btn', txt: QC.scanning ? '⏸ Pause Camera' : '▶ Start Scanning'});
+  const camBtn = qcEl('button', {cls: 'btn btn-g', id: 'qc-cam-btn',
+    txt: QC.scanning ? '⏸ Pause Camera' : '▶ Start Scanning'});
   camBtn.style.flex = '1';
   camBtn.addEventListener('click', function(){ QC.scanning ? qcStopScan() : qcStartScan(); });
   btnRow.appendChild(camBtn);
@@ -2889,70 +2888,60 @@ function qcRenderScanTally() {
   });
 }
 
-// ── CAMERA + jsQR (rising-edge detection) ───────────────────────────
-let qcCanvas = null;
+// ── CAMERA via html5-qrcode (already loaded, no extra CDN needed) ────
+let qcHtml5 = null;
+let qcLastCode = null;
+let qcLastCodeAt = 0;
 
 function qcStartScan() {
-  if (typeof jsQR === 'undefined') {
+  if (typeof Html5Qrcode === 'undefined') {
     const s = document.getElementById('qc-scan-status');
-    if (s) s.textContent = 'Scanner library failed to load. Check your connection.';
+    if (s) s.textContent = 'Scanner not available. Please refresh the page.';
     return;
   }
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function(stream) {
-    QC.stream = stream;
-    const video = document.getElementById('qc-video');
-    if (!video) { stream.getTracks().forEach(function(t){ t.stop(); }); return; }
-    video.srcObject = stream;
-    video.play();
+  // Destroy previous instance if any
+  if (qcHtml5) {
+    try { qcHtml5.clear(); } catch(e) {}
+    qcHtml5 = null;
+  }
+  qcHtml5 = new Html5Qrcode('qc-scanner-container');
+  Html5Qrcode.getCameras().then(function(devices) {
+    const back = devices && devices.find(function(d){ return /back|rear|environment/i.test(d.label); });
+    const camId = back ? back.id : (devices && devices.length ? devices[devices.length-1].id : null);
+    const target = camId || { facingMode: 'environment' };
+    return qcHtml5.start(target,
+      { fps: 12, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+      qcOnScanDetect,
+      function() {}  // ignore per-frame failures
+    );
+  }).then(function() {
     QC.scanning = true;
-    QC.lastCode = null;
     const btn = document.getElementById('qc-cam-btn');
     if (btn) btn.textContent = '⏸ Pause Camera';
-    const status = document.getElementById('qc-scan-status');
-    if (status) status.textContent = "Move the camera over each box's QR code...";
-    qcScanLoop();
+    const s = document.getElementById('qc-scan-status');
+    if (s) s.textContent = "Move the camera over each box's QR code...";
   }).catch(function(err) {
-    const status = document.getElementById('qc-scan-status');
-    if (status) status.textContent = 'Camera error: ' + (err.message || err) + '. Check camera permissions in Safari settings.';
+    const s = document.getElementById('qc-scan-status');
+    if (s) s.textContent = 'Camera error: ' + (err.message || err) + '. Check camera permissions in Safari settings.';
   });
 }
 
 function qcStopScan() {
   QC.scanning = false;
-  QC.lastCode = null;
-  if (QC.rafId) { cancelAnimationFrame(QC.rafId); QC.rafId = null; }
-  if (QC.stream) { QC.stream.getTracks().forEach(function(t){ t.stop(); }); QC.stream = null; }
+  qcLastCode = null;
+  if (qcHtml5) {
+    qcHtml5.stop().then(function(){
+      try { qcHtml5.clear(); } catch(e) {}
+      qcHtml5 = null;
+    }).catch(function(){
+      try { qcHtml5.clear(); } catch(e) {}
+      qcHtml5 = null;
+    });
+  }
   const btn = document.getElementById('qc-cam-btn');
   if (btn) btn.textContent = '▶ Start Scanning';
-  const status = document.getElementById('qc-scan-status');
-  if (status) status.textContent = 'Camera paused.';
-}
-
-function qcScanLoop() {
-  if (!QC.scanning) return;
-  const video = document.getElementById('qc-video');
-  if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
-    QC.rafId = requestAnimationFrame(qcScanLoop);
-    return;
-  }
-  const canvas = qcCanvas || (qcCanvas = document.createElement('canvas'));
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  let imageData;
-  try { imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); }
-  catch (e) { QC.rafId = requestAnimationFrame(qcScanLoop); return; }
-  const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-
-  if (code && code.data) {
-    if (code.data !== QC.lastCode) qcOnScanDetect(code.data);
-    QC.lastCode = code.data;
-  } else {
-    QC.lastCode = null;
-  }
-
-  QC.rafId = requestAnimationFrame(qcScanLoop);
+  const s = document.getElementById('qc-scan-status');
+  if (s) s.textContent = 'Camera paused.';
 }
 
 function qcFlash() {
@@ -2963,6 +2952,12 @@ function qcFlash() {
 }
 
 function qcOnScanDetect(text) {
+  // Debounce: ignore same code within 1.5 seconds
+  const now2 = Date.now();
+  if (text === qcLastCode && (now2 - qcLastCodeAt) < 1500) return;
+  qcLastCode = text;
+  qcLastCodeAt = now2;
+
   if (text.indexOf('JWQC:') !== 0) {
     const status = document.getElementById('qc-scan-status');
     if (status) status.textContent = '⚠ Unrecognized QR code.';
@@ -3005,6 +3000,7 @@ async function qcSaveInv() {
     S.invDirty = false; S.lastSaved = now();
   } catch (err) { /* non-blocking */ }
 }
+
 
 function qcFinish() { QC.view = 'done'; rQuickCount(); }
 
