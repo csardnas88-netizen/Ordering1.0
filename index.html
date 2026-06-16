@@ -145,23 +145,40 @@ input,select,textarea{font-family:inherit}
 .emp{text-align:center;padding:50px 20px;color:var(--tm)}
 .eic{font-size:44px;margin-bottom:12px;opacity:.35}
 /* DASHBOARD */
-.inv-hero{background:linear-gradient(135deg,var(--nvy),var(--nv2));border-radius:var(--r3);padding:22px 24px;margin-bottom:18px}
-.ih-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
-.ih-ey{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px}
-.ih-mn{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:400;color:#fff}
-.ih-sub{font-size:11px;color:rgba(255,255,255,.38);margin-top:3px}
-.ih-meta{font-size:10px;color:rgba(255,255,255,.3);margin-top:4px}
-.ih-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--r1);padding:8px 14px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#fff;cursor:pointer;transition:all .15s;white-space:nowrap}
-.ih-btn:hover{background:rgba(255,255,255,.18)}
-.vp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.vp-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--r1);padding:12px 14px;cursor:pointer;transition:all .15s}
-.vp-card:hover{background:rgba(255,255,255,.12)}
-.vp-name{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vp-count{font-size:18px;font-weight:700;color:#fff}
-.vp-sub{font-size:10px;color:rgba(255,255,255,.38);margin-top:1px}
-.vp-bar{height:3px;background:rgba(255,255,255,.15);border-radius:99px;overflow:hidden;margin-top:8px}
-.vp-fill{height:100%;border-radius:99px;background:var(--gl);transition:width .4s}
+/* ── DASHBOARD REDESIGN (Option A) ───────────────────────── */
+.dh-hero{background:var(--nvy);padding:22px 20px 20px;margin-bottom:12px}
+.dh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px}
+.dh-ey{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:6px}
+.dh-mn{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:600;color:#fff;line-height:1.1}
+.dh-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px}
+.dh-meta{font-size:10px;color:rgba(255,255,255,.25);margin-top:3px}
+/* Progress ring */
+.dh-ring{width:88px;height:88px;flex-shrink:0}
+.dh-ring-bg{fill:none;stroke:#253656;stroke-width:7}
+.dh-ring-fill{fill:none;stroke:var(--gold);stroke-width:7;stroke-linecap:round;transition:stroke-dasharray .6s ease}
+.dh-ring-pct{fill:#fff;font-size:16px;font-weight:700;font-family:-apple-system,sans-serif}
+.dh-ring-lbl{fill:rgba(255,255,255,.35);font-size:7.5px;letter-spacing:.1em;font-family:-apple-system,sans-serif}
+/* Buttons */
+.dh-btns{display:flex;gap:8px;margin-bottom:18px}
+.dh-btn-pri{flex:2;background:var(--gold);color:var(--nvy);border:none;border-radius:var(--r1);padding:13px 0;font-size:13px;font-weight:800;letter-spacing:.06em;cursor:pointer;transition:opacity .15s}
+.dh-btn-pri:active{opacity:.85}
+.dh-btn-sec{flex:1;background:transparent;color:var(--gold);border:1.5px solid rgba(201,168,76,.35);border-radius:var(--r1);padding:13px 0;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.dh-btn-sec:active{opacity:.7}
+/* Vendor rows */
+.dh-vendor-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:12px}
+.vp-grid{display:flex;flex-direction:column;gap:12px}
+.vp-card{cursor:pointer}
+.vp-name{font-size:13px;color:rgba(255,255,255,.75);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.vp-count{font-size:12px;color:rgba(255,255,255,.35)}
+.vp-bar{height:5px;background:#253656;border-radius:3px;overflow:hidden}
+.vp-fill{height:100%;border-radius:3px;background:var(--gold);transition:width .5s}
 .vp-fill.done{background:var(--grn)}
+/* Stat cards */
+.dh-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 20px 12px;background:var(--bg)}
+.dh-stat{background:var(--nvy);border:1px solid #253656;border-radius:var(--r2);padding:14px 8px;text-align:center}
+.dh-stat-val{font-size:26px;font-weight:800;color:#fff}
+.dh-gold{color:var(--gold)!important}
+.dh-stat-lbl{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
 .urg-wrap{margin-bottom:18px}
 .urg-hd{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--tm);margin-bottom:8px}
 .UA{background:var(--rd);border:1px solid var(--rb);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:7px;cursor:pointer;transition:box-shadow .2s}
@@ -705,26 +722,42 @@ input,select,textarea{font-family:inherit}
     </div>
     <!-- DASHBOARD -->
     <div class="PG on" id="pg-dashboard">
-      <div class="inv-hero">
-        <div class="ih-top">
+      <!-- HERO -->
+      <div class="dh-hero">
+        <div class="dh-top">
           <div>
-            <div class="ih-ey">Inventory Status</div>
-            <div class="ih-mn" id="ih-month"></div>
-            <div class="ih-sub" id="ih-sub">Loading&hellip;</div>
-            <div class="ih-meta" id="ih-meta"></div>
+            <div class="dh-ey">Inventory Status</div>
+            <div class="dh-mn" id="ih-month"></div>
+            <div class="dh-sub" id="ih-sub">Loading&hellip;</div>
+            <div class="dh-meta" id="ih-meta"></div>
           </div>
-          <button class="ih-btn" onclick="go('inventory')">Start Count &rarr;</button>
-          <button class="ih-btn" onclick="go('quickcount')" style="background:rgba(200,164,90,0.18);border-color:rgba(200,164,90,0.5)">&#9889; Quick Count</button>
+          <!-- Progress ring -->
+          <svg class="dh-ring" id="dh-ring-svg" viewBox="0 0 96 96">
+            <circle class="dh-ring-bg" cx="48" cy="48" r="40"/>
+            <circle class="dh-ring-fill" id="dh-ring-fill" cx="48" cy="48" r="40"
+              stroke-dasharray="0 251.3" transform="rotate(-90 48 48)"/>
+            <text class="dh-ring-pct" id="dh-ring-pct" x="48" y="44" text-anchor="middle">0%</text>
+            <text class="dh-ring-lbl" x="48" y="59" text-anchor="middle">DONE</text>
+          </svg>
         </div>
-        <div class="vp-grid" id="vp-grid"></div>
+        <!-- Action buttons -->
+        <div class="dh-btns">
+          <button class="dh-btn-pri" onclick="go('quickcount')">&#9889; QUICK COUNT</button>
+          <button class="dh-btn-sec" onclick="go('inventory')">Full Count &#8250;</button>
+        </div>
+        <!-- Vendor breakdown -->
+        <div class="dh-vendor-lbl">By Vendor</div>
+        <div id="vp-grid"></div>
       </div>
-      <div class="qs-row">
-        <div class="qs"><div class="qs-val" id="qs-tot">0</div><div class="qs-lbl">Total Products</div></div>
-        <div class="qs"><div class="qs-val tg" id="qs-cnt">0</div><div class="qs-lbl">Counted</div></div>
-        <div class="qs"><div class="qs-val tr" id="qs-alr">0</div><div class="qs-lbl">Urgent Alerts</div></div>
+      <!-- STAT CARDS -->
+      <div class="dh-stats">
+        <div class="dh-stat"><div class="dh-stat-val" id="qs-tot">0</div><div class="dh-stat-lbl">Total</div></div>
+        <div class="dh-stat"><div class="dh-stat-val dh-gold" id="qs-cnt">0</div><div class="dh-stat-lbl">Counted</div></div>
+        <div class="dh-stat"><div class="dh-stat-val" id="qs-alr">0</div><div class="dh-stat-lbl">Alerts</div></div>
       </div>
+      <!-- UNSAVED BANNER -->
       <div class="save-banner unsaved hi" id="unsaved-banner">
-        <div><div class="sb-lbl">&#9888;&#65039; Unsaved inventory changes</div><div class="sb-time">Tap save before leaving this device</div></div>
+        <div><div class="sb-lbl">&#9888;&#65039; Unsaved changes</div><div class="sb-time">Tap save before leaving this device</div></div>
         <button class="btn btn-g btn-sm" onclick="saveInv()">&#128190; Save Now</button>
       </div>
       <div id="smart-alerts-section"></div>
@@ -1190,38 +1223,56 @@ function rDash(){
   const mn=d.toLocaleString('en-US',{month:'long',year:'numeric'});
   const el=document.getElementById('ih-month');if(el)el.textContent=mn;
   const bmlEl=document.getElementById('bml');if(bmlEl)bmlEl.textContent=mn;
+
+  const totP=S.products.length;
+  const totC=S.products.filter(x=>getTotalCount(x.id)!==null).length;
+  const pct=totP>0?Math.round((totC/totP)*100):0;
+  const CIRC=2*Math.PI*40;
+
+  // Progress ring
+  const ringFill=document.getElementById('dh-ring-fill');
+  if(ringFill) ringFill.setAttribute('stroke-dasharray',(CIRC*(pct/100)).toFixed(1)+' '+CIRC.toFixed(1));
+  const ringPct=document.getElementById('dh-ring-pct');
+  if(ringPct) ringPct.textContent=pct+'%';
+
+  // Text fields
+  const subEl=document.getElementById('ih-sub');if(subEl)subEl.textContent=totC+' of '+totP+' products counted';
+  const metaEl=document.getElementById('ih-meta');if(metaEl)metaEl.textContent=S.lastSaved?'Saved '+fd(S.lastSaved):'Not saved yet';
+  const q1=document.getElementById('qs-tot');if(q1)q1.textContent=totP;
+  const q2=document.getElementById('qs-cnt');if(q2)q2.textContent=totC;
+
+  // Alerts count + color
+  const alrCount=S.alerts.filter(a=>a.status==='urgent').length;
+  const alrEl=document.getElementById('qs-alr');
+  if(alrEl){alrEl.textContent=alrCount;alrEl.style.color=alrCount>0?'var(--red)':'var(--grn)';}
+
+  // Vendor bars
   const vs=activeVendors();
   const vp=document.getElementById('vp-grid');
   if(vp)vp.innerHTML=vs.length?vs.map(v=>{
     const ps2=S.products.filter(x=>x.vendorName===v);
     const tot=ps2.length,cnt=ps2.filter(x=>S.inventory[x.id]!==undefined&&S.inventory[x.id]!=='').length;
-    const pct=tot>0?(cnt/tot)*100:0,done=pct>=100;
-    return '<div class="vp-card" onclick="go(\'inventory\');setTimeout(()=>pickV(\''+e(v)+'\'),120)">'+
-      '<div class="vp-name">'+e(v)+'</div>'+
-      '<div class="vp-count">'+cnt+'<span style="font-size:13px;font-weight:400;color:rgba(255,255,255,.4)"> / '+tot+'</span></div>'+
-      '<div class="vp-sub">'+(done?'&#10003; Complete':'products counted')+'</div>'+
-      '<div class="vp-bar"><div class="vp-fill '+(done?'done':'')+'" style="width:'+pct+'%"></div></div>'+
+    const vpct=tot>0?Math.round((cnt/tot)*100):0,done=vpct>=100;
+    var _oc="go('inventory');setTimeout(()=>pickV('"+e(v)+"'),120)";
+    return '<div class="vp-card" onclick="'+_oc+'">'+
+      '<div class="vp-name">'+e(v)+'<span class="vp-count">'+cnt+' / '+tot+'</span></div>'+
+      '<div class="vp-bar"><div class="vp-fill '+(done?'done':'')+'" style="width:'+vpct+'%"></div></div>'+
       '</div>';
-  }).join(''):'<div style="color:rgba(255,255,255,.4);font-size:12px;padding:8px 0">No products yet</div>';
-  const totP=S.products.length,totC=S.products.filter(x=>getTotalCount(x.id)!==null).length;
-  const subEl=document.getElementById('ih-sub');if(subEl)subEl.textContent=totC+' of '+totP+' products counted';
-  const metaEl=document.getElementById('ih-meta');if(metaEl)metaEl.textContent=S.lastSaved?'Last saved: '+fd(S.lastSaved):'Not saved yet';
-  const q1=document.getElementById('qs-tot');if(q1)q1.textContent=totP;
-  const q2=document.getElementById('qs-cnt');if(q2)q2.textContent=totC;
-  const q3=document.getElementById('qs-alr');if(q3)q3.textContent=S.alerts.filter(a=>a.status==='urgent').length;
+  }).join(''):'<div style="color:rgba(255,255,255,.35);font-size:12px;padding:4px 0">No products yet</div>';
+
+  // Banners
   const ub=document.getElementById('unsaved-banner');if(ub)ub.classList.toggle('hi',!S.invDirty);
   const ua=S.alerts.filter(a=>a.status==='urgent');
   const uw=document.getElementById('urg-wrap');if(uw)uw.classList.toggle('hi',!ua.length);
   const us=document.getElementById('urg-strip');
-  if(us)us.innerHTML=ua.slice(0,4).map(a=>
-    '<div class="UA" onclick="go(\'alerts\')">'+
+  if(us){var _al="alerts";us.innerHTML=ua.slice(0,4).map(function(a){
+    return '<div class="UA" onclick="go(\''+_al+'\')">'+
     '<div class="UA-dot"></div>'+
     '<div style="flex:1"><div class="UA-name">'+e(a.productName)+'</div><div class="UA-sub">Flagged by '+e(a.flaggedBy||'manager')+' &middot; '+e(a.budgetLine||'')+'</div></div>'+
-    '<div class="UA-arr">&#8250;</div></div>'
-  ).join('');
+    '<div class="UA-arr">&#8250;</div></div>';
+  }).join('');}
   runSmartAlerts();
 }
-
 // ── INVENTORY ──────────────────────────────────────────
 
 // ── LOCATIONS ──────────────────────────────────────────────────────
