@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -3264,33 +3264,37 @@ function qrRenderList() {
 }
 
 function qrPrintProduct(p, copies) {
+  // Build all QR data as JSON, inject into popup — popup loads its own QRCode.js
+  const qrData = JSON.stringify({ id: p.id, name: p.name, pn: p.partNumber || '', copies: copies });
   const w = window.open('', '_blank');
-  let html = '<html><head><title>QR - ' + p.name + '</title><style>' +
+  const html = '<!DOCTYPE html><html><head><title>QR - ' + p.name.replace(/</g,'&lt;') + '</title>' +
+    '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+    '<style>' +
     'body{font-family:sans-serif;margin:20px}' +
-    '.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}' +
-    '.card{border:1px solid #ccc;border-radius:8px;padding:10px;text-align:center;break-inside:avoid}' +
-    '.card .qr{margin:0 auto 6px}' +
-    '.card .nm{font-size:11px;font-weight:600;line-height:1.3;min-height:28px}' +
-    '.card .pn{font-size:9px;color:#888;margin-top:2px}' +
-    '</style></head><body><div class="grid" id="g"></div></body></html>';
+    '.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}' +
+    '.card{border:1px solid #ccc;border-radius:8px;padding:12px;text-align:center;break-inside:avoid;page-break-inside:avoid}' +
+    '.nm{font-size:11px;font-weight:700;line-height:1.4;margin-top:8px}' +
+    '.pn{font-size:9px;color:#888;margin-top:3px}' +
+    '@media print{body{margin:10px}.grid{gap:10px}}' +
+    '</style></head><body>' +
+    '<div class="grid" id="g"></div>' +
+    '<script>' +
+    'var d=' + qrData + ';' +
+    'window.onload=function(){' +
+    '  var g=document.getElementById("g");' +
+    '  for(var i=0;i<d.copies;i++){' +
+    '    var card=document.createElement("div");card.className="card";' +
+    '    var qrDiv=document.createElement("div");' +
+    '    var nm=document.createElement("div");nm.className="nm";nm.textContent=d.name;' +
+    '    var pn=document.createElement("div");pn.className="pn";pn.textContent=d.pn?"#"+d.pn:"";' +
+    '    card.appendChild(qrDiv);card.appendChild(nm);card.appendChild(pn);g.appendChild(card);' +
+    '    new QRCode(qrDiv,{text:"JWQC:"+d.id,width:110,height:110,colorDark:"#1E2D4A",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});' +
+    '  }' +
+    '  setTimeout(function(){window.print();},800);' +
+    '};' +
+    '<\/script></body></html>';
   w.document.write(html);
   w.document.close();
-  const g = w.document.getElementById('g');
-  for (let i = 0; i < copies; i++) {
-    const card = w.document.createElement('div');
-    card.className = 'card';
-    const qrDiv = w.document.createElement('div');
-    qrDiv.className = 'qr';
-    card.appendChild(qrDiv);
-    const nm = w.document.createElement('div');
-    nm.className = 'nm'; nm.textContent = p.name;
-    const pn = w.document.createElement('div');
-    pn.className = 'pn'; pn.textContent = p.partNumber ? '#' + p.partNumber : '';
-    card.appendChild(nm); card.appendChild(pn);
-    g.appendChild(card);
-    new QRCode(qrDiv, { text: 'JWQC:' + p.id, width: 100, height: 100, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  }
-  setTimeout(function(){ w.print(); }, 600);
 }
 
 </script>
