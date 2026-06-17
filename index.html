@@ -1776,7 +1776,10 @@ async function toggleProdLoc(productId, loc) {
   if (ci) {
     ci.querySelectorAll('.js-loc').forEach(function(span) {
       const l = span.dataset.loc;
-      span.className = 'loc-badge js-loc ' + (p.locations[l] !== false ? 'loc-on' : '');
+      const on = p.locations[l] !== false;
+      span.className = 'loc-badge js-loc ' + (on ? 'loc-on' : 'loc-off');
+      const lbl = l === 'floor3' ? 'Floor 3' : 'Tiendita';
+      span.innerHTML = (on ? '&#10003;' : '✗') + ' ' + lbl;
     });
   }
 }
@@ -1807,8 +1810,9 @@ function rCatalog(){
       '<div class="CIM">'+e(p.budgetLine||'')+(p.partNumber?' &middot; #'+e(p.partNumber):'')+'</div></div>'+
       '<div class="CIAC">'+
       '<div class="loc-badges">'+
-      '<span class="loc-badge '+(p.locations&&p.locations.floor3===false?'':"loc-on")+' js-loc" data-pid="'+p.id+'" data-loc="floor3">📦 F3</span>'+
-      '<span class="loc-badge '+(p.locations&&p.locations.tiendita===false?'':"loc-on")+' js-loc" data-pid="'+p.id+'" data-loc="tiendita">🏪 TD</span>'+
+      '<span class="loc-badges-lbl">STORES:</span>'+
+      '<span class="loc-badge '+(p.locations&&p.locations.floor3===false?'loc-off':'loc-on')+' js-loc" data-pid="'+p.id+'" data-loc="floor3">'+(p.locations&&p.locations.floor3===false?'✗':'&#10003;')+' Floor 3</span>'+
+      '<span class="loc-badge '+(p.locations&&p.locations.tiendita===false?'loc-off':'loc-on')+' js-loc" data-pid="'+p.id+'" data-loc="tiendita">'+(p.locations&&p.locations.tiendita===false?'✗':'&#10003;')+' Tiendita</span>'+
       '</div>'+
       '<button class="btn btn-o btn-sm" onclick="editP(\''+p.id+'\')">Edit</button><button class="btn btn-d btn-sm" onclick="delP(\''+p.id+'\')">Delete</button></div></div>';
   };
@@ -3409,10 +3413,12 @@ function qrPrintProduct(p, copies) {
     '@media print{body{margin:10px}.grid{gap:10px}}' +
     '
 /* ── PRODUCT LOCATION BADGES ──────────────────────────────────────── */
-.loc-badges{display:flex;gap:4px;margin-bottom:6px}
-.loc-badge{font-size:10px;font-weight:600;padding:3px 7px;border-radius:20px;cursor:pointer;border:1.5px solid var(--bdr);color:var(--tm);background:var(--s2);transition:all .15s;user-select:none;white-space:nowrap}
-.loc-badge.loc-on{background:var(--nvy);color:var(--gold);border-color:var(--nvy)}
-.loc-badge:active{opacity:.7}
+.loc-badges{display:flex;gap:5px;margin-bottom:8px;align-items:center}
+.loc-badges-lbl{font-size:9px;color:var(--tm);letter-spacing:.06em;margin-right:2px}
+.loc-badge{font-size:10px;font-weight:700;padding:4px 9px;border-radius:6px;cursor:pointer;transition:all .18s;user-select:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.loc-badge.loc-on{background:var(--nvy);color:var(--gold);border:1.5px solid var(--nvy)}
+.loc-badge.loc-off{background:#F3F4F6;color:#9CA3AF;border:1.5px dashed #D1D5DB;text-decoration:line-through;opacity:.75}
+.loc-badge:active{transform:scale(.95)}
 </style></head><body>' +
     '<div class="grid" id="g"></div>' +
     '<script>' +
