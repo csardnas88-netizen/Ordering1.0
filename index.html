@@ -2034,26 +2034,22 @@ async function processPdf(file){
   }catch(err){area.innerHTML='';showErr('Could not read the PDF. Make sure it is a valid, text-based PDF file.',err);}
 }
 function parseGSOrder(text){
-  // PDF.js produces one big line per page — use regex on the full text
+  // PDF.js joins each page into one big line — use regex on flattened text
   const products=[],seen=new Set();
-  // Normalize whitespace: collapse to single spaces
-  const norm=text.replace(/\s+/g,' ').trim();
+  const flat=text.replace(/\n+/g,' ').replace(/\s{2,}/g,' ');
   const unitMap={CS:'Case',DR:'Drum',EA:'Each'};
-  // Pattern: #PARTNUM  MFG #MFGNUM  DESCRIPTION  CS/DR/EA  QTY
-  // Use non-greedy match for description, terminated by unit code + digits
-  const re=/#(\d{4,7})\s+MFG\s+#(\S+)\s+(.*?)\s+(CS|DR|EA)\s+\d+/gi;
+  const itemRe=/#(\d{4,7})\s+MFG\s+#(\S+)\s+(.*?)\s+\b(CS|DR|EA)\b\s+\d+/gi;
   let m;
-  while((m=re.exec(norm))!==null){
+  while((m=itemRe.exec(flat))!==null){
     const pn=m[1];
     if(seen.has(pn))continue;
     const mfg=m[2];
+    const unit=unitMap[m[4].toUpperCase()]||'Case';
     let name=m[3]
-      .replace(/,?\s*#[A-Z0-9]{5,}/gi,'')   // strip embedded MFG refs like #6102152
+      .replace(/,?\s*#[A-Z0-9]{5,}/gi,'')  // strip inline MFG refs
       .replace(/\s{2,}/g,' ').trim();
-    // Remove trailing comma or period
-    name=name.replace(/[,.]$/,'').trim();
-    const unit=unitMap[(m[4]||'CS').toUpperCase()]||'Case';
     if(!name||name.length<4)continue;
+    if(name.length>120)name=name.slice(0,120).trim();
     seen.add(pn);
     const isEq=EQUIP.some(k=>name.toLowerCase().includes(k));
     products.push({
