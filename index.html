@@ -1159,7 +1159,7 @@ async function seedProducts(){
 function listen(){
   const {db,collection,onSnapshot,doc}=FB,mk=mkey();
   S.uns.push(onSnapshot(collection(db,'vendors'),s=>{S.vendors=s.docs.map(d=>({id:d.id,...d.data()}));ref();},err=>showErr('Could not load vendors.',err)));
-  S.uns.push(onSnapshot(collection(db,'products'),s=>{S.products=s.docs.map(d=>({id:d.id,...d.data()}));ref();},err=>showErr('Could not load products.',err)));
+  S.uns.push(onSnapshot(collection(db,'products'),s=>{S.products=s.docs.map(d=>({id:d.id,...d.data()}));seedCleaningSupplies();ref();},err=>showErr('Could not load products.',err)));
   S.uns.push(onSnapshot(doc(db,'budgets',mk),s=>{S.budgets=s.exists()?s.data():{};ref();},err=>showErr('Could not load budgets.',err)));
   S.uns.push(onSnapshot(collection(db,'alerts'),s=>{S.alerts=s.docs.map(d=>({id:d.id,...d.data()}));cleanOldAlerts();updBadges();ref();},err=>showErr('Could not load alerts.',err)));
   // Load both locations from Firebase
@@ -1217,6 +1217,51 @@ function render(p){
   else if(p==='qrcodes')rQrCodes();
 }
 
+
+// ── AUTO-SEED: Guest Supply Cleaning Supplies ────────────────────────
+// Runs once on load — silently adds products if not already in catalog
+const _CS_SEED=[
+  {name:'Palmolive Original Dish Soap 3oz',partNumber:'0024217',mfgNumber:'11900088',unit:'Case',emoji:'🧴'},
+  {name:'Ecolab ZephAir Mountain Mist Air & Fabric Refresher 32oz',partNumber:'0020055',mfgNumber:'6112043',unit:'Case',emoji:'🌿'},
+  {name:'Ecolab StainBlaster Rust Remover Laundry Pre-Spotter 22oz',partNumber:'0030506',mfgNumber:'6100398',unit:'Case',emoji:'🧹'},
+  {name:'Ecolab StainBlaster Enzyme Boost 22oz Trigger Spray',partNumber:'0033552',mfgNumber:'6101068',unit:'Case',emoji:'🧹'},
+  {name:'Ecolab StainBlaster Grease Remover 22oz',partNumber:'0033551',mfgNumber:'6101070',unit:'Case',emoji:'🧹'},
+  {name:'Ecolab StainBlaster Power Pak Reclaim MultiPurpose 1.2lb',partNumber:'0033390',mfgNumber:'6100909',unit:'Case',emoji:'🧹'},
+  {name:'Ecolab Rapid Multi-Surface Disinfectant Cleaner 2.5 Gallon',partNumber:'0076827',mfgNumber:'6102257',unit:'Case',emoji:'🧼'},
+  {name:'Ecolab Oasis Morning Breeze Room Refresher 2.5 Gallon',partNumber:'0043782',mfgNumber:'6101977',unit:'Case',emoji:'🌅'},
+  {name:'Ecolab Oasis 66 Heavy Duty Bathroom Cleaner 2.5 Gallon',partNumber:'0020083',mfgNumber:'6114914',unit:'Case',emoji:'🧼'},
+  {name:'Ecolab Oasis 100 All Purpose and Floor Cleaner 2.5 Gallon',partNumber:'061600',mfgNumber:'6114522',unit:'Case',emoji:'🧼'},
+  {name:'Ecolab Liquid Laundry Builder 15 Gallon',partNumber:'0078491',mfgNumber:'6102152',unit:'Drum',emoji:'🛢️'},
+  {name:'Ecolab Liquid Laundry Chlorine Bleach 15 Gallon',partNumber:'0011505',mfgNumber:'6116146',unit:'Drum',emoji:'🛢️'},
+  {name:'Ecolab Liquid Laundry Neutral Detergent 15 Gallon',partNumber:'0078273',mfgNumber:'6102162',unit:'Drum',emoji:'🛢️'},
+  {name:'Ecolab Liquid Laundry Sour with Iron Control 15 Gallon',partNumber:'0078274',mfgNumber:'6102175',unit:'Drum',emoji:'🛢️'},
+  {name:'Ecolab Liquid Laundry Premium Softener 15 Gallon',partNumber:'0078492',mfgNumber:'6102173',unit:'Drum',emoji:'🛢️'},
+  {name:'Rubbermaid Hygen 58 Inch Quick Connect Handle Yellow',partNumber:'0016699',mfgNumber:'FGQ75000YL00',unit:'Each',emoji:'🧹'},
+  {name:'Rubbermaid Hygen 11 Inch Quick Connect Frame Yellow',partNumber:'0017083',mfgNumber:'FGQ55000YL00',unit:'Each',emoji:'🧹'},
+  {name:'Rubbermaid Hygen 48-72 Inch Quick Connect Handle Yellow',partNumber:'0026094',mfgNumber:'FGQ75500YL00',unit:'Each',emoji:'🧹'},
+  {name:'Ecolab First Impression Micro Aerosol Summer Linen 1.8oz',partNumber:'0009454',mfgNumber:'6130076',unit:'Case',emoji:'✨'},
+  {name:'Rust-Oleum Commercial MULE Gloss Grey Epoxy 1 Gallon',partNumber:'0079319',mfgNumber:'RST375642',unit:'Case',emoji:'🎨'},
+];
+let _seedDone=false;
+async function seedCleaningSupplies(){
+  if(_seedDone)return;
+  _seedDone=true;
+  const existing=new Set(S.products.map(p=>p.partNumber).filter(Boolean));
+  const missing=_CS_SEED.filter(p=>!existing.has(p.partNumber));
+  if(!missing.length)return;
+  for(const p of missing){
+    try{
+      await FB.addDoc(FB.collection(FB.db,'products'),{
+        ...p,
+        vendorName:'Guest Supply',
+        budgetLine:'Cleaning Supplies',
+        pricePerCase:0,casePack:1,parLevel:1,
+        countMode:'cases',active:true,
+        createdAt:now()
+      });
+    }catch(e){/* silent */}
+  }
+}
 // ── DASHBOARD ──────────────────────────────────────────
 function rDash(){
   const d=new Date();
