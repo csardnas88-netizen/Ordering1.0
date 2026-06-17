@@ -2004,6 +2004,34 @@ function smartRecommend(product){
 function runSmartAlerts(){
   if(!S.products.length)return;
   loadOrderSettings();
+
+  // ── ZERO STOCK CHECK: both locations = 0 → urgent alert ──────────
+  for(const p of S.products){
+    const f3 = S.invLoc.floor3[p.id];
+    const ti = S.invLoc.tiendita[p.id];
+    const f3zero = f3 !== undefined && f3 !== '' && Number(f3) === 0;
+    const tizero = ti !== undefined && ti !== '' && Number(ti) === 0;
+    if(f3zero && tizero){
+      // Add/update urgent alert if not already there
+      const exists = S.alerts.find(function(a){ return a.productId===p.id && a.reason==='zero_stock'; });
+      if(!exists){
+        S.alerts.push({
+          productId: p.id,
+          productName: p.name,
+          status: 'urgent',
+          reason: 'zero_stock',
+          message: 'Zero stock in both locations — order immediately',
+          budgetLine: p.budgetLine||'',
+          flaggedBy: 'Auto',
+          createdAt: now()
+        });
+      }
+    } else {
+      // Remove zero_stock alert if stock is no longer zero
+      S.alerts = S.alerts.filter(function(a){ return !(a.productId===p.id && a.reason==='zero_stock'); });
+    }
+  }
+
   const critical=[];
   for(const p of S.products){
     const rec=smartRecommend(p);
@@ -2742,6 +2770,14 @@ function qcRenderListItems() {
   const urgIds = new Set(S.alerts.filter(function(a){ return a.status === 'urgent'; }).map(function(a){ return a.productId; }));
   let filtered = S.products.slice().sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
   const allProds = filtered.slice();
+  // Show products already counted in this location FIRST
+  filtered = filtered.sort(function(a, b) {
+    const aCounted = S.invLoc[loc][a.id] !== undefined && S.invLoc[loc][a.id] !== '';
+    const bCounted = S.invLoc[loc][b.id] !== undefined && S.invLoc[loc][b.id] !== '';
+    if (aCounted && !bCounted) return -1;
+    if (!aCounted && bCounted) return 1;
+    return (a.sortOrder||999) - (b.sortOrder||999);
+  });
 
   if (QC.filter === 'pending') filtered = filtered.filter(function(p){ return S.invLoc[loc][p.id] === undefined || S.invLoc[loc][p.id] === ''; });
   else if (QC.filter === 'counted') filtered = filtered.filter(function(p){ return S.invLoc[loc][p.id] !== undefined && S.invLoc[loc][p.id] !== ''; });
@@ -2940,6 +2976,8 @@ async function qcSaveAndNext() {
     S.invDirty = false;
     S.lastSaved = now();
   } catch(err) { /* non-blocking */ }
+  // Check for zero-stock alert immediately after any count is saved
+  setTimeout(runSmartAlerts, 200);
   if (QC.idx < QC.products.length - 1) {
     QC.idx++;
     QC.productId = QC.products[QC.idx].id;
