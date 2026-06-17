@@ -1752,6 +1752,37 @@ async function delAl(id){
 }
 
 // ── CATALOG ────────────────────────────────────────────
+
+async function toggleProdLoc(productId, loc) {
+  const p = S.products.find(function(x){ return x.id === productId; });
+  if (!p) return;
+  if (!p.locations) p.locations = { floor3: true, tiendita: true };
+  // Toggle: if currently on (true or undefined), turn off; if off, turn on
+  const current = p.locations[loc] !== false;
+  p.locations[loc] = !current;
+  // Update locally
+  const locName = loc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita';
+  const status = p.locations[loc] ? 'added to' : 'removed from';
+  // Save to Firebase
+  try {
+    await FB.updateDoc(FB.doc(FB.db, 'products', productId), { locations: p.locations });
+    showOk(e(p.name).slice(0,30) + ' ' + status + ' ' + locName + '.');
+  } catch(err) {
+    showErr('Could not update product location.', err);
+    p.locations[loc] = current; // revert
+  }
+  // Re-render catalog row
+  const ci = document.getElementById('ci-' + productId);
+  if (ci) {
+    const badges = ci.querySelectorAll('.loc-badge');
+    if (badges[0]) {
+      badges[0].className = 'loc-badge ' + (p.locations.floor3 !== false ? 'loc-on' : '');
+    }
+    if (badges[1]) {
+      badges[1].className = 'loc-badge ' + (p.locations.tiendita !== false ? 'loc-on' : '');
+    }
+  }
+}
 function rCatalog(){
   const allVendors=[...new Set([...S.vendors.map(v=>v.name),...S.products.map(p=>p.vendorName)].filter(Boolean))].sort();
   if(!S.cv||!allVendors.includes(S.cv))S.cv=allVendors[0]||null;
@@ -1768,7 +1799,12 @@ function rCatalog(){
       '<div class="CII"><div class="CIN">'+e(p.name)+'</div>'+
       '<div class="CIM">Par: <strong>'+p.parLevel+' '+cm(p)+'</strong> &middot; Case: '+p.casePack+' units &middot; $'+(p.pricePerCase||0).toFixed(2)+'/case</div>'+
       '<div class="CIM">'+e(p.budgetLine||'')+(p.partNumber?' &middot; #'+e(p.partNumber):'')+'</div></div>'+
-      '<div class="CIAC"><button class="btn btn-o btn-sm" onclick="editP(\''+p.id+'\')">Edit</button><button class="btn btn-d btn-sm" onclick="delP(\''+p.id+'\')">Delete</button></div></div>';
+      '<div class="CIAC">'+
+      '<div class="loc-badges">'+
+      '<span class="loc-badge '+(p.locations&&p.locations.floor3===false?'':'loc-on')+'" onclick="toggleProdLoc(\''+p.id+'\',\'floor3\')">📦 F3</span>'+
+      '<span class="loc-badge '+(p.locations&&p.locations.tiendita===false?'':'loc-on')+'" onclick="toggleProdLoc(\''+p.id+'\',\'tiendita\')">🏪 TD</span>'+
+      '</div>'+
+      '<button class="btn btn-o btn-sm" onclick="editP(\''+p.id+'\')">Edit</button><button class="btn btn-d btn-sm" onclick="delP(\''+p.id+'\')">Delete</button></div></div>';
   };
   if(CAT.query){
     const q=CAT.query;
@@ -2768,7 +2804,10 @@ function qcRenderListItems() {
   container.innerHTML = '';
   const loc = QC.loc;
   const urgIds = new Set(S.alerts.filter(function(a){ return a.status === 'urgent'; }).map(function(a){ return a.productId; }));
-  let filtered = S.products.slice().sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
+  let filtered = S.products.filter(function(p){
+    // Exclude products explicitly disabled for this location
+    return !p.locations || p.locations[loc] !== false;
+  }).sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
   const allProds = filtered.slice();
   // Show products already counted in this location FIRST
   filtered = filtered.sort(function(a, b) {
@@ -3362,7 +3401,13 @@ function qrPrintProduct(p, copies) {
     '.nm{font-size:11px;font-weight:700;line-height:1.4;margin-top:8px}' +
     '.pn{font-size:9px;color:#888;margin-top:3px}' +
     '@media print{body{margin:10px}.grid{gap:10px}}' +
-    '</style></head><body>' +
+    '
+/* ── PRODUCT LOCATION BADGES ──────────────────────────────────────── */
+.loc-badges{display:flex;gap:4px;margin-bottom:6px}
+.loc-badge{font-size:10px;font-weight:600;padding:3px 7px;border-radius:20px;cursor:pointer;border:1.5px solid var(--bdr);color:var(--tm);background:var(--s2);transition:all .15s;user-select:none;white-space:nowrap}
+.loc-badge.loc-on{background:var(--nvy);color:var(--gold);border-color:var(--nvy)}
+.loc-badge:active{opacity:.7}
+</style></head><body>' +
     '<div class="grid" id="g"></div>' +
     '<script>' +
     'var d=' + qrData + ';' +
