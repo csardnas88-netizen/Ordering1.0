@@ -1042,7 +1042,7 @@ const OS_KEY='jw_order_settings';
 const S={
   products:[],vendors:[],budgets:{},
   // inventory now keyed by location: S.invLoc['floor3'][productId] = qty
-  invLoc:{floor3:{},tiendita:{}},
+  invLoc:{floor3:{},tiendita:{},piso2:{}},
   // keep legacy S.inventory as combined read for backward compat
   get inventory(){
     const combined={};
@@ -1324,7 +1324,8 @@ function rDash(){
 // ── LOCATIONS ──────────────────────────────────────────────────────
 const LOCS={
   floor3:{name:'Floor 3 Storage', icon:'📦', short:'Floor 3'},
-  tiendita:{name:'La Tiendita', icon:'&#127978;', short:'Tiendita'}
+  tiendita:{name:'La Tiendita', icon:'&#127978;', short:'Tiendita'},
+  piso2:{name:'Piso 2 Laundry', icon:'&#129529;', short:'Piso 2'}
 };
 
 function setLoc(loc){
@@ -1757,12 +1758,12 @@ async function delAl(id){
 async function toggleProdLoc(productId, loc) {
   const p = S.products.find(function(x){ return x.id === productId; });
   if (!p) return;
-  if (!p.locations) p.locations = { floor3: true, tiendita: true };
+  if (!p.locations) p.locations = { floor3: true, tiendita: true, piso2: false };
   // Toggle: if currently on (true or undefined), turn off; if off, turn on
   const current = p.locations[loc] !== false;
   p.locations[loc] = !current;
   // Update locally
-  const locName = loc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita';
+  const locName = LOCS[loc] ? LOCS[loc].name : loc;
   const status = p.locations[loc] ? 'added to' : 'removed from';
   // Save to Firebase
   try {
@@ -1779,8 +1780,8 @@ async function toggleProdLoc(productId, loc) {
       const l = span.dataset.loc;
       const on = p.locations[l] !== false;
       span.className = 'loc-badge js-loc ' + (on ? 'loc-on' : 'loc-off');
-      const lbl = l === 'floor3' ? 'Floor 3' : 'Tiendita';
-      span.innerHTML = (on ? '&#10003;' : '✗') + ' ' + lbl;
+      const lblMap={floor3:'Floor 3',tiendita:'Tiendita',piso2:'Piso 2'};
+      span.innerHTML = (on ? '&#10003;' : '✗') + ' ' + (lblMap[l]||l);
     });
   }
 }
@@ -1805,6 +1806,7 @@ function rCatalog(){
     const da='draggable="true" ondragstart="onDragStart(event,\''+p.id+'\',\'cat\')" ondragend="onDragEnd(event,\''+p.id+'\',\'cat\')" ondragover="onDragOver(event,\''+p.id+'\',\'cat\')" ondrop="onDrop(event,\''+p.id+'\',\'cat\')" ontouchstart="onTouchStart(event,\''+p.id+'\',\'cat\')"';
     const f3on=!(p.locations&&p.locations.floor3===false);
     const tdon=!(p.locations&&p.locations.tiendita===false);
+    const p2on=!(p.locations&&p.locations.piso2===false);
     const em=p.photoUrl?'<img src="'+e(p.photoUrl)+'" alt="" onerror="this.style.display=\'none\'">': (p.emoji||'📦');
     return '<div class="CI" id="ci-'+p.id+'" '+da+'>'+
       '<div class="CI-emo">'+em+'</div>'+
@@ -1819,6 +1821,7 @@ function rCatalog(){
           '<div class="loc-badges">'+
             '<span class="loc-badge '+(f3on?'loc-on':'loc-off')+' js-loc" data-pid="'+p.id+'" data-loc="floor3">'+(f3on?'&#10003;':'&#10007;')+' Floor 3</span>'+
             '<span class="loc-badge '+(tdon?'loc-on':'loc-off')+' js-loc" data-pid="'+p.id+'" data-loc="tiendita">'+(tdon?'&#10003;':'&#10007;')+' Tiendita</span>'+
+            '<span class="loc-badge '+(p2on?'loc-on':'loc-off')+' js-loc" data-pid="'+p.id+'" data-loc="piso2">'+(p2on?'&#10003;':'&#10007;')+' Piso 2</span>'+
           '</div>'+
           '<div class="CI-acts">'+
             '<button class="btn btn-o btn-sm" onclick="editP(\''+p.id+'\')">Edit</button>'+
@@ -2064,13 +2067,21 @@ function runSmartAlerts(){
   if(!S.products.length)return;
   loadOrderSettings();
 
-  // ── ZERO STOCK CHECK: both locations = 0 → urgent alert ──────────
+  // ── ZERO STOCK CHECK: all active locations = 0 → urgent alert ─────
   for(const p of S.products){
     const f3 = S.invLoc.floor3[p.id];
     const ti = S.invLoc.tiendita[p.id];
-    const f3zero = f3 !== undefined && f3 !== '' && Number(f3) === 0;
-    const tizero = ti !== undefined && ti !== '' && Number(ti) === 0;
-    if(f3zero && tizero){
+    const p2 = S.invLoc.piso2[p.id];
+    const f3on = !(p.locations&&p.locations.floor3===false);
+    const tion = !(p.locations&&p.locations.tiendita===false);
+    const p2on = !(p.locations&&p.locations.piso2===false);
+    // Only check locations where the product is actually stored
+    const f3zero = !f3on || (f3 !== undefined && f3 !== '' && Number(f3) === 0);
+    const tizero = !tion || (ti !== undefined && ti !== '' && Number(ti) === 0);
+    const p2zero = !p2on || (p2 !== undefined && p2 !== '' && Number(p2) === 0);
+    // Must have at least one active location AND all active locations = 0
+    const hasActiveLocation = f3on || tion || p2on;
+    if(hasActiveLocation && f3zero && tizero && p2zero){
       // Add/update urgent alert if not already there
       const exists = S.alerts.find(function(a){ return a.productId===p.id && a.reason==='zero_stock'; });
       if(!exists){
@@ -2665,6 +2676,7 @@ function qcRenderSelect(root) {
   const locs = [
     {id: 'floor3', icon: '📦', name: 'Floor 3 Storage', sub: 'Main storage room · Floor 3'},
     {id: 'tiendita', icon: '🏪', name: 'La Tiendita', sub: 'Office storage · Manager\'s area'},
+    {id: 'piso2', icon: '🧺', name: 'Piso 2 Laundry', sub: 'Floor 2 · Laundry room'},
   ];
 
   locs.forEach(function(l) {
@@ -2725,7 +2737,7 @@ function qcStartCount() {
 function qcRenderList(root) {
   root.innerHTML = '';
   const loc = QC.loc;
-  const locName = loc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita';
+  const locName = LOCS[loc] ? LOCS[loc].name : loc;
   const locIcon = loc === 'floor3' ? '📦' : '🏪';
   const allProds = S.products.slice().sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
   const counted = allProds.filter(function(p){ return S.invLoc[loc][p.id] !== undefined && S.invLoc[loc][p.id] !== ''; }).length;
@@ -2910,8 +2922,9 @@ function qcRenderCounter(root) {
   const par = p.parLevel || 0;
   const locVal = S.invLoc[loc][p.id];
   const curVal = (locVal !== undefined && locVal !== '') ? Number(locVal) : '';
-  const otherLoc = loc === 'floor3' ? 'tiendita' : 'floor3';
-  const otherLocName = loc === 'floor3' ? 'La Tiendita' : 'Floor 3 Storage';
+  const otherLocs = Object.keys(LOCS).filter(function(k){ return k !== loc; });
+  const otherLoc = otherLocs[0] || null;
+  const otherLocName = otherLoc ? LOCS[otherLoc].name : '';
   const otherVal = S.invLoc[otherLoc][p.id];
   const otherCounted = otherVal !== undefined && otherVal !== '';
   const allProds = S.products.length;
@@ -3280,7 +3293,7 @@ function qcFinish() { QC.view = 'done'; rQuickCount(); }
 function qcRenderDone(root) {
   root.innerHTML = '';
   const loc = QC.loc;
-  const locName = loc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita';
+  const locName = LOCS[loc] ? LOCS[loc].name : loc;
   const allProds = S.products;
   const counted = allProds.filter(function(p){ return S.invLoc[loc][p.id] !== undefined && S.invLoc[loc][p.id] !== ''; }).length;
   const pending = allProds.length - counted;
