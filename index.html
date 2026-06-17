@@ -294,15 +294,16 @@ input,select,textarea{font-family:inherit}
 .CTabs{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
 .CTAB{padding:7px 14px;border-radius:99px;border:1px solid var(--bdr);font-size:11px;color:var(--tm);background:var(--sur);cursor:pointer;transition:all .14s;font-weight:500}
 .CTAB.on{background:var(--nvy);border-color:var(--nvy);color:#fff}
-.CI{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh1)}
+.CI{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;box-shadow:var(--sh1)}
 .CI.dragging{opacity:.45;border-style:dashed}
 .CI.drag-over{border-color:var(--gold);background:var(--gt)}
 .CITH{width:44px;height:44px;border-radius:8px;background:var(--s2);border:1px solid var(--bdr);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px}
 .CITH img{width:100%;height:100%;object-fit:cover}
 .CII{flex:1;min-width:0}
-.CIN{font-size:12px;font-weight:500}
-.CIM{font-size:10px;color:var(--tm);margin-top:2px}
-.CIAC{display:flex;gap:5px;flex-shrink:0}
+.CIN{font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.CIM{font-size:11px;color:var(--tm);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.CI-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px}
+.CI-acts{display:flex;gap:5px;flex-shrink:0}
 /* PDF IMPORT */
 .pdf-drop{border:2px dashed var(--bdr);border-radius:var(--r2);padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
 .pdf-drop:hover,.pdf-drop.over{border-color:var(--gold);background:var(--gt)}
@@ -1802,19 +1803,26 @@ function rCatalog(){
   const cm=p=>isEquip(p)?'units':'cases';
   const ciHTML=p=>{
     const da='draggable="true" ondragstart="onDragStart(event,\''+p.id+'\',\'cat\')" ondragend="onDragEnd(event,\''+p.id+'\',\'cat\')" ondragover="onDragOver(event,\''+p.id+'\',\'cat\')" ondrop="onDrop(event,\''+p.id+'\',\'cat\')" ontouchstart="onTouchStart(event,\''+p.id+'\',\'cat\')"';
+    const f3on=!(p.locations&&p.locations.floor3===false);
+    const tdon=!(p.locations&&p.locations.tiendita===false);
     return '<div class="CI" id="ci-'+p.id+'" '+da+'>'+
-      '<div class="drag-handle" title="Drag to reorder">&#8286;</div>'+
-      '<div class="CITH">'+(p.photoUrl?'<img src="'+e(p.photoUrl)+'" alt="" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+(p.emoji||'📦')+'\'">': (p.emoji||'📦'))+'</div>'+
-      '<div class="CII"><div class="CIN">'+e(p.name)+'</div>'+
-      '<div class="CIM">Par: <strong>'+p.parLevel+' '+cm(p)+'</strong> &middot; Case: '+p.casePack+' units &middot; $'+(p.pricePerCase||0).toFixed(2)+'/case</div>'+
-      '<div class="CIM">'+e(p.budgetLine||'')+(p.partNumber?' &middot; #'+e(p.partNumber):'')+'</div></div>'+
-      '<div class="CIAC">'+
-      '<div class="loc-badges">'+
-      '<span class="loc-badges-lbl">STORES:</span>'+
-      '<span class="loc-badge '+(p.locations&&p.locations.floor3===false?'loc-off':'loc-on')+' js-loc" data-pid="'+p.id+'" data-loc="floor3">'+(p.locations&&p.locations.floor3===false?'✗':'&#10003;')+' Floor 3</span>'+
-      '<span class="loc-badge '+(p.locations&&p.locations.tiendita===false?'loc-off':'loc-on')+' js-loc" data-pid="'+p.id+'" data-loc="tiendita">'+(p.locations&&p.locations.tiendita===false?'✗':'&#10003;')+' Tiendita</span>'+
+      '<div class="drag-handle">&#8286;</div>'+
+      '<div class="CITH" style="margin-top:2px">'+(p.photoUrl?'<img src="'+e(p.photoUrl)+'" alt="" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+(p.emoji||'📦')+'\'">': (p.emoji||'📦'))+'</div>'+
+      '<div class="CII">'+
+        '<div class="CIN" title="'+e(p.name)+'">'+e(p.name)+'</div>'+
+        '<div class="CIM">Par <strong>'+p.parLevel+'</strong> '+cm(p)+' &nbsp;·&nbsp; $'+(p.pricePerCase||0).toFixed(2)+' &nbsp;·&nbsp; #'+e(p.partNumber||'—')+'</div>'+
+        '<div class="CI-bottom">'+
+          '<div class="loc-badges">'+
+            '<span class="loc-badge '+(f3on?'loc-on':'loc-off')+' js-loc" data-pid="'+p.id+'" data-loc="floor3">'+(f3on?'&#10003;':'&#10007;')+' F3</span>'+
+            '<span class="loc-badge '+(tdon?'loc-on':'loc-off')+' js-loc" data-pid="'+p.id+'" data-loc="tiendita">'+(tdon?'&#10003;':'&#10007;')+' TD</span>'+
+          '</div>'+
+          '<div class="CI-acts">'+
+            '<button class="btn btn-o btn-sm" onclick="editP(\''+p.id+'\')">Edit</button>'+
+            '<button class="btn btn-d btn-sm" onclick="delP(\''+p.id+'\')">Del</button>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
-      '<button class="btn btn-o btn-sm" onclick="editP(\''+p.id+'\')">Edit</button><button class="btn btn-d btn-sm" onclick="delP(\''+p.id+'\')">Delete</button></div></div>';
+    '</div>';
   };
   if(CAT.query){
     const q=CAT.query;
@@ -3413,12 +3421,11 @@ function qrPrintProduct(p, copies) {
     '@media print{body{margin:10px}.grid{gap:10px}}' +
     '
 /* ── PRODUCT LOCATION BADGES ──────────────────────────────────────── */
-.loc-badges{display:flex;gap:5px;margin-bottom:8px;align-items:center}
-.loc-badges-lbl{font-size:9px;color:var(--tm);letter-spacing:.06em;margin-right:2px}
-.loc-badge{font-size:10px;font-weight:700;padding:4px 9px;border-radius:6px;cursor:pointer;transition:all .18s;user-select:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.loc-badges{display:flex;gap:4px;align-items:center;flex-wrap:nowrap}
+.loc-badge{font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;cursor:pointer;transition:all .18s;user-select:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
 .loc-badge.loc-on{background:var(--nvy);color:var(--gold);border:1.5px solid var(--nvy)}
-.loc-badge.loc-off{background:#F3F4F6;color:#9CA3AF;border:1.5px dashed #D1D5DB;text-decoration:line-through;opacity:.75}
-.loc-badge:active{transform:scale(.95)}
+.loc-badge.loc-off{background:#F3F4F6;color:#9CA3AF;border:1.5px dashed #D1D5DB;text-decoration:line-through;opacity:.7}
+.loc-badge:active{transform:scale(.93)}
 </style></head><body>' +
     '<div class="grid" id="g"></div>' +
     '<script>' +
