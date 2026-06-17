@@ -1771,18 +1771,24 @@ async function toggleProdLoc(productId, loc) {
     showErr('Could not update product location.', err);
     p.locations[loc] = current; // revert
   }
-  // Re-render catalog row
+  // Re-render catalog badges
   const ci = document.getElementById('ci-' + productId);
   if (ci) {
-    const badges = ci.querySelectorAll('.loc-badge');
-    if (badges[0]) {
-      badges[0].className = 'loc-badge ' + (p.locations.floor3 !== false ? 'loc-on' : '');
-    }
-    if (badges[1]) {
-      badges[1].className = 'loc-badge ' + (p.locations.tiendita !== false ? 'loc-on' : '');
-    }
+    ci.querySelectorAll('.js-loc').forEach(function(span) {
+      const l = span.dataset.loc;
+      span.className = 'loc-badge js-loc ' + (p.locations[l] !== false ? 'loc-on' : '');
+    });
   }
 }
+
+// Delegated click handler for location badges
+document.addEventListener('click', function(ev) {
+  const span = ev.target.closest('.js-loc');
+  if (!span) return;
+  const pid = span.dataset.pid;
+  const loc = span.dataset.loc;
+  if (pid && loc) toggleProdLoc(pid, loc);
+});
 function rCatalog(){
   const allVendors=[...new Set([...S.vendors.map(v=>v.name),...S.products.map(p=>p.vendorName)].filter(Boolean))].sort();
   if(!S.cv||!allVendors.includes(S.cv))S.cv=allVendors[0]||null;
@@ -1801,8 +1807,8 @@ function rCatalog(){
       '<div class="CIM">'+e(p.budgetLine||'')+(p.partNumber?' &middot; #'+e(p.partNumber):'')+'</div></div>'+
       '<div class="CIAC">'+
       '<div class="loc-badges">'+
-      '<span class="loc-badge '+(p.locations&&p.locations.floor3===false?'':'loc-on')+'" onclick="toggleProdLoc(\''+p.id+'\',\'floor3\')">📦 F3</span>'+
-      '<span class="loc-badge '+(p.locations&&p.locations.tiendita===false?'':'loc-on')+'" onclick="toggleProdLoc(\''+p.id+'\',\'tiendita\')">🏪 TD</span>'+
+      '<span class="loc-badge '+(p.locations&&p.locations.floor3===false?'':"loc-on")+' js-loc" data-pid="'+p.id+'" data-loc="floor3">📦 F3</span>'+
+      '<span class="loc-badge '+(p.locations&&p.locations.tiendita===false?'':"loc-on")+' js-loc" data-pid="'+p.id+'" data-loc="tiendita">🏪 TD</span>'+
       '</div>'+
       '<button class="btn btn-o btn-sm" onclick="editP(\''+p.id+'\')">Edit</button><button class="btn btn-d btn-sm" onclick="delP(\''+p.id+'\')">Delete</button></div></div>';
   };
