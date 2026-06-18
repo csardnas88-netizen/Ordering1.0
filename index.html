@@ -772,6 +772,7 @@ input,select,textarea{font-family:inherit}
         <button class="btn btn-g btn-sm" onclick="saveInv()">&#128190; Save Now</button>
       </div>
       <div id="smart-alerts-section"></div>
+      <div id="dh-aggregate"></div>
       <div class="urg-wrap hi" id="urg-wrap">
         <div class="urg-hd">&#128308; Urgent Alerts</div>
         <div id="urg-strip"></div>
@@ -819,6 +820,7 @@ input,select,textarea{font-family:inherit}
         <button class="btn btn-o btn-sm" onclick="exportOrd()">&#128196; Export</button>
       </div>
       <div id="OC"></div>
+      <div id="OH" style="margin-top:20px"></div>
     </div>
     <!-- ALERTS -->
     <div class="PG" id="pg-alerts">
@@ -1275,6 +1277,45 @@ async function seedCleaningSupplies(){
     }catch(e){/* silent */}
   }
 }
+
+async function submitOrder(){
+  const items=getItems();
+  if(!items.length){showNote('Nothing to order yet.');return;}
+  if(!S.managerName){showNote('Please select your name first (👤 top bar).');return;}
+  if(!confirm('Save this order to history?'))return;
+  const total=items.reduce(function(s,i){return s+i.lt;},0);
+  try{
+    await FB.addDoc(FB.collection(FB.db,'orders'),{
+      items:items.map(function(i){return{name:i.name,vendor:i.vn,qty:i.qty,total:i.lt};}),
+      total:total,
+      submittedBy:S.managerName,
+      submittedAt:now(),
+      month:mkey()
+    });
+    showOk('Order saved to history by '+S.managerName+'. Total: '+fmt(total));
+    rOrderHistory();
+  }catch(err){showErr('Could not save order.',err);}
+}
+
+async function rOrderHistory(){
+  const el=document.getElementById('OH');
+  if(!el)return;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,'orders'));
+    const orders=[];
+    snap.forEach(function(d){orders.push({id:d.id,...d.data()});});
+    orders.sort(function(a,b){return (b.submittedAt||'').localeCompare(a.submittedAt||'');});
+    const recent=orders.slice(0,5);
+    if(!recent.length){el.innerHTML='';return;}
+    el.innerHTML='<div class="PH"><div class="CT">Order History</div></div>'+
+      recent.map(function(o){
+        return '<div class="OR" style="margin-bottom:8px">'+
+          '<div class="ORN">'+e(o.submittedBy||'Manager')+' · '+fd(o.submittedAt||'')+'</div>'+
+          '<div class="ORM">'+( o.items?o.items.length:0)+' items · '+fmt(o.total||0)+'</div>'+
+        '</div>';
+      }).join('');
+  }catch(e){el.innerHTML='';}
+}
 // ── DASHBOARD ──────────────────────────────────────────
 function rDash(){
   const d=new Date();
@@ -1331,6 +1372,44 @@ function rDash(){
   }).join('');}
   runSmartAlerts();
   // Shift note is real-time via listener
+  rDashAggregate();
+}
+
+function rDashAggregate(){
+  const el=document.getElementById('dh-aggregate');
+  if(!el||!S.products.length)return;
+  // Products with counts below par across all locations
+  const items=[];
+  for(const p of S.products){
+    if(!Number(p.parLevel))continue;
+    const locs=['floor3','tiendita','piso2'];
+    let total=0,anyCounted=false;
+    for(const loc of locs){
+      const on=!(p.locations&&p.locations[loc]===false);
+      if(!on)continue;
+      const v=S.invLoc[loc]?S.invLoc[loc][p.id]:undefined;
+      if(v!==undefined&&v!==''){anyCounted=true;total+=Number(v);}
+    }
+    if(!anyCounted)continue;
+    const par=Number(p.parLevel);
+    const pct=Math.round((total/par)*100);
+    if(total<par)items.push({p,total,par,pct});
+  }
+  if(!items.length){el.innerHTML='';return;}
+  items.sort(function(a,b){return a.pct-b.pct;});
+  const top=items.slice(0,5);
+  el.innerHTML='<div class="dh-agg-wrap">'+
+    '<div class="dh-agg-title">⚠ Below Par — Action Required</div>'+
+    top.map(function(it){
+      const color=it.total===0?'var(--red)':it.pct<50?'var(--red)':'var(--amb)';
+      return '<div class="dh-agg-row">'+
+        '<div class="dh-agg-name">'+e(it.p.name.slice(0,32))+'</div>'+
+        '<div class="dh-agg-bar-wrap"><div class="dh-agg-bar" style="width:'+Math.min(it.pct,100)+'%;background:'+color+'"></div></div>'+
+        '<div class="dh-agg-val" style="color:'+color+'">'+it.total+'/'+it.par+'</div>'+
+      '</div>';
+    }).join('')+
+    (items.length>5?'<div class="dh-agg-more">+' + (items.length-5) + ' more below par</div>':'')+
+  '</div>';
 }
 // ── INVENTORY ──────────────────────────────────────────
 
@@ -1661,8 +1740,10 @@ function rOrd(){
     '<div class="BIR"><span class="BIL">Available budget</span><span>'+fmt(rm)+'</span></div>'+
     '<div class="BIR"><span class="BIL">This order total</span><span>'+fmt(gd)+'</span></div>'+
     '<div class="BIR"><span class="BIL">Remaining after order</span><span class="'+(safe?'bi-s':'bi-o')+'">'+fmt(Math.abs(af))+' '+(safe?'left &#10003;':'OVER BUDGET &#9888;')+'</span></div></div>'+
-    '<button class="FB" id="finalize-btn" onclick="finalize()">Finalize &amp; Mark as Ordered</button>';
+    '<button class="FB" id="finalize-btn" onclick="finalize()">Finalize &amp; Mark as Ordered</button>'+
+    '<button class="FB" style="background:var(--grn);margin-top:8px" onclick="submitOrder()">📤 Submit &amp; Save Order History</button>';
   c.innerHTML=html;
+  rOrderHistory();
 }
 
 function getItems(){
@@ -2112,6 +2193,39 @@ function runSmartAlerts(){
     } else {
       // Remove zero_stock alert if stock is no longer zero
       S.alerts = S.alerts.filter(function(a){ return !(a.productId===p.id && a.reason==='zero_stock'); });
+    }
+  }
+
+  // ── BELOW PAR CHECK: works from day one, no history needed ──────
+  for(const p of S.products){
+    if(!Number(p.parLevel)) continue; // skip products with no par set
+    // Sum counts across all active locations
+    const locs = ['floor3','tiendita','piso2'];
+    let total = 0, anyCounted = false;
+    for(const loc of locs){
+      const on = !(p.locations && p.locations[loc] === false);
+      if(!on) continue;
+      const v = S.invLoc[loc] ? S.invLoc[loc][p.id] : undefined;
+      if(v !== undefined && v !== ''){
+        anyCounted = true;
+        total += Number(v);
+      }
+    }
+    if(!anyCounted) continue; // no count yet — don't alert
+    const par = Number(p.parLevel);
+    const isBelowPar = total < par;
+    const existsBP = S.alerts.find(function(a){ return a.productId===p.id && a.reason==='below_par'; });
+    if(isBelowPar && !existsBP){
+      const pct = Math.round((total/par)*100);
+      S.alerts.push({
+        productId:p.id, productName:p.name,
+        status: total <= par*0.25 ? 'urgent' : 'warning',
+        reason:'below_par',
+        message:'Total ' + total + ' / par ' + par + ' (' + pct + '%) — reorder needed',
+        budgetLine:p.budgetLine||'', flaggedBy:'Auto', createdAt:now()
+      });
+    } else if(!isBelowPar && existsBP){
+      S.alerts = S.alerts.filter(function(a){ return !(a.productId===p.id && a.reason==='below_par'); });
     }
   }
 
@@ -3499,6 +3613,16 @@ function qrPrintProduct(p, copies) {
 .par-red{background:#C0392B}
 .par-grey{background:#9CA3AF}
 .QC-li-par{font-size:10px;font-weight:600;margin-top:2px;display:flex;align-items:center}
+
+/* ── AGGREGATE VIEW ─────────────────────────────────────────────── */
+.dh-agg-wrap{background:var(--nvy);border:1px solid rgba(192,57,43,.4);border-radius:var(--r2);padding:14px 16px;margin:0 20px 12px}
+.dh-agg-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:12px;font-weight:700}
+.dh-agg-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.dh-agg-name{font-size:11px;color:rgba(255,255,255,.7);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-agg-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.dh-agg-bar{height:100%;border-radius:3px;transition:width .4s}
+.dh-agg-val{font-size:11px;font-weight:700;flex-shrink:0;min-width:36px;text-align:right}
+.dh-agg-more{font-size:10px;color:rgba(255,255,255,.3);text-align:center;margin-top:6px}
 </style></head><body>' +
     '<div class="grid" id="g"></div>' +
     '<script>' +
