@@ -1325,7 +1325,7 @@ function rDash(){
 const LOCS={
   floor3:{name:'Floor 3 Storage', icon:'📦', short:'Floor 3'},
   tiendita:{name:'La Tiendita', icon:'&#127978;', short:'Tiendita'},
-  piso2:{name:'Piso 2 Laundry', icon:'&#129529;', short:'Piso 2'}
+  piso2:{name:'2nd Floor Laundry Chemicals', icon:'&#129529;', short:'2nd Floor'}
 };
 
 function setLoc(loc){
@@ -2676,7 +2676,7 @@ function qcRenderSelect(root) {
   const locs = [
     {id: 'floor3', icon: '📦', name: 'Floor 3 Storage', sub: 'Main storage room · Floor 3'},
     {id: 'tiendita', icon: '🏪', name: 'La Tiendita', sub: 'Office storage · Manager\'s area'},
-    {id: 'piso2', icon: '🧺', name: 'Piso 2 Laundry', sub: 'Floor 2 · Laundry room'},
+    {id: 'piso2', icon: '🧺', name: '2nd Floor Laundry Chemicals', sub: 'Floor 2 · Laundry room'},
   ];
 
   locs.forEach(function(l) {
@@ -2840,7 +2840,11 @@ function qcRenderListItems() {
   const loc = QC.loc;
   const urgIds = new Set(S.alerts.filter(function(a){ return a.status === 'urgent'; }).map(function(a){ return a.productId; }));
   let filtered = S.products.filter(function(p){
-    // Exclude products explicitly disabled for this location
+    if (loc === 'piso2') {
+      // Piso 2 is opt-in only — product must have piso2 explicitly set to true
+      return p.locations && p.locations.piso2 === true;
+    }
+    // Floor 3 and Tiendita: show unless explicitly disabled
     return !p.locations || p.locations[loc] !== false;
   }).sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
   const allProds = filtered.slice();
