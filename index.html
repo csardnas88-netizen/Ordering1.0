@@ -2680,7 +2680,11 @@ function qcRenderSelect(root) {
   ];
 
   locs.forEach(function(l) {
-    const prods = S.products;
+    // Filter products relevant to this location (same logic as QC list)
+    const prods = S.products.filter(function(p) {
+      if (l.id === 'piso2') return p.locations && p.locations.piso2 === true;
+      return !p.locations || p.locations[l.id] !== false;
+    });
     const counted = prods.filter(function(p) {
       return S.invLoc[l.id][p.id] !== undefined && S.invLoc[l.id][p.id] !== '';
     }).length;
@@ -3298,7 +3302,11 @@ function qcRenderDone(root) {
   root.innerHTML = '';
   const loc = QC.loc;
   const locName = LOCS[loc] ? LOCS[loc].name : loc;
-  const allProds = S.products;
+  // Only count products relevant to this location
+  const allProds = S.products.filter(function(p) {
+    if (loc === 'piso2') return p.locations && p.locations.piso2 === true;
+    return !p.locations || p.locations[loc] !== false;
+  });
   const counted = allProds.filter(function(p){ return S.invLoc[loc][p.id] !== undefined && S.invLoc[loc][p.id] !== ''; }).length;
   const pending = allProds.length - counted;
   const needOrder = allProds.filter(function(p){
