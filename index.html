@@ -2743,7 +2743,11 @@ function qcRenderList(root) {
   const loc = QC.loc;
   const locName = LOCS[loc] ? LOCS[loc].name : loc;
   const locIcon = loc === 'floor3' ? '📦' : '🏪';
-  const allProds = S.products.slice().sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
+  // Filter to location-relevant products only
+  const allProds = S.products.filter(function(p){
+    if (loc === 'piso2') return p.locations && p.locations.piso2 === true;
+    return !p.locations || p.locations[loc] !== false;
+  }).sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
   const counted = allProds.filter(function(p){ return S.invLoc[loc][p.id] !== undefined && S.invLoc[loc][p.id] !== ''; }).length;
   const pct = allProds.length > 0 ? Math.round((counted / allProds.length) * 100) : 0;
 
