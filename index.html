@@ -718,6 +718,7 @@ input,select,textarea{font-family:inherit}
       <button class="TB-menu" onclick="toggleSB()">&#9776;</button>
       <div class="TB-title" id="TBT">Dashboard</div>
       <div class="TB-right">
+        <div class="TB-mgr" id="TB-mgr" onclick="openManagerSelect()">👤 <span id="TB-mgr-name">Select</span></div>
         <div class="TB-badge hi" id="TBB" onclick="go('alerts')"><span class="pdot"></span><span id="TBC">0</span> urgent</div>
       </div>
     </div>
@@ -749,6 +750,15 @@ input,select,textarea{font-family:inherit}
         <!-- Vendor breakdown -->
         <div class="dh-vendor-lbl">By Vendor</div>
         <div id="vp-grid"></div>
+      </div>
+      <!-- SHIFT NOTE -->
+      <div class="dh-shift" id="dh-shift-content" onclick="openShiftNote()">
+        <div class="dh-shift-hdr">
+          <div class="dh-shift-title">📋 Shift Handoff</div>
+          <div class="dh-shift-edit">Tap to edit ›</div>
+        </div>
+        <div class="dh-shift-text" id="dh-shift-text">Loading...</div>
+        <div class="dh-shift-meta" id="dh-shift-meta"></div>
       </div>
       <!-- STAT CARDS -->
       <div class="dh-stats">
@@ -1054,7 +1064,7 @@ const S={
   gaps:{},alerts:[],
   page:'dashboard',vf:null,cv:null,plv:null,epid:null,uns:[],
   pdfProducts:[],
-  managerName:'Manager',
+  managerName:localStorage.getItem('jw_manager')||'',
   invDirty:false,
   lastSaved:null,
   finalizing:false,
@@ -1091,13 +1101,15 @@ async function boot(){
   cleanOldMonth();
   listen();
   hideLoad();
+  initManager();
+  loadShiftNote();
 }
 
 function cleanOldMonth(){
   const stored=localStorage.getItem('jw_inv_month');
   const cur=mkey();
   if(stored&&stored!==cur){
-  S.invLoc={floor3:{},tiendita:{}};S.gaps={};S.invDirty=false;S.lastSaved=null;
+  S.invLoc={floor3:{},tiendita:{},piso2:{}};S.gaps={};S.invDirty=false;S.lastSaved=null;
     showNote('New month - inventory reset for '+cur+'.');
   }
   localStorage.setItem('jw_inv_month',cur);
@@ -1318,6 +1330,7 @@ function rDash(){
     '<div class="UA-arr">&#8250;</div></div>';
   }).join('');}
   runSmartAlerts();
+  // Shift note is real-time via listener
 }
 // ── INVENTORY ──────────────────────────────────────────
 
@@ -2897,7 +2910,15 @@ function qcRenderListItems() {
     const info = qcEl('div', {cls: 'QC-li-info'});
     const nm = qcEl('div', {cls: 'QC-li-name', txt: p.name});
     const mt = qcEl('div', {cls: 'QC-li-meta', txt: 'Par ' + par + ' · ' + (p.vendorName||'') + (p.partNumber ? ' · #' + p.partNumber : '')});
-    info.appendChild(nm); info.appendChild(mt);
+    // Par status indicator
+    const parHtml = parBadge(p, loc);
+    if (parHtml) {
+      const parEl = qcEl('div', {});
+      parEl.innerHTML = parHtml;
+      info.appendChild(nm); info.appendChild(mt); info.appendChild(parEl);
+    } else {
+      info.appendChild(nm); info.appendChild(mt);
+    }
     const pill = qcEl('div', {cls: 'QC-li-pill ' + pillCls, txt: pillTxt});
     row.appendChild(emoji); row.appendChild(info); row.appendChild(pill);
     container.appendChild(row);
@@ -3460,6 +3481,24 @@ function qrPrintProduct(p, copies) {
 .loc-badge.loc-on{background:var(--nvy);color:var(--gold);border:1.5px solid var(--nvy)}
 .loc-badge.loc-off{background:#F3F4F6;color:#9CA3AF;border:1.5px dashed #D1D5DB;text-decoration:line-through;opacity:.7}
 .loc-badge:active{transform:scale(.93)}
+
+/* ── MANAGER & SHIFT ─────────────────────────────────────────────── */
+.TB-mgr{font-size:11px;font-weight:600;color:var(--gold);cursor:pointer;padding:5px 9px;background:rgba(201,168,76,.15);border-radius:20px;border:1px solid rgba(201,168,76,.3);white-space:nowrap;transition:all .15s;margin-right:6px}
+.TB-mgr:active{opacity:.7}
+.dh-shift{background:var(--nvy);border:1px solid rgba(201,168,76,.25);border-radius:var(--r2);padding:14px 16px;margin:0 20px 12px;cursor:pointer;transition:all .15s}
+.dh-shift:active{opacity:.8}
+.dh-shift-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dh-shift-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.dh-shift-edit{font-size:10px;color:rgba(255,255,255,.4)}
+.dh-shift-text{font-size:12px;color:rgba(255,255,255,.75);line-height:1.5}
+.dh-shift-meta{font-size:10px;color:rgba(255,255,255,.3);margin-top:4px}
+/* ── PAR INDICATOR ───────────────────────────────────────────────── */
+.par-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:5px}
+.par-green{background:#2d9e45}
+.par-yellow{background:#E67E22}
+.par-red{background:#C0392B}
+.par-grey{background:#9CA3AF}
+.QC-li-par{font-size:10px;font-weight:600;margin-top:2px;display:flex;align-items:center}
 </style></head><body>' +
     '<div class="grid" id="g"></div>' +
     '<script>' +
@@ -3479,6 +3518,150 @@ function qrPrintProduct(p, copies) {
     '<\/script></body></html>';
   w.document.write(html);
   w.document.close();
+}
+
+</script>
+
+
+<script>
+'use strict';
+// ── MANAGER SELECTOR ────────────────────────────────────────────────
+const MANAGERS = ['Carlos Sardinas','Eoin','Manny','Supervisor AM','Supervisor PM'];
+
+function openManagerSelect() {
+  const list = document.getElementById('mgr-list');
+  if (list) {
+    list.innerHTML = '';
+    MANAGERS.forEach(function(name) {
+      const btn = document.createElement('button');
+      const active = S.managerName === name;
+      btn.className = 'btn ' + (active ? 'btn-g' : 'btn-o');
+      btn.textContent = (active ? '✓ ' : '') + name;
+      btn.addEventListener('click', function(){ setManager(name); });
+      list.appendChild(btn);
+    });
+    const inp = document.getElementById('mgr-custom');
+    if (inp) inp.value = '';
+  }
+  openMO('MO-manager');
+}
+
+function setManager(name) {
+  S.managerName = name;
+  localStorage.setItem('jw_manager', name);
+  const el = document.getElementById('TB-mgr-name');
+  if (el) el.textContent = name.split(' ')[0]; // first name only in topbar
+  closeMO('MO-manager');
+  showOk('Counting as ' + name + '.');
+}
+
+function setManagerCustom() {
+  const inp = document.getElementById('mgr-custom');
+  const name = inp ? inp.value.trim() : '';
+  if (!name) { showNote('Please enter a name.'); return; }
+  if (!MANAGERS.includes(name)) MANAGERS.push(name);
+  setManager(name);
+}
+
+function initManager() {
+  const saved = S.managerName;
+  const el = document.getElementById('TB-mgr-name');
+  if (saved) {
+    if (el) el.textContent = saved.split(' ')[0];
+  } else {
+    if (el) el.textContent = 'Select';
+    // Auto-open manager select on first load
+    setTimeout(openManagerSelect, 800);
+  }
+}
+
+// ── SHIFT HANDOFF NOTE ───────────────────────────────────────────────
+let shiftNoteListener = null;
+
+async function loadShiftNote() {
+  try {
+    const docRef = FB.doc(FB.db, 'settings', 'shiftNote');
+    if (shiftNoteListener) shiftNoteListener();
+    shiftNoteListener = FB.onSnapshot(docRef, function(snap) {
+      const data = snap.exists() ? snap.data() : null;
+      renderShiftNote(data);
+    });
+  } catch(e) { /* non-blocking */ }
+}
+
+function renderShiftNote(data) {
+  const el = document.getElementById('dh-shift-content');
+  if (!el) return;
+  if (data && data.note) {
+    document.getElementById('dh-shift-text').textContent = data.note;
+    document.getElementById('dh-shift-meta').textContent =
+      'Left by ' + (data.by || 'Unknown') + ' · ' + (data.at ? fd(data.at) : '');
+  } else {
+    document.getElementById('dh-shift-text').textContent = 'No note from previous shift.';
+    document.getElementById('dh-shift-meta').textContent = 'Tap to add a note for the next manager';
+  }
+}
+
+function openShiftNote() {
+  const docRef = FB.doc(FB.db, 'settings', 'shiftNote');
+  FB.getDocs ? null : null; // ensure FB is loaded
+  try {
+    FB.onSnapshot(FB.doc(FB.db, 'settings', 'shiftNote'), function(snap) {
+      const prev = document.getElementById('shift-prev-note');
+      if (prev) {
+        const d = snap.exists() ? snap.data() : null;
+        prev.innerHTML = d && d.note ?
+          '<strong>Previous note:</strong><br>' + e(d.note) + '<br><span style="opacity:.5">— ' + e(d.by||'') + ' · ' + (d.at ? fd(d.at) : '') + '</span>' :
+          '<em style="opacity:.5">No previous note</em>';
+      }
+    }, function() {});
+  } catch(err) {}
+  openMO('MO-shift');
+}
+
+async function saveShiftNote() {
+  const inp = document.getElementById('shift-note-inp');
+  const note = inp ? inp.value.trim() : '';
+  if (!note) { showNote('Please write a note before saving.'); return; }
+  if (!S.managerName) { showNote('Please select your name first (tap 👤 in the top bar).'); return; }
+  try {
+    await FB.setDoc(FB.doc(FB.db, 'settings', 'shiftNote'), {
+      note: note, by: S.managerName, at: now()
+    });
+    closeMO('MO-shift');
+    showOk('Shift note saved.');
+  } catch(err) {
+    showErr('Could not save shift note.', err);
+  }
+}
+
+// ── PAR INDICATOR HELPER ─────────────────────────────────────────────
+function parStatus(p, loc) {
+  const raw = S.invLoc[loc] ? S.invLoc[loc][p.id] : undefined;
+  if (raw === undefined || raw === '') return 'uncounted';
+  const qty = Number(raw);
+  const par = Number(p.parLevel) || 0;
+  if (par === 0) return 'green'; // no par set
+  if (qty === 0) return 'zero';
+  if (qty >= par) return 'green';
+  if (qty >= par * 0.5) return 'yellow';
+  return 'red';
+}
+
+function parBadge(p, loc) {
+  const status = parStatus(p, loc);
+  const raw = S.invLoc[loc] ? S.invLoc[loc][p.id] : undefined;
+  const hasCount = raw !== undefined && raw !== '';
+  if (!hasCount) return '';
+  const qty = Number(raw);
+  const par = Number(p.parLevel) || 0;
+  const dotClass = {zero:'par-red', red:'par-red', yellow:'par-yellow', green:'par-green'}[status] || 'par-grey';
+  const label = status === 'zero' ? '⚠ Zero stock' :
+                status === 'green' ? '✓ At par' :
+                status === 'yellow' ? 'Below par (' + qty + '/' + par + ')' :
+                'Low stock (' + qty + '/' + par + ')';
+  const color = {zero:'var(--red)', red:'var(--red)', yellow:'var(--amb)', green:'var(--grn)'}[status] || 'var(--tm)';
+  return '<div class="QC-li-par" style="color:' + color + '"><span class="par-dot ' + dotClass + '"></span>' + label + '</div>';
 }
 
 </script>
