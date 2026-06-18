@@ -746,6 +746,7 @@ input,select,textarea{font-family:inherit}
         <div class="dh-btns">
           <button class="dh-btn-pri" onclick="go('quickcount')">&#9889; QUICK COUNT</button>
           <button class="dh-btn-sec" onclick="go('inventory')">Full Count &#8250;</button>
+        <button class="dh-btn-sec" onclick="generateMonthlyReport()" style="margin-top:8px;width:100%;color:var(--tm);border-color:rgba(140,134,128,.3)">📄 Monthly Report</button>
         </div>
         <!-- Vendor breakdown -->
         <div class="dh-vendor-lbl">By Vendor</div>
@@ -943,7 +944,18 @@ input,select,textarea{font-family:inherit}
       <div class="FG"><div class="FL">Part Number</div><input class="FI" id="pm-pt" placeholder="0100264"/></div>
       <div class="FG"><div class="FL">Price / Case ($)</div><input class="FI" type="number" id="pm-pr" placeholder="69.70"/></div>
       <div class="FG"><div class="FL">Units per Case</div><input class="FI" type="number" id="pm-cp" placeholder="288"/></div>
-      <div class="FG" style="grid-column:1/-1"><div class="FL">Photo URL (optional)</div><input class="FI" id="pm-ph" placeholder="https://..."/></div>
+      <div class="FG" style="grid-column:1/-1">
+      <div class="FL">Product Photo</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="pm-photo-preview" style="width:48px;height:48px;border-radius:8px;background:var(--s2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden">📦</div>
+        <div style="flex:1">
+          <input type="file" id="pm-photo-file" accept="image/*" style="display:none" onchange="onPhotoUpload(this)"/>
+          <button class="btn btn-o btn-sm" onclick="document.getElementById('pm-photo-file').click()">📷 Upload Photo</button>
+          <div style="font-size:10px;color:var(--tm);margin-top:4px">Or paste URL below</div>
+          <input class="FI" id="pm-ph" placeholder="https://..." style="margin-top:4px" oninput="previewPhotoUrl(this.value)"/>
+        </div>
+      </div>
+    </div>
     </div>
     <div class="MAC"><div class="MB sec" onclick="closeMO('MO-product')">Cancel</div><div class="MB pri" onclick="saveProd()">Save Product</div></div>
   </div>
@@ -1315,6 +1327,43 @@ async function rOrderHistory(){
         '</div>';
       }).join('');
   }catch(e){el.innerHTML='';}
+}
+
+// ── PRODUCT PHOTO ───────────────────────────────────────────────────
+function previewPhotoUrl(url, fallback) {
+  const prev = document.getElementById('pm-photo-preview');
+  if (!prev) return;
+  if (url) {
+    prev.innerHTML = '<img src="' + e(url) + '" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent=\'' + (fallback||'📦') + '\'">';
+  } else {
+    prev.textContent = fallback || '📦';
+  }
+}
+
+function onPhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Compress using canvas
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX = 300;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', 0.75);
+      document.getElementById('pm-ph').value = b64;
+      previewPhotoUrl(b64);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 // ── DASHBOARD ──────────────────────────────────────────
 function rDash(){
@@ -1966,6 +2015,7 @@ function editP(id){
   document.getElementById('pm-cp').value=p.casePack||'';
   document.getElementById('pm-pa').value=p.parLevel||'';
   document.getElementById('pm-ph').value=p.photoUrl||'';
+  previewPhotoUrl(p.photoUrl||'',p.emoji||'📦');
   document.getElementById('pm-cm').value=isEquip(p)?'units':'cases';updPLbl();
   fillPS(p.vendorName);document.getElementById('pm-b').value=p.budgetLine||'';
   openMO('MO-product');
@@ -2936,6 +2986,17 @@ function qcRenderList(root) {
   // Items container
   const itemsContainer = qcEl('div', {id: 'qc-list-items'});
   wrap.appendChild(itemsContainer);
+
+  // Close Count button
+  const closeBtn = qcEl('button', {cls: 'btn btn-nvy mt16', txt: '✓ Close Count for Today'});
+  closeBtn.style.width = '100%';
+  closeBtn.style.marginBottom = '20px';
+  closeBtn.style.background = 'var(--nvy)';
+  closeBtn.style.color = 'var(--gold)';
+  closeBtn.style.border = '1.5px solid rgba(201,168,76,.4)';
+  closeBtn.addEventListener('click', closeCount);
+  wrap.appendChild(closeBtn);
+
   root.appendChild(wrap);
 
   // Render items
@@ -3436,6 +3497,40 @@ async function qcSaveInv() {
 
 function qcFinish() { QC.view = 'done'; rQuickCount(); }
 
+// ── CLOSE COUNT (daily sign-off) ─────────────────────────────────────
+async function closeCount() {
+  if (!S.managerName) {
+    showNote('Please select your name first (👤 top bar).');
+    return;
+  }
+  const loc = QC.loc;
+  const locName = LOCS[loc] ? LOCS[loc].name : loc;
+  const prods = S.products.filter(function(p){
+    if(loc==='piso2')return p.locations&&p.locations.piso2===true;
+    return !p.locations||p.locations[loc]!==false;
+  });
+  const counted = prods.filter(function(p){
+    return S.invLoc[loc][p.id]!==undefined&&S.invLoc[loc][p.id]!=='';
+  }).length;
+  const total = prods.length;
+  if (counted < total) {
+    if (!confirm('Only ' + counted + ' of ' + total + ' products counted. Close anyway?')) return;
+  }
+  try {
+    const today = new Date().toISOString().slice(0,10);
+    await FB.setDoc(FB.doc(FB.db,'countSessions',today+'_'+loc),{
+      location:loc, locationName:locName,
+      manager:S.managerName, date:today,
+      counted:counted, total:total,
+      closedAt:now()
+    });
+    showOk(locName + ' count closed by ' + S.managerName + ' (' + counted + '/' + total + ').');
+    setTimeout(runSmartAlerts, 300);
+  } catch(err) {
+    showErr('Could not save count session.', err);
+  }
+}
+
 // ── DONE VIEW ────────────────────────────────────────────────────────
 function qcRenderDone(root) {
   root.innerHTML = '';
@@ -3786,6 +3881,142 @@ function parBadge(p, loc) {
                 'Low stock (' + qty + '/' + par + ')';
   const color = {zero:'var(--red)', red:'var(--red)', yellow:'var(--amb)', green:'var(--grn)'}[status] || 'var(--tm)';
   return '<div class="QC-li-par" style="color:' + color + '"><span class="par-dot ' + dotClass + '"></span>' + label + '</div>';
+}
+
+</script>
+
+
+<script>
+'use strict';
+// ── MONTHLY REPORT ───────────────────────────────────────────────────
+async function generateMonthlyReport() {
+  const month = mkey();
+  const monthName = new Date().toLocaleString('en-US',{month:'long',year:'numeric'});
+
+  // Gather data
+  const locs = Object.keys(LOCS);
+  const products = S.products.slice().sort(function(a,b){
+    return (a.vendorName||'').localeCompare(b.vendorName||'') || (a.name||'').localeCompare(b.name||'');
+  });
+
+  // Order history
+  let orders = [];
+  try {
+    const snap = await FB.getDocs(FB.collection(FB.db,'orders'));
+    snap.forEach(function(d){ const o=d.data(); if(o.month===month) orders.push(o); });
+  } catch(e) {}
+
+  // Count sessions
+  let sessions = [];
+  try {
+    const snap2 = await FB.getDocs(FB.collection(FB.db,'countSessions'));
+    snap2.forEach(function(d){ const s=d.data(); if(s.date&&s.date.startsWith(month)) sessions.push(s); });
+  } catch(e) {}
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Monthly Report — ${e(monthName)}</title>
+<style>
+  body{font-family:-apple-system,sans-serif;margin:0;padding:24px;color:#1E2D4A;background:#FAF8F2}
+  h1{font-family:Georgia,serif;font-size:28px;font-weight:400;margin-bottom:4px;color:#1E2D4A}
+  .sub{font-size:13px;color:#8C8680;margin-bottom:24px}
+  .section{margin-bottom:28px}
+  .section-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C9A84C;border-bottom:2px solid #C9A84C;padding-bottom:4px;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#1E2D4A;color:#C9A84C;padding:8px 10px;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+  td{padding:7px 10px;border-bottom:1px solid #E2DBD0}
+  tr:nth-child(even){background:#F5F2EC}
+  .status-ok{color:#2d9e45;font-weight:600}
+  .status-low{color:#E67E22;font-weight:600}
+  .status-critical{color:#C0392B;font-weight:600}
+  .status-none{color:#9CA3AF}
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .kpi{background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #E2DBD0}
+  .kpi-val{font-size:28px;font-weight:700;color:#1E2D4A}
+  .kpi-lbl{font-size:10px;color:#8C8680;margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
+  @media print{body{padding:12px}.kpi-row{display:grid}}
+  .footer{margin-top:32px;font-size:10px;color:#9CA3AF;text-align:center;border-top:1px solid #E2DBD0;padding-top:12px}
+</style></head><body>`);
+
+  // Header
+  const mgr = S.managerName || 'Manager';
+  w.document.write(`<h1>JW Marriott Houston Downtown</h1>
+<div class="sub">Housekeeping Inventory Report · ${e(monthName)} · Prepared by ${e(mgr)}</div>`);
+
+  // KPIs
+  const totalProducts = products.length;
+  const totalCounted = products.filter(function(p){
+    return locs.some(function(l){ return S.invLoc[l]&&S.invLoc[l][p.id]!==undefined&&S.invLoc[l][p.id]!==''; });
+  }).length;
+  const belowPar = products.filter(function(p){
+    if(!Number(p.parLevel))return false;
+    let total=0,any=false;
+    locs.forEach(function(l){const v=S.invLoc[l]?S.invLoc[l][p.id]:undefined;if(v!==undefined&&v!==''){any=true;total+=Number(v);}});
+    return any && total < Number(p.parLevel);
+  }).length;
+  const urgentCount = S.alerts.filter(function(a){return a.status==='urgent';}).length;
+
+  w.document.write(`<div class="kpi-row">
+    <div class="kpi"><div class="kpi-val">${totalProducts}</div><div class="kpi-lbl">Total Products</div></div>
+    <div class="kpi"><div class="kpi-val">${totalCounted}</div><div class="kpi-lbl">Counted</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:#E67E22">${belowPar}</div><div class="kpi-lbl">Below Par</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:#C0392B">${urgentCount}</div><div class="kpi-lbl">Urgent Alerts</div></div>
+  </div>`);
+
+  // Inventory Status Table
+  w.document.write(`<div class="section"><div class="section-title">Inventory Status — All Products</div>
+  <table><thead><tr><th>Product</th><th>Vendor</th><th>Floor 3</th><th>Tiendita</th><th>2nd Floor</th><th>Total</th><th>Par</th><th>Status</th></tr></thead><tbody>`);
+
+  products.forEach(function(p){
+    const f3=S.invLoc.floor3[p.id]; const ti=S.invLoc.tiendita[p.id]; const p2=S.invLoc.piso2[p.id];
+    const vals=[f3,ti,p2];
+    let total=0;
+    vals.forEach(function(v){if(v!==undefined&&v!=='')total+=Number(v);});
+    const par=Number(p.parLevel)||0;
+    const anyCounted=vals.some(function(v){return v!==undefined&&v!=='';});
+    let statusClass='status-none', statusTxt='Not counted';
+    if(anyCounted){
+      if(total===0){statusClass='status-critical';statusTxt='ZERO';}
+      else if(par&&total<par*0.5){statusClass='status-critical';statusTxt='Critical';}
+      else if(par&&total<par){statusClass='status-low';statusTxt='Low';}
+      else{statusClass='status-ok';statusTxt='OK';}
+    }
+    const fmt2=function(v){return(v===undefined||v==='')?'—':v;};
+    w.document.write(`<tr>
+      <td><strong>${e(p.name)}</strong></td>
+      <td>${e(p.vendorName||'')}</td>
+      <td>${fmt2(f3)}</td><td>${fmt2(ti)}</td><td>${fmt2(p2)}</td>
+      <td><strong>${anyCounted?total:'—'}</strong></td>
+      <td>${par||'—'}</td>
+      <td class="${statusClass}">${statusTxt}</td>
+    </tr>`);
+  });
+  w.document.write('</tbody></table></div>');
+
+  // Count Sessions
+  if(sessions.length){
+    w.document.write(`<div class="section"><div class="section-title">Count Sessions This Month</div><table>
+    <thead><tr><th>Date</th><th>Location</th><th>Manager</th><th>Products Counted</th></tr></thead><tbody>`);
+    sessions.sort(function(a,b){return(b.date||'').localeCompare(a.date||'');}).forEach(function(s){
+      w.document.write(`<tr><td>${s.date||'—'}</td><td>${e(s.locationName||s.location)}</td><td>${e(s.manager||'—')}</td><td>${s.counted||0}/${s.total||0}</td></tr>`);
+    });
+    w.document.write('</tbody></table></div>');
+  }
+
+  // Order History
+  if(orders.length){
+    const orderTotal=orders.reduce(function(s,o){return s+(o.total||0);},0);
+    w.document.write(`<div class="section"><div class="section-title">Orders Submitted This Month</div>
+    <table><thead><tr><th>Date</th><th>Submitted By</th><th>Items</th><th>Total</th></tr></thead><tbody>`);
+    orders.sort(function(a,b){return(b.submittedAt||'').localeCompare(a.submittedAt||'');}).forEach(function(o){
+      w.document.write(`<tr><td>${fd(o.submittedAt||'')}</td><td>${e(o.submittedBy||'—')}</td><td>${(o.items||[]).length}</td><td>$${(o.total||0).toFixed(2)}</td></tr>`);
+    });
+    w.document.write(`</tbody></table><div style="text-align:right;font-size:12px;margin-top:8px"><strong>Month Total: $${orderTotal.toFixed(2)}</strong></div></div>`);
+  }
+
+  w.document.write(`<div class="footer">JW Marriott Houston Downtown · Housekeeping · ${e(monthName)} · Generated by ${e(mgr)}</div>
+  <div style="text-align:center;margin-top:16px"><button onclick="window.print()" style="padding:10px 24px;background:#1E2D4A;color:#C9A84C;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨 Print Report</button></div>
+  </body></html>`);
+  w.document.close();
 }
 
 </script>
