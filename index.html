@@ -518,8 +518,8 @@ input,select,textarea{font-family:inherit}
 
 /* ── LOCATIONS ───────────────────────────────────────────────────── */
 .loc-bar{padding:10px 14px 8px;background:var(--sur);border-bottom:1px solid var(--bds);flex-shrink:0}
-.loc-toggle{display:flex;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r2);padding:3px;gap:3px}
-.loc-btn{flex:1;padding:9px 10px;border-radius:9px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;transition:all .2s;color:var(--tm);white-space:nowrap}
+.loc-toggle{display:flex;flex-wrap:wrap;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r2);padding:3px;gap:3px}
+.loc-btn{flex:1 1 30%;min-width:90px;padding:9px 6px;border-radius:9px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;transition:all .2s;color:var(--tm);white-space:nowrap}
 .loc-btn:hover{background:rgba(30,45,74,.06)}
 .loc-btn.on{background:var(--nvy);color:#fff;box-shadow:0 2px 8px rgba(30,45,74,.22)}
 .loc-sub{font-size:9px;color:var(--tm);text-align:center;margin-top:5px;letter-spacing:.08em;text-transform:uppercase}
@@ -772,6 +772,7 @@ input,select,textarea{font-family:inherit}
       <div class="NI"     data-p="parlevels"     onclick="go('parlevels')"><span class="ic">&#127919;</span>Par Levels</div>
       <div class="NI"     data-p="ordersettings" onclick="go('ordersettings')"><span class="ic">&#9881;&#65039;</span>Order Settings</div>
       <div class="NI"     data-p="budget"        onclick="go('budget')"><span class="ic">&#128176;</span>Budget Setup</div>
+      <div class="NI"     onclick="generateMonthlyReport();closeSB()"><span class="ic">&#128196;</span>Monthly Report</div>
     </div>
     <div class="SB-foot">
       <div class="SB-user">
@@ -807,10 +808,7 @@ input,select,textarea{font-family:inherit}
         </div>
         <div class="dh-btns">
           <button class="dh-btn-pri" onclick="go('quickcount')">&#9889; QUICK COUNT</button>
-          <div class="dh-btn-row2">
-            <button class="dh-btn-sec" onclick="go('inventory')">Full Count &#8250;</button>
-            <button class="dh-btn-sec" onclick="generateMonthlyReport()">&#128196; Report</button>
-          </div>
+          <button class="dh-btn-sec" onclick="go('inventory')" style="width:100%">Full Count &#8250;</button>
         </div>
         <div class="dh-vendor-lbl">By Vendor</div>
         <div id="vp-grid"></div>
@@ -862,6 +860,7 @@ input,select,textarea{font-family:inherit}
         <div class="loc-toggle">
           <div class="loc-btn on" id="loc-btn-floor3" onclick="setLoc('floor3')">&#128230; Floor 3 Storage</div>
           <div class="loc-btn" id="loc-btn-tiendita" onclick="setLoc('tiendita')">&#127978; La Tiendita</div>
+          <div class="loc-btn" id="loc-btn-piso2" onclick="setLoc('piso2')">&#129529; 2nd Floor Laundry</div>
         </div>
         <div class="loc-sub" id="loc-sub">Counting Floor 3 Storage</div>
       </div>
@@ -977,6 +976,36 @@ input,select,textarea{font-family:inherit}
       <div id="qr-root"></div>
     </div>
 <!-- MODALS -->
+<!-- MANAGER SELECT MODAL -->
+<div class="MO" id="MO-manager">
+  <div class="MS">
+    <div class="MH"></div>
+    <div class="MTL">&#128100; Who is counting?</div>
+    <div class="MSB">Select your name so counts are tracked correctly.</div>
+    <div id="mgr-list" style="display:flex;flex-direction:column;gap:8px;padding:0 20px 12px"></div>
+    <div style="padding:0 20px 16px">
+      <div class="CT" style="font-size:11px;margin-bottom:6px">Or enter a new name</div>
+      <input id="mgr-custom" class="FI" placeholder="Type name..." style="width:100%"/>
+      <button class="btn btn-g" style="width:100%;margin-top:8px" onclick="setManagerCustom()">&#10003; Use This Name</button>
+    </div>
+  </div>
+</div>
+<!-- SHIFT NOTE MODAL -->
+<div class="MO" id="MO-shift">
+  <div class="MS">
+    <div class="MH"></div>
+    <div class="MTL">&#128203; Shift Handoff Note</div>
+    <div id="shift-prev-note" style="background:var(--s2);border-radius:8px;padding:10px;margin:0 20px 10px;font-size:12px;color:var(--ts);min-height:36px"></div>
+    <div style="padding:0 20px 4px">
+      <div class="CT" style="font-size:11px;margin-bottom:6px">Leave a note for the next shift:</div>
+      <textarea id="shift-note-inp" class="FI" rows="4" placeholder="e.g. Floor 3 count done. Tiendita low on gloves..." style="width:100%;resize:vertical;font-family:inherit"></textarea>
+    </div>
+    <div class="MAC">
+      <div class="MB sec" onclick="closeMO('MO-shift')">Cancel</div>
+      <div class="MB pri" onclick="saveShiftNote()">Save Note</div>
+    </div>
+  </div>
+</div>
 <div class="MO" id="MO-confirm">
   <div class="MS">
     <div class="MH"></div>
@@ -1539,6 +1568,7 @@ function setLoc(loc){
   // Update toggle UI
   document.getElementById('loc-btn-floor3')?.classList.toggle('on',loc==='floor3');
   document.getElementById('loc-btn-tiendita')?.classList.toggle('on',loc==='tiendita');
+  document.getElementById('loc-btn-piso2')?.classList.toggle('on',loc==='piso2');
   const sub=document.getElementById('loc-sub');
   if(sub)sub.textContent='Counting '+LOCS[loc].name;
   // Update save button label
@@ -1566,6 +1596,7 @@ function rInv(){
   const loc=S.currentLoc;
   document.getElementById('loc-btn-floor3')?.classList.toggle('on',loc==='floor3');
   document.getElementById('loc-btn-tiendita')?.classList.toggle('on',loc==='tiendita');
+  document.getElementById('loc-btn-piso2')?.classList.toggle('on',loc==='piso2');
   const sub=document.getElementById('loc-sub');
   if(sub)sub.textContent='Counting '+LOCS[loc].name;
   const saveBtn=document.getElementById('save-inv-btn');
@@ -2627,7 +2658,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.1.0';
+const APP_VERSION='2.2.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
