@@ -275,6 +275,20 @@ input,select,textarea{font-family:inherit}
 .MB.pri{background:var(--nvy);color:#fff}
 .MB.sec{background:var(--s2);color:var(--tm);border:1px solid var(--bdr)}
 .MB.dan{background:var(--red);color:#fff}
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 860px){
+  .TB-menu{display:block !important}
+  .SB{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:200;box-shadow:4px 0 24px rgba(0,0,0,.3)}
+  .SB.op{transform:translateX(0)}
+  .SB-ov{z-index:199}
+  .SB-ov.sh{display:block}
+  .MN{width:100%}
+}
+@media (min-width: 861px){
+  .SB{position:relative;transform:none}
+  .SB-ov{display:none !important}
+}
 </style>
 </head>
 <body>
@@ -2177,7 +2191,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.0.2';
+const APP_VERSION='2.0.3';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
