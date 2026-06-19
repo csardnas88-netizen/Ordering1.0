@@ -102,6 +102,7 @@ input,select,textarea{font-family:inherit}
 @keyframes pu{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
 /* PAGES */
 .PG{display:none;overflow-y:auto;padding:20px}
+#pg-dashboard{padding:0}
 .PG.on{display:block;height:calc(100vh - var(--hh));overflow-y:auto}
 #pg-quickcount{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none}
 #pg-quickcount.on{display:block}
@@ -172,16 +173,16 @@ input,select,textarea{font-family:inherit}
 .vp-bar{height:4px;background:#253656;border-radius:2px;overflow:hidden}
 .vp-fill{height:100%;border-radius:2px;background:var(--gold);transition:width .5s}
 .vp-fill.done{background:var(--grn)}
-.dh-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 20px;background:var(--nvy2)}
+.dh-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 16px;background:var(--nvy2)}
 .dh-stat{background:#253656;border-radius:var(--r2);padding:14px 8px;text-align:center}
 .dh-stat-val{font-size:26px;font-weight:800;color:#fff}
 .dh-gold{color:var(--gold)!important}
 .dh-stat-lbl{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
-.dh-shift{background:#253656;border:1px solid rgba(201,168,76,.2);border-radius:var(--r2);padding:14px 16px;margin:0 20px 12px;cursor:pointer}
+.dh-shift{background:#253656;border:1px solid rgba(201,168,76,.2);border-radius:var(--r2);padding:12px 14px;margin:0 0 0;cursor:pointer}
 .dh-shift-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .dh-shift-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .dh-shift-edit{font-size:10px;color:rgba(255,255,255,.3)}
-.dh-shift-text{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5}
+.dh-shift-text{font-size:12px;color:rgba(255,255,255,.55);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .dh-shift-meta{font-size:10px;color:rgba(255,255,255,.25);margin-top:4px}
 
 /* ── QR CODES & SCANNER ──────────────────────────────────────────── */
@@ -316,7 +317,8 @@ input,select,textarea{font-family:inherit}
         <div class="dh-vendor-lbl">By Vendor</div>
         <div id="vp-grid"></div>
       </div>
-      <!-- SHIFT NOTE -->
+      <!-- SHIFT NOTE + AGGREGATE wrapper -->
+      <div style="background:var(--nvy2);padding:12px 16px;display:flex;flex-direction:column;gap:10px">
       <div class="dh-shift" id="dh-shift-content" onclick="openShiftNote()">
         <div class="dh-shift-hdr">
           <div class="dh-shift-title">📋 Shift Handoff</div>
@@ -336,8 +338,9 @@ input,select,textarea{font-family:inherit}
         <div><div class="sb-lbl">&#9888;&#65039; Unsaved changes</div><div class="sb-time">Tap save before leaving this device</div></div>
         <button class="btn btn-g btn-sm" onclick="saveInv()">&#128190; Save Now</button>
       </div>
+      </div><!-- end shift+agg wrapper -->
       <div id="smart-alerts-section"></div>
-      <div id="dh-aggregate"></div>
+      <div id="dh-aggregate" style="padding:0 16px 12px;background:var(--nvy2)"></div>
       <div class="urg-wrap hi" id="urg-wrap">
         <div class="urg-hd">&#128308; Urgent Alerts</div>
         <div id="urg-strip"></div>
@@ -3274,10 +3277,10 @@ function qrPrintProduct(p, copies) {
 .QC-li-par{font-size:10px;font-weight:600;margin-top:2px;display:flex;align-items:center}
 
 /* ── AGGREGATE VIEW ─────────────────────────────────────────────── */
-.dh-agg-wrap{background:var(--nvy);border:1px solid rgba(192,57,43,.4);border-radius:var(--r2);padding:14px 16px;margin:0 20px 12px}
+.dh-agg-wrap{background:var(--nvy);border:1px solid rgba(192,57,43,.4);border-radius:var(--r2);padding:12px 14px;margin:0}
 .dh-agg-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:12px;font-weight:700}
 .dh-agg-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.dh-agg-name{font-size:11px;color:rgba(255,255,255,.7);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-agg-name{font-size:11px;color:rgba(255,255,255,.7);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dh-agg-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
 .dh-agg-bar{height:100%;border-radius:3px;transition:width .4s}
 .dh-agg-val{font-size:11px;font-weight:700;flex-shrink:0;min-width:36px;text-align:right}
