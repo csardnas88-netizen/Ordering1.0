@@ -3502,6 +3502,63 @@ async function generateMonthlyReport() {
   .kpi-lbl{font-size:10px;color:#8C8680;margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
   @media print{body{padding:12px}.kpi-row{display:grid}}
   .footer{margin-top:32px;font-size:10px;color:#9CA3AF;text-align:center;border-top:1px solid #E2DBD0;padding-top:12px}
+
+/* ── MODALS ──────────────────────────────────────────────────────── */
+.MO{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px}
+.MO.on{display:flex}
+.MS{background:var(--sur);border-radius:var(--r3);width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.MH{height:4px;background:linear-gradient(90deg,var(--gl),var(--gold))}
+.MTL{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600;padding:18px 20px 4px;color:var(--txt)}
+.MSB{font-size:13px;color:var(--tm);padding:0 20px 16px;line-height:1.5}
+.MAC{display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--bdr)}
+.MB{flex:1;text-align:center;padding:12px 16px;border-radius:var(--r1);font-size:14px;font-weight:600;cursor:pointer}
+.MB.pri{background:var(--nvy);color:#fff}
+.MB.sec{background:var(--s2);color:var(--tm);border:1px solid var(--bdr)}
+.MB.dan{background:var(--red);color:#fff}
+/* ── SAVE BANNER ──────────────────────────────────────────────────── */
+.save-banner{background:var(--nvy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 20px 12px;border-radius:var(--r2)}
+.save-banner.unsaved{border-left:3px solid var(--red)}
+.sb-lbl{font-size:12px;font-weight:600}
+.sb-time{font-size:10px;opacity:.6;margin-top:2px}
+/* ── URGENT WRAP ──────────────────────────────────────────────────── */
+.urg-wrap{background:var(--rd);border:1px solid var(--rb);border-radius:var(--r2);padding:14px 16px;margin:0 20px 12px}
+.urg-hd{font-size:11px;font-weight:700;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.UA{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--rb);cursor:pointer}
+.UA-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0}
+.UA-name{font-size:13px;font-weight:500;color:var(--red)}
+.UA-sub{font-size:10px;color:var(--tm);margin-top:1px}
+.UA-arr{font-size:18px;color:var(--red);flex-shrink:0}
+/* ── SHARED ───────────────────────────────────────────────────────── */
+.PH{margin-bottom:20px}
+.PT{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:400;color:var(--txt);margin-bottom:4px}
+.PD{font-size:12px;color:var(--tm);line-height:1.5}
+.CT{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ts)}
+.fbet{display:flex;justify-content:space-between;align-items:flex-start}
+.mb6{margin-bottom:6px}.mb8{margin-bottom:8px}.mb16{margin-bottom:16px}.mt8{margin-top:8px}.mt16{margin-top:16px}
+.hi{display:none!important}
+.emp{text-align:center;padding:40px 20px;color:var(--tm)}
+.eic{font-size:36px;margin-bottom:12px}
+/* ── BUTTONS ──────────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:10px 16px;border-radius:var(--r1);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;white-space:nowrap}
+.btn:active{opacity:.75}
+.btn-g{background:var(--gold);color:var(--nvy)}
+.btn-o{background:transparent;border:1.5px solid var(--bdr);color:var(--ts)}
+.btn-d{background:var(--rd);color:var(--red);border:1px solid var(--rb)}
+.btn-pdf{background:var(--nvy);color:var(--gold)}
+.btn-sm{padding:7px 12px;font-size:11px}
+.btn-nvy{background:var(--nvy);color:#fff}
+/* ── SEARCH ───────────────────────────────────────────────────────── */
+.search-bar-row{margin-bottom:12px}
+.search-wrap{display:flex;align-items:center;gap:8px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:10px 14px}
+.search-icon{font-size:16px;color:var(--tm);flex-shrink:0}
+.search-inp{flex:1;border:none;background:transparent;font-size:14px;color:var(--txt);outline:none}
+/* ── SMART ALERTS ─────────────────────────────────────────────────── */
+.smart-alert{background:var(--ad);border:1px solid var(--ab);border-radius:var(--r2);padding:14px 16px;margin:0 20px 10px;cursor:pointer}
+.sa-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sa-icon{font-size:20px}
+.sa-title{font-size:13px;font-weight:600;color:var(--amb);flex:1}
+.sa-badge{font-size:10px;background:var(--amb);color:#fff;padding:2px 8px;border-radius:20px;flex-shrink:0}
+.sa-body{font-size:11px;color:var(--ts);line-height:1.5}
 </style></head><body>`);
 
   // Header
