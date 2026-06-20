@@ -120,13 +120,13 @@ input,select,textarea{font-family:inherit}
 #pg-qrcodes.on{display:block}
 #qc-root{padding:20px}
 /* SHARED */
-.PH{margin-bottom:20px}
-.PT{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:400}
-.PD{font-size:11px;color:var(--tm);margin-top:3px}
+.PH{margin-bottom:24px}
+.PT{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:500;color:var(--txt);line-height:1.15}
+.PD{font-size:12px;color:var(--tm);margin-top:4px;line-height:1.5}
 .fbet{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);box-shadow:var(--sh1)}
 .CH{padding:14px 18px;border-bottom:1px solid var(--bds);display:flex;align-items:center;justify-content:space-between}
-.CT{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ts)}
+.CT{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tm)}
 .CB{padding:18px}
 .btn{padding:10px 16px;border-radius:var(--r1);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:all .14s;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;border:none;min-height:40px}
 .btn:active{opacity:.75}
@@ -223,7 +223,7 @@ input,select,textarea{font-family:inherit}
 .sa-body{font-size:11px;color:rgba(255,255,255,.65);line-height:1.6;padding-left:28px}
 .sa-badge{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:6px}
 /* INVENTORY */
-.VTabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none}
+.VTabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none}
 .VTabs::-webkit-scrollbar{display:none}
 .VT{flex-shrink:0;padding:8px 16px;border-radius:99px;border:1px solid var(--bdr);font-size:11px;color:var(--tm);background:var(--sur);cursor:pointer;transition:all .14s;white-space:nowrap;font-weight:500}
 .VT:hover{border-color:var(--gd);color:var(--gd)}
@@ -233,7 +233,7 @@ input,select,textarea{font-family:inherit}
 .IPS{font-size:10px;color:var(--tm)}
 .IPBW{flex:1;height:5px;background:var(--s3);border-radius:99px;overflow:hidden}
 .IPBF{height:100%;background:linear-gradient(90deg,var(--gd),var(--gl));border-radius:99px;transition:width .4s}
-.PC{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:7px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--sh1)}
+.PC{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:8px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh1)}
 .PC-main{display:flex;align-items:center;gap:12px;width:100%}
 .PC.pu{border-color:var(--rb);background:var(--rd)}
 .PC.pok{border-color:var(--grb)}
@@ -316,7 +316,7 @@ input,select,textarea{font-family:inherit}
 .CTabs{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
 .CTAB{padding:7px 14px;border-radius:99px;border:1px solid var(--bdr);font-size:11px;color:var(--tm);background:var(--sur);cursor:pointer;transition:all .14s;font-weight:500}
 .CTAB.on{background:var(--nvy);border-color:var(--nvy);color:#fff}
-.CI{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;box-shadow:var(--sh1)}
+.CI{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--sh1)}
 .CI.dragging{opacity:.45;border-style:dashed}
 .CI.drag-over{border-color:var(--gold);background:var(--gt)}
 .CI-emo{width:38px;height:38px;border-radius:8px;background:var(--s2);border:1px solid var(--bdr);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden}
@@ -764,7 +764,7 @@ input,select,textarea{font-family:inherit}
 
 
 /* ── INVENTORY FILTER PILLS ──────────────────────────────────────── */
-.inv-filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.inv-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .inv-fp{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);color:var(--ts);background:var(--sur);transition:all .15s;user-select:none}
 .inv-fp:active{opacity:.7}
 .inv-fp-count{font-size:11px;font-weight:700;background:var(--s3);color:var(--ts);padding:1px 7px;border-radius:10px;min-width:18px;text-align:center}
@@ -2876,7 +2876,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.7.0';
+const APP_VERSION='2.8.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
