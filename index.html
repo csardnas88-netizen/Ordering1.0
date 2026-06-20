@@ -744,6 +744,28 @@ input,select,textarea{font-family:inherit}
 .bp-locs{color:rgba(255,255,255,.6);background:rgba(255,255,255,.07);padding:2px 8px;border-radius:20px}
 .bp-need{font-weight:700;margin-left:auto;font-size:11px;color:var(--gold)}
 
+
+/* ── INVENTORY FILTER PILLS ──────────────────────────────────────── */
+.inv-filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.inv-fp{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);color:var(--ts);background:var(--sur);transition:all .15s;user-select:none}
+.inv-fp:active{opacity:.7}
+.inv-fp-count{font-size:11px;font-weight:700;background:var(--s3);color:var(--ts);padding:1px 7px;border-radius:10px;min-width:18px;text-align:center}
+.inv-fp.active{background:var(--nvy);color:#fff;border-color:var(--nvy)}
+.inv-fp.active .inv-fp-count{background:rgba(255,255,255,.2);color:#fff}
+.inv-fp.fp-out.active{background:var(--red);border-color:var(--red)}
+.inv-fp.fp-below.active{background:var(--amb);border-color:var(--amb)}
+.inv-fp.fp-atpar.active{background:var(--grn);border-color:var(--grn)}
+.inv-fp.fp-out{color:var(--red);border-color:var(--rb)}
+.inv-fp.fp-below{color:var(--amb);border-color:var(--ab)}
+.inv-fp.fp-atpar{color:var(--grn);border-color:var(--grb)}
+
+/* ── PROGRESS FILL CARD (Inventory) ──────────────────────────────── */
+.prog-card{margin-top:8px}
+.prog-bar-outer{position:relative;height:30px;border-radius:8px;overflow:hidden}
+.prog-bar-fill{position:absolute;top:0;left:0;bottom:0;border-radius:8px;transition:width .4s}
+.prog-bar-content{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;gap:8px}
+.prog-have{font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.prog-locs{font-size:10px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 </style>
 </head>
 <body>
@@ -896,6 +918,7 @@ input,select,textarea{font-family:inherit}
         </div>
       </div>
       <div class="VTabs" id="VTabs"></div>
+      <div class="inv-filter-row" id="inv-filter-row"></div>
       <div id="PList"></div>
     </div>
     <!-- ORDER SUMMARY -->
@@ -1203,7 +1226,7 @@ const S={
   finalizing:false,
   currentLoc:'floor3', // active location for counting
 };
-const INV={query:'',view:'vendor'};
+const INV={query:'',view:'vendor',filter:'all'};
 const CAT={query:'',view:'vendor'};
 let OrderSettings={approvalDays:2,vendors:{}};
 let FB=null;
@@ -1705,9 +1728,17 @@ function pickV(v){S.vf=v;rInv();}
 function rProds(){
   const c=document.getElementById('PList');if(!c)return;
   const ui=new Set(S.alerts.filter(a=>a.status==='urgent').map(a=>a.productId));
+  // Render filter pills based on the current location's relevant products
+  const locProds=S.products.filter(function(p){
+    const loc=S.currentLoc;
+    if(loc==='piso2')return p.locations&&p.locations.piso2===true;
+    return !p.locations||p.locations[loc]!==false;
+  });
+  rInvFilters(locProds);
   if(INV.query){
     const q=INV.query;
-    const matches=S.products.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.partNumber||'').toLowerCase().includes(q)||(p.budgetLine||'').toLowerCase().includes(q));
+    let matches=S.products.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.partNumber||'').toLowerCase().includes(q)||(p.budgetLine||'').toLowerCase().includes(q));
+    matches=applyInvFilter(matches);
     if(!matches.length){c.innerHTML='<div class="srch-no-results">No products match "'+e(INV.query)+'"</div>';return;}
     const byV={};for(const p of matches)(byV[p.vendorName]||(byV[p.vendorName]=[])).push(p);
     let html='';for(const[v,ps2]of Object.entries(byV)){html+='<div class="srch-group-hdr">'+e(v)+'</div>';html+=ps2.map(p=>pCard(p,ui.has(p.id))).join('');}
@@ -1716,15 +1747,18 @@ function rProds(){
   if(INV.view==='budget'){
     let html='';
     for(const bl of BL){
-      const ps2=S.products.filter(p=>p.budgetLine===bl).sort((a,b)=>(a.sortOrder??999)-(b.sortOrder??999));
+      let ps2=S.products.filter(p=>p.budgetLine===bl).sort((a,b)=>(a.sortOrder??999)-(b.sortOrder??999));
+      ps2=applyInvFilter(ps2);
       if(!ps2.length)continue;
       html+='<div class="budget-group-hdr">'+e(bl)+'</div>';
       html+=ps2.map(p=>pCard(p,ui.has(p.id))).join('');
     }
-    c.innerHTML=html||'<div class="emp"><div class="eic">&#128230;</div>No products yet.</div>';return;
+    c.innerHTML=html||'<div class="emp"><div class="eic">&#128230;</div>No products match this filter.</div>';return;
   }
-  const ps=S.products.filter(p=>p.vendorName===S.vf);
+  let ps=S.products.filter(p=>p.vendorName===S.vf);
   if(!ps.length){c.innerHTML='<div class="emp"><div class="eic">&#128230;</div>No products for this vendor.<br><br><button class="btn btn-g btn-sm" onclick="go(\'catalog\')">Add Products</button></div>';return;}
+  ps=applyInvFilter(ps);
+  if(!ps.length){c.innerHTML='<div class="emp"><div class="eic">&#9989;</div>No products match this filter.</div>';return;}
   const sorted=[...ps].sort((a,b)=>{if(ui.has(a.id)&&!ui.has(b.id))return -1;if(!ui.has(a.id)&&ui.has(b.id))return 1;return(a.sortOrder??999)-(b.sortOrder??999);});
   c.innerHTML=sorted.map(p=>pCard(p,ui.has(p.id))).join('');
 }
@@ -1732,6 +1766,66 @@ function rProds(){
 function isEquip(p){
   const nm=(p.name||'').toLowerCase();
   return p.countMode==='units'||EQUIP.some(k=>nm.includes(k));
+}
+
+
+// ── INVENTORY STATUS & FILTER ────────────────────────────────────────
+function invProductStatus(p){
+  // Returns 'out' | 'below' | 'atpar' | 'uncounted'
+  const f3=getLocCount(p.id,'floor3');
+  const ti=getLocCount(p.id,'tiendita');
+  const p2=getLocCount(p.id,'piso2');
+  const anyCounted=f3!==null||ti!==null||p2!==null;
+  if(!anyCounted)return 'uncounted';
+  const tot=(f3||0)+(ti||0)+(p2||0);
+  const par=Number(p.parLevel)||0;
+  if(tot===0)return 'out';
+  if(par&&tot<par)return 'below';
+  return 'atpar';
+}
+
+function invFilterCounts(prods){
+  const c={all:prods.length,out:0,below:0,atpar:0};
+  for(const p of prods){
+    const s=invProductStatus(p);
+    if(s==='out')c.out++;
+    else if(s==='below')c.below++;
+    else if(s==='atpar')c.atpar++;
+  }
+  return c;
+}
+
+function rInvFilters(prods){
+  const row=document.getElementById('inv-filter-row');
+  if(!row)return;
+  const c=invFilterCounts(prods);
+  const pills=[
+    {id:'all',label:'All',count:c.all,cls:''},
+    {id:'out',label:'Out',count:c.out,cls:'fp-out'},
+    {id:'below',label:'Below Par',count:c.below,cls:'fp-below'},
+    {id:'atpar',label:'At Par',count:c.atpar,cls:'fp-atpar'}
+  ];
+  row.innerHTML=pills.map(function(p){
+    const active=INV.filter===p.id?' active':'';
+    return '<div class="inv-fp '+p.cls+active+'" onclick="setInvFilter(\''+p.id+'\')">'+
+      p.label+'<span class="inv-fp-count">'+p.count+'</span></div>';
+  }).join('');
+}
+
+function setInvFilter(f){
+  INV.filter=f;
+  rProds();
+}
+
+function applyInvFilter(prods){
+  if(INV.filter==='all')return prods;
+  return prods.filter(function(p){
+    const s=invProductStatus(p);
+    if(INV.filter==='out')return s==='out';
+    if(INV.filter==='below')return s==='below';
+    if(INV.filter==='atpar')return s==='atpar';
+    return true;
+  });
 }
 
 function pCard(p,isU){
@@ -1770,18 +1864,25 @@ function pCard(p,isU){
   let combinedCard='';
   const f3=getLocCount(p.id,'floor3');
   const ti=getLocCount(p.id,'tiendita');
-  if(f3!==null||ti!==null){
-    const tot=(f3||0)+(ti||0);
+  const p2=getLocCount(p.id,'piso2');
+  if(f3!==null||ti!==null||p2!==null){
+    const tot=(f3||0)+(ti||0)+(p2||0);
     const needsOrder=par-tot;
-    combinedCard='<div class="combined-card">'+
-      '<div class="combined-hdr">Combined Total &mdash; Both Locations</div>'+
-      '<div class="combined-row">'+
-        '<div>'+
-          '<div class="combined-detail">&#128230; Floor 3: <strong>'+(f3!==null?f3:'?')+'</strong> &nbsp;&middot;&nbsp; &#127978; Tiendita: <strong>'+(ti!==null?ti:'?')+'</strong></div>'+
-          '<div class="combined-meta">Total on hand: <strong>'+tot+' '+cm+'</strong> &middot; Par '+par+(needsOrder>0?' &middot; Need '+needsOrder+' more':'')+'</div>'+
-          (f3===null||ti===null?'<div style="font-size:9px;color:var(--amb);margin-top:2px">&#9888; '+(f3===null?'Floor 3':'Tiendita')+' not counted yet</div>':'')+
+    const pctFill=par>0?Math.min((tot/par)*100,100):100;
+    // Status color
+    let barColor='var(--grn)',barBg='var(--grd)',statusTxt='&#10003; Stocked';
+    if(tot===0){barColor='var(--red)';barBg='var(--rd)';statusTxt='&#9888; OUT';}
+    else if(par&&tot<par*0.5){barColor='var(--red)';barBg='var(--rd)';statusTxt='order '+needsOrder;}
+    else if(par&&tot<par){barColor='var(--amb)';barBg='var(--ad)';statusTxt='order '+needsOrder;}
+    // Location chips
+    const locChips='&#128230; '+(f3!==null?f3:'\u2013')+' &nbsp; &#127978; '+(ti!==null?ti:'\u2013')+(p2!==null?' &nbsp; &#129529; '+p2:'');
+    combinedCard='<div class="prog-card">'+
+      '<div class="prog-bar-outer" style="background:var(--s3)">'+
+        '<div class="prog-bar-fill" style="width:'+pctFill+'%;background:'+barColor+';opacity:.18"></div>'+
+        '<div class="prog-bar-content">'+
+          '<span class="prog-have" style="color:'+barColor+'">'+tot+' of '+par+' '+cm+'</span>'+
+          '<span class="prog-locs">'+locChips+' &middot; '+statusTxt+'</span>'+
         '</div>'+
-        (needsOrder>0?'<span class="OP op-g">'+needsOrder+' to order</span>':'<span class="OP op-ok">&#10003; At par</span>')+
       '</div>'+
     '</div>';
   }
@@ -2742,7 +2843,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.3.3';
+const APP_VERSION='2.4.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
