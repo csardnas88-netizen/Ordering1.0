@@ -157,8 +157,11 @@ input,select,textarea{font-family:inherit}
 .FL{font-size:10px;font-weight:600;color:var(--ts);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
 .FI{width:100%;padding:9px 12px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);font-size:13px;color:var(--txt);outline:none;transition:border-color .2s}
 .FI:focus{border-color:var(--gold)}
-.emp{text-align:center;padding:50px 20px;color:var(--tm)}
-.eic{font-size:44px;margin-bottom:12px;opacity:.35}
+.emp{text-align:center;padding:48px 24px;color:var(--tm);display:flex;flex-direction:column;align-items:center;gap:6px}
+.eic{font-size:40px;margin-bottom:4px;opacity:.4;width:76px;height:76px;display:flex;align-items:center;justify-content:center;background:var(--s2);border-radius:50%;margin-bottom:10px}
+.emp-title{font-size:15px;font-weight:600;color:var(--ts);margin-bottom:2px}
+.emp-desc{font-size:12px;color:var(--tm);line-height:1.5;max-width:260px}
+.emp-action{margin-top:14px}
 /* DASHBOARD */
 /* ── DASHBOARD REDESIGN (Option A) ───────────────────────── */
 .dh-hero{background:var(--nvy);padding:16px 16px 16px;border-bottom:1px solid var(--nvy3)}
@@ -1654,7 +1657,7 @@ function rBelowPar(){
   if(!el)return;
   const items=getBelowParItems();
   if(!items.length){
-    el.innerHTML='<div class="emp"><div class="eic">&#9989;</div>Nothing below par right now.<br>All counted products are at or above their par level.</div>';
+    el.innerHTML=emptyState('&#9989;','All stocked up','Every counted product is at or above its par level. Nice work.');
     return;
   }
   const shortLoc={floor3:'F3',tiendita:'TD',piso2:'2nd'};
@@ -1770,12 +1773,12 @@ function rProds(){
       html+='<div class="budget-group-hdr">'+e(bl)+'</div>';
       html+=ps2.map(p=>pCard(p,ui.has(p.id))).join('');
     }
-    c.innerHTML=html||'<div class="emp"><div class="eic">&#128230;</div>No products match this filter.</div>';return;
+    c.innerHTML=html||emptyState('&#128230;','Nothing here','No products match this filter right now.');return;
   }
   let ps=S.products.filter(p=>p.vendorName===S.vf);
-  if(!ps.length){c.innerHTML='<div class="emp"><div class="eic">&#128230;</div>No products for this vendor.<br><br><button class="btn btn-g btn-sm" onclick="go(\'catalog\')">Add Products</button></div>';return;}
+  if(!ps.length){c.innerHTML=emptyState('&#128230;','No products for this vendor','Add products to start counting this vendor inventory.','<button class="btn btn-g btn-sm" onclick="go(\'catalog\')">Add Products</button>');return;}
   ps=applyInvFilter(ps);
-  if(!ps.length){c.innerHTML='<div class="emp"><div class="eic">&#9989;</div>No products match this filter.</div>';return;}
+  if(!ps.length){c.innerHTML=emptyState('&#9989;','Nothing here','No products match this filter right now.');return;}
   const sorted=[...ps].sort((a,b)=>{if(ui.has(a.id)&&!ui.has(b.id))return -1;if(!ui.has(a.id)&&ui.has(b.id))return 1;return(a.sortOrder??999)-(b.sortOrder??999);});
   c.innerHTML=sorted.map(p=>pCard(p,ui.has(p.id))).join('');
 }
@@ -1843,6 +1846,17 @@ function applyInvFilter(prods){
     if(INV.filter==='atpar')return s==='atpar';
     return true;
   });
+}
+
+
+// ── EMPTY STATE BUILDER ──────────────────────────────────────────────
+function emptyState(icon,title,desc,actionHtml){
+  return '<div class="emp">'+
+    '<div class="eic">'+icon+'</div>'+
+    '<div class="emp-title">'+title+'</div>'+
+    (desc?'<div class="emp-desc">'+desc+'</div>':'')+
+    (actionHtml?'<div class="emp-action">'+actionHtml+'</div>':'')+
+  '</div>';
 }
 
 function pCard(p,isU){
@@ -2074,7 +2088,7 @@ async function persistOrder(ctx){
 function rOrd(){
   const items=getItems(),ui=new Set(S.alerts.filter(a=>a.status==='urgent').map(a=>a.productId));
   const c=document.getElementById('OC');if(!c)return;
-  if(!items.length){c.innerHTML='<div class="emp"><div class="eic">&#9989;</div>Nothing to order right now.<br>Complete an inventory count first.</div>';return;}
+  if(!items.length){c.innerHTML=emptyState('&#9989;','Nothing to order','Complete an inventory count and any items below par will appear here.');return;}
   const bv={};for(const i of items)(bv[i.vn]||(bv[i.vn]=[])).push(i);
   let html='',gd=0;
   for(const[v,vi]of Object.entries(bv)){
@@ -2286,10 +2300,10 @@ function rCatalog(){
   if(CAT.view==='budget'){
     let html='';
     for(const bl of BL){const ps2=S.products.filter(p=>p.budgetLine===bl).sort((a,b)=>(a.sortOrder??999)-(b.sortOrder??999));if(!ps2.length)continue;html+='<div class="budget-group-hdr">'+e(bl)+'</div>';html+=ps2.map(p=>ciHTML(p)).join('');}
-    cl.innerHTML=html||'<div class="emp"><div class="eic">&#128203;</div>No products yet.</div>';return;
+    cl.innerHTML=html||emptyState('&#128203;','No products yet','Products you add will show up here.');return;
   }
   const ps=S.products.filter(p=>p.vendorName===S.cv).sort((a,b)=>(a.sortOrder??999)-(b.sortOrder??999));
-  if(!ps.length){cl.innerHTML='<div class="emp"><div class="eic">&#128203;</div>No products yet for this vendor.<br><br><button class="btn btn-g btn-sm" onclick="openProdMO()">Add first product</button></div>';return;}
+  if(!ps.length){cl.innerHTML=emptyState('&#128203;','No products yet','Add your first product for this vendor to get started.','<button class="btn btn-g btn-sm" onclick="openProdMO()">Add First Product</button>');return;}
   cl.innerHTML=ps.map(p=>ciHTML(p)).join('');
 }
 function pickCV(v){S.cv=v;rCatalog();}
@@ -2352,7 +2366,7 @@ function rParLevels(){
   if(plvEl)plvEl.innerHTML=vs.map(v=>'<div class="VT '+(S.plv===v?'on':'')+'" onclick="pickPLV(\''+e(v)+'\')">'+e(v)+'</div>').join('');
   const ps=[...S.products.filter(p=>p.vendorName===S.plv)].sort((a,b)=>a.name.localeCompare(b.name));
   const c=document.getElementById('PLList');if(!c)return;
-  if(!ps.length){c.innerHTML='<div class="emp"><div class="eic">&#127919;</div>No products for this vendor yet.</div>';return;}
+  if(!ps.length){c.innerHTML=emptyState('&#127919;','No products yet','This vendor has no products assigned.');return;}
   const cm=p=>isEquip(p)?'units':'cases';
   const mobileRows=ps.map(p=>
     '<div class="PL-row '+(isEquip(p)?'equip':'')+'">'+
@@ -2862,7 +2876,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.6.0';
+const APP_VERSION='2.7.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3628,7 +3642,7 @@ function qcRenderScanTally() {
   if (!tallyC) return;
   tallyC.innerHTML = '';
   if (!QC.scanSeen || !QC.scanSeen.size) {
-    tallyC.innerHTML = '<div class="emp"><div class="eic">📷</div>Nothing scanned yet.</div>';
+    tallyC.innerHTML = emptyState('📷','Nothing scanned yet','Scan a product QR code or switch to manual to start counting.');
     return;
   }
   QC.scanSeen.forEach(function(pid) {
@@ -3930,7 +3944,7 @@ function qrRenderList() {
     prods = prods.filter(function(p){ return (p.name||'').toLowerCase().includes(q); });
   }
   if (!prods.length) {
-    listC.innerHTML = '<div class="emp"><div class="eic">📦</div>No products found.</div>';
+    listC.innerHTML = emptyState('📦','No products found','Try a different search or filter.');
     return;
   }
 
