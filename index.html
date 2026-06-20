@@ -876,7 +876,7 @@ input,select,textarea{font-family:inherit}
         <div id="vp-grid"></div>
       </div>
       <!-- SHIFT NOTE + AGGREGATE wrapper -->
-      <div style="background:var(--nvy2);padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--bg);padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
       <div class="dh-shift" id="dh-shift-content" onclick="openShiftNote()">
         <div class="dh-shift-hdr">
           <div class="dh-shift-title">📋 Shift Handoff</div>
@@ -898,7 +898,7 @@ input,select,textarea{font-family:inherit}
       </div>
       </div><!-- end shift+agg wrapper -->
       <div id="smart-alerts-section"></div>
-      <div id="dh-aggregate" style="padding:0 16px 12px;background:var(--nvy2)"></div>
+      <div id="dh-aggregate" style="padding:0 16px 12px;background:var(--bg)"></div>
       <div class="urg-wrap hi" id="urg-wrap">
         <div class="urg-hd">&#128308; Urgent Alerts</div>
         <div id="urg-strip"></div>
@@ -1208,7 +1208,11 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
-</div>
+<!-- QR SCANNER MODAL -->
+<div class="SCM" id="SCM">
+  <div class="SCM-box">
+    <div class="SCM-hdr">
+      <div class="SCM-title">Scan Product QR</div>
       <div class="SCM-close" onclick="closeScanner()">&#10005;</div>
     </div>
     <div id="scm-reader"></div>
@@ -2876,7 +2880,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.9.0';
+const APP_VERSION='2.9.1';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3695,6 +3699,11 @@ function qcStartScan() {
   });
 }
 
+function closeScanner(){
+  const m=document.getElementById('SCM');
+  if(m)m.classList.remove('on');
+  try{ if(typeof qcStopScan==='function')qcStopScan(); }catch(e){}
+}
 function qcStopScan() {
   QC.scanning = false;
   qcLastCode = null;
