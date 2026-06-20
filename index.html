@@ -128,15 +128,17 @@ input,select,textarea{font-family:inherit}
 .CH{padding:14px 18px;border-bottom:1px solid var(--bds);display:flex;align-items:center;justify-content:space-between}
 .CT{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ts)}
 .CB{padding:18px}
-.btn{padding:9px 16px;border-radius:var(--r1);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:all .14s;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:none}
-.btn-g{background:linear-gradient(135deg,var(--gd),var(--gl));color:#fff;box-shadow:0 2px 8px rgba(184,151,46,.25)}
+.btn{padding:10px 16px;border-radius:var(--r1);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:all .14s;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;border:none;min-height:40px}
+.btn:active{opacity:.75}
+.btn-nvy2{background:var(--nvy);color:#fff}
+.btn-g{background:var(--gold);color:var(--nvy);box-shadow:0 2px 8px rgba(201,168,76,.28)}
 .btn-g:hover{opacity:.9}
 .btn-g:disabled{opacity:.5;cursor:not-allowed}
 .btn-o{background:transparent;border:1px solid var(--bdr);color:var(--ts)}
 .btn-o:hover{border-color:var(--gold);color:var(--gd)}
 .btn-d{background:var(--rd);border:1px solid var(--rb);color:var(--red)}
 .btn-sm{padding:5px 11px;font-size:10px}
-.btn-pdf{background:linear-gradient(135deg,#1E3A5F,#2A5298);color:#fff}
+.btn-pdf{background:var(--nvy);color:#fff}
 .bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .bdg-u{background:var(--rd);border:1px solid var(--rb);color:var(--red)}
 .bdg-p{background:var(--ad);border:1px solid var(--ab);color:var(--amb)}
@@ -779,6 +781,8 @@ input,select,textarea{font-family:inherit}
 .prog-bar-content{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;gap:8px}
 .prog-have{font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0}
 .prog-locs{font-size:10px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+
+.PMT-sec{color:var(--tm);opacity:.7}
 </style>
 </head>
 <body>
@@ -1908,7 +1912,7 @@ function pCard(p,isU){
     '<div class="PTH">'+th+'</div>'+
     '<div class="PIN">'+
       '<div class="PNM">'+e(p.name)+'</div>'+
-      '<div class="PMT">Par <strong>'+par+'</strong> '+cm+' &middot; $'+(p.pricePerCase||0).toFixed(2)+'/case'+(p.partNumber?' &middot; #'+e(p.partNumber):'')+'</div>'+
+      '<div class="PMT">Par <strong>'+par+'</strong> '+cm+'<span class="PMT-sec">'+(p.pricePerCase?' &middot; $'+(p.pricePerCase||0).toFixed(2)+'/case':'')+(p.partNumber?' &middot; #'+e(p.partNumber):'')+'</span></div>'+
       '<div class="PUNIT">Counting in <strong>'+cm+'</strong>'+(cm==='units'?' ('+cp+' per case)':'')+'</div>'+
       (isU?'<div class="PUL">&#9888; Flagged urgent</div>':'')+
     '</div>'+
@@ -2858,7 +2862,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.5.0';
+const APP_VERSION='2.6.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
