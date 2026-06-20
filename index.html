@@ -768,6 +768,7 @@ input,select,textarea{font-family:inherit}
       <div class="NI"     data-p="order"         onclick="go('order')"><span class="ic">&#128722;</span>Order Summary</div>
       <div class="nh" style="margin-top:6px">Management</div>
       <div class="NI"     data-p="alerts"        onclick="go('alerts')"><span class="ic">&#128276;</span>Urgent Alerts<span class="bd hi" id="nb">0</span></div>
+      <div class="NI"     data-p="belowpar"      onclick="go('belowpar')"><span class="ic">&#9888;&#65039;</span>Below Par<span class="bd hi" id="bp-badge">0</span></div>
       <div class="NI"     data-p="catalog"       onclick="go('catalog')"><span class="ic">&#128203;</span>Product Catalog</div>
       <div class="NI"     data-p="parlevels"     onclick="go('parlevels')"><span class="ic">&#127919;</span>Par Levels</div>
       <div class="NI"     data-p="ordersettings" onclick="go('ordersettings')"><span class="ic">&#9881;&#65039;</span>Order Settings</div>
@@ -892,6 +893,11 @@ input,select,textarea{font-family:inherit}
       <div class="PH"><div class="PT">Urgent Alerts</div><div class="PD">Digital sticky notes &mdash; flagged products</div></div>
       <div id="AL"></div>
       <div class="AAA" onclick="openAlertMO()">&#65291; Flag a product as urgent</div>
+    </div>
+    <!-- BELOW PAR -->
+    <div class="PG" id="pg-belowpar">
+      <div class="PH"><div class="PT">Below Par</div><div class="PD">All products under their par level &mdash; sorted by urgency</div></div>
+      <div id="BP-list"></div>
     </div>
     <!-- CATALOG -->
     <div class="PG" id="pg-catalog">
@@ -1314,7 +1320,7 @@ function go(p){
   document.querySelectorAll('.NI').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p)?.classList.add('on');
   document.querySelector('[data-p="'+p+'"]')?.classList.add('on');
-  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',qrcodes:'QR Codes'};
+  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',qrcodes:'QR Codes',belowpar:'Below Par'};
   document.getElementById('TBT').textContent=T[p]||p;
   closeSB();render(p);
   // Reset all scroll positions on page change
@@ -1330,6 +1336,7 @@ function render(p){
   else if(p==='inventory')rInv();
   else if(p==='order')rOrd();
   else if(p==='alerts')rAlerts();
+  else if(p==='belowpar')rBelowPar();
   else if(p==='catalog')rCatalog();
   else if(p==='parlevels')rParLevels();
   else if(p==='ordersettings')rOrderSettings();
@@ -1540,6 +1547,12 @@ function rDashAggregate(){
   }
   if(!items.length){el.innerHTML='';return;}
   items.sort(function(a,b){return a.pct-b.pct;});
+  // Update sidebar badge
+  const bpBadge=document.getElementById('bp-badge');
+  if(bpBadge){
+    if(items.length>0){bpBadge.textContent=items.length;bpBadge.classList.remove('hi');}
+    else{bpBadge.classList.add('hi');}
+  }
   const top=items.slice(0,5);
   el.innerHTML='<div class="dh-agg-wrap">'+
     '<div class="dh-agg-title">⚠ Below Par — Action Required</div>'+
@@ -1551,8 +1564,59 @@ function rDashAggregate(){
         '<div class="dh-agg-val" style="color:'+color+'">'+it.total+'/'+it.par+'</div>'+
       '</div>';
     }).join('')+
-    (items.length>5?'<div class="dh-agg-more">+' + (items.length-5) + ' more below par</div>':'')+
+    (items.length>5?'<div class="dh-agg-more" onclick="go(\'belowpar\')" style="cursor:pointer;text-decoration:underline">+' + (items.length-5) + ' more below par — view all</div>':'')+
   '</div>';
+}
+
+function getBelowParItems(){
+  const items=[];
+  for(const p of S.products){
+    if(!Number(p.parLevel))continue;
+    const locs=['floor3','tiendita','piso2'];
+    let total=0,anyCounted=false;
+    const breakdown={};
+    for(const loc of locs){
+      const on=!(p.locations&&p.locations[loc]===false);
+      if(!on)continue;
+      const v=S.invLoc[loc]?S.invLoc[loc][p.id]:undefined;
+      if(v!==undefined&&v!==''){anyCounted=true;total+=Number(v);breakdown[loc]=Number(v);}
+    }
+    if(!anyCounted)continue;
+    const par=Number(p.parLevel);
+    const pct=Math.round((total/par)*100);
+    if(total<par)items.push({p,total,par,pct,breakdown});
+  }
+  items.sort(function(a,b){return a.pct-b.pct;});
+  return items;
+}
+
+function rBelowPar(){
+  const el=document.getElementById('BP-list');
+  if(!el)return;
+  const items=getBelowParItems();
+  if(!items.length){
+    el.innerHTML='<div class="emp"><div class="eic">&#9989;</div>Nothing below par right now.<br>All counted products are at or above their par level.</div>';
+    return;
+  }
+  const shortLoc={floor3:'F3',tiendita:'TD',piso2:'2nd'};
+  el.innerHTML='<div class="bp-summary">'+items.length+' product'+(items.length>1?'s':'')+' below par</div>'+
+    items.map(function(it){
+      const color=it.total===0?'var(--red)':it.pct<50?'var(--red)':'var(--amb)';
+      const need=it.par-it.total;
+      const locParts=Object.keys(it.breakdown).map(function(l){return shortLoc[l]+': '+it.breakdown[l];}).join(' · ');
+      return '<div class="bp-card" onclick="go(\'catalog\')">'+
+        '<div class="bp-top">'+
+          '<div class="bp-name">'+e(it.p.name)+'</div>'+
+          '<div class="bp-val" style="color:'+color+'">'+it.total+'/'+it.par+'</div>'+
+        '</div>'+
+        '<div class="bp-bar-wrap"><div class="bp-bar" style="width:'+Math.min(it.pct,100)+'%;background:'+color+'"></div></div>'+
+        '<div class="bp-meta">'+
+          '<span class="bp-vendor">'+e(it.p.vendorName||'')+'</span>'+
+          (locParts?'<span class="bp-locs">'+locParts+'</span>':'')+
+          '<span class="bp-need" style="color:'+color+'">Need '+need+' more</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
 }
 // ── INVENTORY ──────────────────────────────────────────
 
@@ -2658,7 +2722,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.2.0';
+const APP_VERSION='2.3.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -4053,6 +4117,20 @@ async function generateMonthlyReport() {
 .sa-title{font-size:13px;font-weight:600;color:var(--amb);flex:1}
 .sa-badge{font-size:10px;background:var(--amb);color:#fff;padding:2px 8px;border-radius:20px;flex-shrink:0}
 .sa-body{font-size:11px;color:var(--ts);line-height:1.5}
+
+/* ── BELOW PAR PAGE ──────────────────────────────────────────────── */
+.bp-summary{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+.bp-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:13px 14px;margin-bottom:8px;cursor:pointer;box-shadow:var(--sh1)}
+.bp-card:active{opacity:.8}
+.bp-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.bp-name{font-size:13px;font-weight:600;color:var(--txt);line-height:1.3;flex:1}
+.bp-val{font-size:15px;font-weight:800;flex-shrink:0}
+.bp-bar-wrap{height:5px;background:var(--s3);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bp-bar{height:100%;border-radius:3px;transition:width .4s}
+.bp-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:10px}
+.bp-vendor{color:var(--tm)}
+.bp-locs{color:var(--ts);background:var(--s2);padding:2px 7px;border-radius:20px}
+.bp-need{font-weight:700;margin-left:auto}
 </style></head><body>`);
 
   // Header
