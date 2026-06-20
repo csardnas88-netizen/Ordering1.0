@@ -37,7 +37,7 @@ window.dispatchEvent(new Event("fb-ready"));
   --red:#B94040;--rd:#FDF0F0;--rb:#E8BABA;
   --grn:#3A7A58;--grd:#EFF7F2;--grb:#B0D9C2;
   --amb:#A06820;--ad:#FDF4E8;--ab:#E8CFA0;
-  --nvy:#1E2D4A;--nv2:#2A3D5C;
+  --nvy:#1E2D4A;--nvy2:#16223A;--nvy3:#253656;--nv2:#2A3D5C;
   --sw:244px;--hh:60px;
   --r1:8px;--r2:12px;--r3:16px;--r4:20px;
   --sh1:0 1px 4px rgba(26,23,20,.06);
@@ -727,7 +727,7 @@ input,select,textarea{font-family:inherit}
 
 
 /* ── BELOW PAR PAGE (Option C — Dark Navy) ──────────────────────── */
-#pg-belowpar{background:var(--nvy2);min-height:100%}
+#pg-belowpar{background:var(--nvy2);margin:-20px;padding:20px;min-height:calc(100% + 40px)}
 #pg-belowpar .PT{color:#fff}
 #pg-belowpar .PD{color:rgba(255,255,255,.45)}
 .bp-summary{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#E87070;margin-bottom:12px}
@@ -2742,7 +2742,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.3.2';
+const APP_VERSION='2.3.3';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
