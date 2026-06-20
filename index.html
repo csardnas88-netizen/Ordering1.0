@@ -2889,7 +2889,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.0.0';
+const APP_VERSION='3.0.1';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3319,10 +3319,10 @@ function qcRenderList(root) {
     if (has) blsInLoc.push(bl);
   });
   if (blsInLoc.length > 1) {
-    const blLabel = qcEl('div', {cls: 'QC-bl-label', txt: '📚 Filter by shelf (budget line)'});
+    const blLabel = qcEl('div', {cls: 'QC-bl-label', txt: '📚 Filter by budget line'});
     wrap.appendChild(blLabel);
     const blRow = qcEl('div', {cls: 'QC-bl-row'});
-    const allBtn = qcEl('div', {cls: 'QC-bl-pill' + (QC.blFilter === 'all' ? ' on' : ''), txt: 'All shelves'});
+    const allBtn = qcEl('div', {cls: 'QC-bl-pill' + (QC.blFilter === 'all' ? ' on' : ''), txt: 'All'});
     allBtn.addEventListener('click', function(){ qcSetBlFilter('all'); });
     blRow.appendChild(allBtn);
     blsInLoc.forEach(function(bl){
