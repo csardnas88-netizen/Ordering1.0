@@ -786,6 +786,15 @@ input,select,textarea{font-family:inherit}
 .prog-locs{font-size:10px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 
 .PMT-sec{color:var(--tm);opacity:.7}
+
+/* ── QUICK COUNT BUDGET LINE (SHELF) FILTER ──────────────────────── */
+.QC-bl-label{font-size:11px;font-weight:700;color:var(--ts);margin:14px 0 8px;letter-spacing:.02em}
+.QC-bl-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.QC-bl-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);color:var(--ts);background:var(--sur);transition:all .15s;user-select:none}
+.QC-bl-pill:active{opacity:.7}
+.QC-bl-pill.on{background:var(--nvy);color:#fff;border-color:var(--nvy)}
+.QC-bl-count{font-size:11px;font-weight:700;background:var(--s3);color:var(--ts);padding:1px 7px;border-radius:10px;min-width:18px;text-align:center}
+.QC-bl-pill.on .QC-bl-count{background:rgba(255,255,255,.2);color:#fff}
 </style>
 </head>
 <body>
@@ -2880,7 +2889,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='2.9.2';
+const APP_VERSION='3.0.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3114,6 +3123,7 @@ const QC = {
   view: 'select',
   mode: 'manual',  // 'manual' | 'scan'
   filter: 'all',
+  blFilter: 'all',  // budget line / shelf filter
   search: '',
   productId: null,
   products: [],
@@ -3228,6 +3238,7 @@ function qcStartCount() {
   QC.view = 'list';
   QC.search = '';
   QC.filter = 'all';
+  QC.blFilter = 'all';
   S.currentLoc = QC.loc;
   rQuickCount();
 }
@@ -3301,6 +3312,29 @@ function qcRenderList(root) {
   });
   wrap.appendChild(filterRow);
 
+  // Budget line (shelf) filter — only show budget lines that have products in this location
+  const blsInLoc = [];
+  BL.forEach(function(bl){
+    const has = allProds.some(function(p){ return p.budgetLine === bl; });
+    if (has) blsInLoc.push(bl);
+  });
+  if (blsInLoc.length > 1) {
+    const blLabel = qcEl('div', {cls: 'QC-bl-label', txt: '📚 Filter by shelf (budget line)'});
+    wrap.appendChild(blLabel);
+    const blRow = qcEl('div', {cls: 'QC-bl-row'});
+    const allBtn = qcEl('div', {cls: 'QC-bl-pill' + (QC.blFilter === 'all' ? ' on' : ''), txt: 'All shelves'});
+    allBtn.addEventListener('click', function(){ qcSetBlFilter('all'); });
+    blRow.appendChild(allBtn);
+    blsInLoc.forEach(function(bl){
+      const n = allProds.filter(function(p){ return p.budgetLine === bl; }).length;
+      const pill = qcEl('div', {cls: 'QC-bl-pill' + (QC.blFilter === bl ? ' on' : '')});
+      pill.innerHTML = e(bl) + '<span class="QC-bl-count">' + n + '</span>';
+      pill.addEventListener('click', function(){ qcSetBlFilter(bl); });
+      blRow.appendChild(pill);
+    });
+    wrap.appendChild(blRow);
+  }
+
   // Items container
   const itemsContainer = qcEl('div', {id: 'qc-list-items'});
   wrap.appendChild(itemsContainer);
@@ -3347,6 +3381,12 @@ function qcSetFilter(f) {
   qcRenderListItems();
 }
 
+function qcSetBlFilter(bl) {
+  QC.blFilter = bl;
+  // Re-render the whole list so the pill highlight updates
+  qcRenderList(document.getElementById('qc-root'));
+}
+
 function qcRenderListItems() {
   const container = document.getElementById('qc-list-items');
   if (!container) return;
@@ -3370,6 +3410,9 @@ function qcRenderListItems() {
     if (!aCounted && bCounted) return 1;
     return (a.sortOrder||999) - (b.sortOrder||999);
   });
+
+  // Apply budget line (shelf) filter
+  if (QC.blFilter && QC.blFilter !== 'all') filtered = filtered.filter(function(p){ return p.budgetLine === QC.blFilter; });
 
   if (QC.filter === 'pending') filtered = filtered.filter(function(p){ return S.invLoc[loc][p.id] === undefined || S.invLoc[loc][p.id] === ''; });
   else if (QC.filter === 'counted') filtered = filtered.filter(function(p){ return S.invLoc[loc][p.id] !== undefined && S.invLoc[loc][p.id] !== ''; });
