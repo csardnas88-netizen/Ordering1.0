@@ -586,7 +586,7 @@ input,select,textarea{font-family:inherit}
 .QC-filter.on{background:var(--nvy);border-color:var(--nvy);color:#fff}
 .QC-list-item{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:13px 16px;margin-bottom:7px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--sh1);transition:border-color .14s}
 .QC-list-item:hover{border-color:var(--gold)}
-.QC-li-emoji{font-size:22px;width:32px;text-align:center;flex-shrink:0}
+.QC-li-emoji{font-size:22px;width:32px;height:32px;text-align:center;flex-shrink:0;overflow:hidden;border-radius:4px}.QC-li-emoji img{width:100%;height:100%;object-fit:cover;border-radius:4px;display:block}
 .QC-li-info{flex:1;min-width:0}
 .QC-li-name{font-size:13px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .QC-li-meta{font-size:10px;color:var(--tm);margin-top:2px}
@@ -609,7 +609,7 @@ input,select,textarea{font-family:inherit}
 .QC-ct-prog-num{color:var(--gl);font-size:11px;font-weight:600}
 .QC-ct-bar{height:3px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden}
 .QC-ct-fill{height:100%;background:var(--gl);border-radius:99px;transition:width .4s}
-.QC-prod-emoji{font-size:40px;text-align:center;margin-bottom:8px;margin-top:4px}
+.QC-prod-emoji{font-size:40px;text-align:center;margin-bottom:8px;margin-top:4px}.QC-prod-emoji img{width:72px;height:72px;object-fit:cover;border-radius:8px;display:block;margin:0 auto}
 .QC-prod-name{font-size:17px;font-weight:600;color:var(--txt);text-align:center;line-height:1.35;margin-bottom:4px}
 .QC-prod-meta{font-size:11px;color:var(--tm);text-align:center;margin-bottom:6px}
 .QC-par-pill{display:flex;align-items:center;gap:5px;background:var(--gt);border:1px solid var(--gold);border-radius:99px;padding:4px 12px;font-size:11px;color:var(--gd);width:fit-content;margin:0 auto 22px;font-weight:600}
@@ -2889,7 +2889,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.0.1';
+const APP_VERSION='3.0.2';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3148,6 +3148,10 @@ function rQuickCount() {
 
 // ── HELPERS ──────────────────────────────────────────────────────────
 function qcEmoji(p) {
+  if (p && p.photoUrl) {
+    const fb = (p.emoji && String(p.emoji)) || '📦';
+    return '<img src="' + p.photoUrl.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + fb.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\'">';
+  }
   // Convert legacy HTML entity emojis stored in Firebase to real emoji chars
   const e = p && p.emoji ? String(p.emoji) : '';
   if (!e || e === '&#128230;' || e.indexOf('&#') === 0) return '📦';
@@ -3442,7 +3446,7 @@ function qcRenderListItems() {
 
     const row = qcEl('div', {cls: 'QC-list-item'});
     row.addEventListener('click', function() { qcOpenCounter(p.id); });
-    const emoji = qcEl('div', {cls: 'QC-li-emoji', txt: qcEmoji(p)});
+    const emoji = qcEl('div', {cls: 'QC-li-emoji', html: qcEmoji(p)});
     const info = qcEl('div', {cls: 'QC-li-info'});
     const nm = qcEl('div', {cls: 'QC-li-name', txt: p.name});
     const mt = qcEl('div', {cls: 'QC-li-meta', txt: 'Par ' + par + ' · ' + (p.vendorName||'') + (p.partNumber ? ' · #' + p.partNumber : '')});
@@ -3517,7 +3521,7 @@ function qcRenderCounter(root) {
   wrap.appendChild(top);
 
   // Product info
-  const emoji = qcEl('div', {cls: 'QC-prod-emoji', txt: qcEmoji(p)});
+  const emoji = qcEl('div', {cls: 'QC-prod-emoji', html: qcEmoji(p)});
   const nm = qcEl('div', {cls: 'QC-prod-name', txt: p.name});
   const mt = qcEl('div', {cls: 'QC-prod-meta', txt: (p.vendorName||'') + (p.partNumber ? ' · #' + p.partNumber : '')});
   const parPill = qcEl('div', {cls: 'QC-par-pill', txt: '🎯 Par: ' + par + ' ' + cm});
