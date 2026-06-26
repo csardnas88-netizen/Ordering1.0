@@ -1365,17 +1365,34 @@ function listen(){
   S.uns.push(onSnapshot(doc(db,'budgets',mk),s=>{S.budgets=s.exists()?s.data():{};ref();},err=>showErr('Could not load budgets.',err)));
   S.uns.push(onSnapshot(collection(db,'alerts'),s=>{S.alerts=s.docs.map(d=>({id:d.id,...d.data()}));cleanOldAlerts();updBadges();ref();},err=>showErr('Could not load alerts.',err)));
   // Load both locations from Firebase
+  // Inventory listeners — always accept Firestore updates so changes from other
+  // devices appear in near real-time.  The only exception is the single product
+  // the user is *currently typing a count for* in the counter view; we protect
+  // that one field to avoid overwriting unsaved keystrokes.
+  function _invApply(loc, d) {
+    for (const [k,v] of Object.entries(d)) {
+      if (k==='savedAt'||k==='savedBy') continue;
+      const activelyEditing = typeof QC!=='undefined' &&
+        QC.view==='counter' && QC.loc===loc && QC.productId===k;
+      if (!activelyEditing) S.invLoc[loc][k] = v;
+    }
+  }
   S.uns.push(onSnapshot(doc(db,'inventory',mk+'_floor3'),s=>{
     const d=s.exists()?s.data():{};
-    for(const[k,v]of Object.entries(d)){if(k==='savedAt'||k==='savedBy')continue;if(S.invLoc.floor3[k]===undefined)S.invLoc.floor3[k]=v;}
-    if(d.savedAt&&!S.lastSaved)S.lastSaved=d.savedAt;
+    _invApply('floor3', d);
+    if(d.savedAt) S.lastSaved=d.savedAt;
     ref();
   },err=>showErr('Could not load Floor 3 inventory.',err)));
   S.uns.push(onSnapshot(doc(db,'inventory',mk+'_tiendita'),s=>{
     const d=s.exists()?s.data():{};
-    for(const[k,v]of Object.entries(d)){if(k==='savedAt'||k==='savedBy')continue;if(S.invLoc.tiendita[k]===undefined)S.invLoc.tiendita[k]=v;}
+    _invApply('tiendita', d);
     ref();
   },err=>showErr('Could not load Tiendita inventory.',err)));
+  S.uns.push(onSnapshot(doc(db,'inventory',mk+'_piso2'),s=>{
+    const d=s.exists()?s.data():{};
+    _invApply('piso2', d);
+    ref();
+  },err=>showErr('Could not load Piso 2 inventory.',err)));
 }
 
 async function cleanOldAlerts(){
@@ -2889,7 +2906,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.0.3';
+const APP_VERSION='3.0.4';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3477,8 +3494,28 @@ function qcRenderListItems() {
 function qcOpenCounter(productId) {
   QC.productId = productId;
   QC.view = 'counter';
-  let prods = S.products.slice().sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
-  if (QC.filter === 'pending') prods = prods.filter(function(p){ return S.invLoc[QC.loc][p.id] === undefined || S.invLoc[QC.loc][p.id] === ''; });
+  const loc = QC.loc;
+  // Apply the SAME filter chain as qcRenderList so Save & Next only navigates
+  // through products that belong to the currently active location and session.
+  let prods = S.products.filter(function(p){
+    if (loc === 'piso2') return p.locations && p.locations.piso2 === true;
+    return !p.locations || p.locations[loc] !== false;
+  }).sort(function(a,b){ return (a.sortOrder||999)-(b.sortOrder||999); });
+  // Budget-line / shelf filter
+  if (QC.blFilter && QC.blFilter !== 'all')
+    prods = prods.filter(function(p){ return p.budgetLine === QC.blFilter; });
+  // Count-status filter (pending / counted / all)
+  if (QC.filter === 'pending')
+    prods = prods.filter(function(p){ return S.invLoc[loc][p.id]===undefined || S.invLoc[loc][p.id]===''; });
+  else if (QC.filter === 'counted')
+    prods = prods.filter(function(p){ return S.invLoc[loc][p.id]!==undefined && S.invLoc[loc][p.id]!==''; });
+  // Search filter
+  if (QC.search) {
+    const q = QC.search.toLowerCase();
+    prods = prods.filter(function(p){
+      return (p.name||'').toLowerCase().includes(q) || (p.partNumber||'').toLowerCase().includes(q);
+    });
+  }
   QC.products = prods;
   QC.idx = prods.findIndex(function(p){ return p.id === productId; });
   if (QC.idx === -1) QC.idx = 0;
