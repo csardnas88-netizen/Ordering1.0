@@ -1397,7 +1397,13 @@ function listen(){
 
 async function cleanOldAlerts(){
   const cutoff=Date.now()-30*24*60*60*1000;
-  const stale=S.alerts.filter(a=>a.status==='ordered'&&new Date(a.createdAt).getTime()<cutoff);
+  // Remove expired local (auto) alerts from memory
+  S.alerts=S.alerts.filter(function(a){
+    if(!a.id||!a.id.startsWith('auto_'))return true;
+    return !(a.status==='ordered'&&new Date(a.createdAt).getTime()<cutoff);
+  });
+  // Delete expired Firestore alerts
+  const stale=S.alerts.filter(a=>a.status==='ordered'&&(!a.id||!a.id.startsWith('auto_'))&&new Date(a.createdAt).getTime()<cutoff);
   for(const a of stale){try{await FB.deleteDoc(FB.doc(FB.db,'alerts',a.id));}catch(x){}}
 }
 
@@ -2231,11 +2237,23 @@ async function submitAlert(){
   }catch(err){showErr('Could not save the alert. Check your connection.',err);}
 }
 async function markOrd(id){
+  // Auto/local alerts (zero_stock, below_par) have synthetic ids — update locally only
+  if(id && id.startsWith('auto_')){
+    const a=S.alerts.find(x=>x.id===id);
+    if(a){a.status='ordered';updBadges();ref();}
+    return;
+  }
   try{await FB.updateDoc(FB.doc(FB.db,'alerts',id),{status:'ordered',orderedBy:S.managerName,orderedAt:now()});}
   catch(err){showErr('Could not update alert. Try again.',err);}
 }
 async function delAl(id){
+  if(!id||id==='undefined'){showNote('This alert cannot be deleted manually.');return;}
   if(!confirm('Delete this alert?'))return;
+  // Auto/local alerts live only in local state — remove from array and refresh
+  if(id.startsWith('auto_')){
+    S.alerts=S.alerts.filter(function(a){return a.id!==id;});
+    updBadges();ref();return;
+  }
   try{await FB.deleteDoc(FB.doc(FB.db,'alerts',id));}
   catch(err){showErr('Could not delete alert. Try again.',err);}
 }
@@ -2574,6 +2592,7 @@ function runSmartAlerts(){
       const exists = S.alerts.find(function(a){ return a.productId===p.id && a.reason==='zero_stock'; });
       if(!exists){
         S.alerts.push({
+          id: 'auto_' + p.id + '_zero',   // synthetic local ID so delete/mark work
           productId: p.id,
           productName: p.name,
           status: 'urgent',
@@ -2612,6 +2631,7 @@ function runSmartAlerts(){
     if(isBelowPar && !existsBP){
       const pct = Math.round((total/par)*100);
       S.alerts.push({
+        id: 'auto_' + p.id + '_bp',       // synthetic local ID so delete/mark work
         productId:p.id, productName:p.name,
         status: total <= par*0.25 ? 'urgent' : 'warning',
         reason:'below_par',
@@ -2866,7 +2886,13 @@ function showConfirmMO(als){
 }
 async function closeConfirm(yes){
   closeMO('MO-confirm');
-  if(yes){for(const a of S.alerts.filter(x=>x.status==='urgent'))await FB.updateDoc(FB.doc(FB.db,'alerts',a.id),{status:'ordered',orderedBy:S.managerName,orderedAt:now()});await doFinalize();}
+  if(yes){
+    for(const a of S.alerts.filter(x=>x.status==='urgent')){
+      if(a.id&&a.id.startsWith('auto_')){a.status='ordered';continue;} // local alert — no Firestore doc
+      if(a.id) await FB.updateDoc(FB.doc(FB.db,'alerts',a.id),{status:'ordered',orderedBy:S.managerName,orderedAt:now()});
+    }
+    await doFinalize();
+  }
 }
 
 // ── MODAL / SIDEBAR / LOAD ─────────────────────────────
@@ -2906,7 +2932,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.0.4';
+const APP_VERSION='3.0.5';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
