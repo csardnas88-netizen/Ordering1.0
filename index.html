@@ -18,7 +18,6 @@ window._sb=supabase.createClient(
   'https://ixqjdqsmnvfkjuvzdtca.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4cWpkcXNtbnZma2p1dnpkdGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMzQxMjAsImV4cCI6MjA5NTYxMDEyMH0.M51bFeERAdCbNajS1CszZDmSJZ9zBzz0Y_V0kDylMgA'
 );
-window.dispatchEvent(new Event("sb-ready"));
 </script>
 <style>
 
@@ -1258,7 +1257,7 @@ let OrderSettings={approvalDays:2,vendors:{}};
 let SB=null;
 
 // ── BOOTSTRAP ──────────────────────────────────────────
-window.addEventListener('sb-ready',async()=>{
+document.addEventListener('DOMContentLoaded',async()=>{
   SB=window._sb;
   const stored=localStorage.getItem('jw_manager_name');
   if(stored){S.managerName=stored;renderUserInfo();await boot();}
@@ -2977,7 +2976,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.0.6';
+const APP_VERSION='3.0.7';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
