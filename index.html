@@ -12,20 +12,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore,collection,doc,setDoc,getDocs,onSnapshot,updateDoc,addDoc,deleteDoc }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-const db=getFirestore(initializeApp({
-  apiKey:"AIzaSyCKmFise4aQ_aXwl_t2h1g8podcOfvmlyk",
-  authDomain:"ordering-app-8bcb8.firebaseapp.com",
-  projectId:"ordering-app-8bcb8",
-  storageBucket:"ordering-app-8bcb8.firebasestorage.app",
-  messagingSenderId:"415914625333",
-  appId:"1:415914625333:web:2d40088539cc96c62a647c"
-}));
-window._fb={db,collection,doc,setDoc,getDocs,onSnapshot,updateDoc,addDoc,deleteDoc};
-window.dispatchEvent(new Event("fb-ready"));
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+window._sb=supabase.createClient(
+  'https://ixqjdqsmnvfkjuvzdtca.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4cWpkcXNtbnZma2p1dnpkdGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMzQxMjAsImV4cCI6MjA5NTYxMDEyMH0.M51bFeERAdCbNajS1CszZDmSJZ9zBzz0Y_V0kDylMgA'
+);
+window.dispatchEvent(new Event("sb-ready"));
 </script>
 <style>
 
@@ -1262,11 +1255,11 @@ const S={
 const INV={query:'',view:'vendor',filter:'all'};
 const CAT={query:'',view:'vendor'};
 let OrderSettings={approvalDays:2,vendors:{}};
-let FB=null;
+let SB=null;
 
 // ── BOOTSTRAP ──────────────────────────────────────────
-window.addEventListener('fb-ready',async()=>{
-  FB=window._fb;
+window.addEventListener('sb-ready',async()=>{
+  SB=window._sb;
   const stored=localStorage.getItem('jw_manager_name');
   if(stored){S.managerName=stored;renderUserInfo();await boot();}
   else{document.getElementById('LS').classList.add('out');setTimeout(()=>{document.getElementById('LS').style.display='none';document.getElementById('NS').classList.add('on');},420);}
@@ -1314,16 +1307,16 @@ function renderUserInfo(){
 // ── SEED ───────────────────────────────────────────────
 async function seed(){
   try{
-    const {db,collection,getDocs,addDoc}=FB;
-    const vs=await getDocs(collection(db,'vendors'));
-    if(vs.empty)for(const n of DV)await addDoc(collection(db,'vendors'),{name:n,createdAt:now()});
-    const ps=await getDocs(collection(db,'products'));
-    if(ps.empty)await seedProducts();
+    const {data:vs,error:ve}=await SB.from('vendors').select('id').limit(1);
+    if(ve)throw ve;
+    if(!vs||vs.length===0)for(const n of DV)await SB.from('vendors').insert({name:n,createdAt:now()});
+    const {data:ps,error:pe}=await SB.from('products').select('id').limit(1);
+    if(pe)throw pe;
+    if(!ps||ps.length===0)await seedProducts();
   }catch(err){showErr('Could not connect to the database. Please check your internet connection.',err);}
 }
 
 async function seedProducts(){
-  const {db,collection,addDoc}=FB;
   const list=[
     {name:'JW Marriott Aromatherapy Associates Aloe Facial Soap 30g',vendorName:'Guest Supply',partNumber:'0100264',pricePerCase:69.70,casePack:288,parLevel:10,countMode:'cases',budgetLine:'Guest Room Supplies',emoji:'🧼'},
     {name:'JW Marriott Aromatherapy Associates Aloe Bath Soap 50g',vendorName:'Guest Supply',partNumber:'0100265',pricePerCase:69.70,casePack:216,parLevel:9,countMode:'cases',budgetLine:'Guest Room Supplies',emoji:'🧼'},
@@ -1353,46 +1346,90 @@ async function seedProducts(){
     {name:'Cordoba Sleek Wastebasket Liner 12 Quart Black',vendorName:'Guest Supply',partNumber:'0079130',pricePerCase:149.43,casePack:12,parLevel:2,countMode:'cases',budgetLine:'Guest Room Supplies',emoji:'🗑️'},
     {name:'Cordoba Sleek Wastebasket 12 Quart Black',vendorName:'Guest Supply',partNumber:'0079308',pricePerCase:175.50,casePack:6,parLevel:3,countMode:'cases',budgetLine:'Guest Room Supplies',emoji:'🗑️'},
   ];
-  for(const p of list)await addDoc(collection(db,'products'),{...p,createdAt:now()});
+  for(const p of list)await SB.from('products').insert({...p,createdAt:now()});
   showOk('Product catalog loaded from your Guest Supply order list.');
 }
 
 // ── LISTENERS ──────────────────────────────────────────
-function listen(){
-  const {db,collection,onSnapshot,doc}=FB,mk=mkey();
-  S.uns.push(onSnapshot(collection(db,'vendors'),s=>{S.vendors=s.docs.map(d=>({id:d.id,...d.data()}));ref();},err=>showErr('Could not load vendors.',err)));
-  S.uns.push(onSnapshot(collection(db,'products'),s=>{S.products=s.docs.map(d=>({id:d.id,...d.data()}));seedCleaningSupplies();ref();},err=>showErr('Could not load products.',err)));
-  S.uns.push(onSnapshot(doc(db,'budgets',mk),s=>{S.budgets=s.exists()?s.data():{};ref();},err=>showErr('Could not load budgets.',err)));
-  S.uns.push(onSnapshot(collection(db,'alerts'),s=>{S.alerts=s.docs.map(d=>({id:d.id,...d.data()}));cleanOldAlerts();updBadges();ref();},err=>showErr('Could not load alerts.',err)));
-  // Load both locations from Firebase
-  // Inventory listeners — always accept Firestore updates so changes from other
-  // devices appear in near real-time.  The only exception is the single product
-  // the user is *currently typing a count for* in the counter view; we protect
-  // that one field to avoid overwriting unsaved keystrokes.
-  function _invApply(loc, d) {
-    for (const [k,v] of Object.entries(d)) {
-      if (k==='savedAt'||k==='savedBy') continue;
-      const activelyEditing = typeof QC!=='undefined' &&
-        QC.view==='counter' && QC.loc===loc && QC.productId===k;
-      if (!activelyEditing) S.invLoc[loc][k] = v;
+async function listen(){
+  const mk=mkey();
+
+  // Helper: apply a Supabase inventory row into S.invLoc
+  function _invApply(loc,row){
+    if(!row)return;
+    const qd=row.qtyData||{};
+    for(const [k,v] of Object.entries(qd)){
+      const ae=typeof QC!=='undefined'&&QC.view==='counter'&&QC.loc===loc&&QC.productId===k;
+      if(!ae)S.invLoc[loc][k]=v;
     }
+    if(row.savedAt)S.lastSaved=row.savedAt;
   }
-  S.uns.push(onSnapshot(doc(db,'inventory',mk+'_floor3'),s=>{
-    const d=s.exists()?s.data():{};
-    _invApply('floor3', d);
-    if(d.savedAt) S.lastSaved=d.savedAt;
+
+  // Initial parallel load
+  try{
+    const [vr,pr,ar,br,i3r,itr,ipr]=await Promise.all([
+      SB.from('vendors').select('*'),
+      SB.from('products').select('*').order('sortOrder',{ascending:true,nullsFirst:false}),
+      SB.from('alerts').select('*'),
+      SB.from('budgets').select('*').eq('monthKey',mk).maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_floor3').maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_tiendita').maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_piso2').maybeSingle()
+    ]);
+    if(vr.data){S.vendors=vr.data;ref();}
+    if(pr.data){S.products=pr.data;seedCleaningSupplies();ref();}
+    if(ar.data){S.alerts=ar.data;cleanOldAlerts();updBadges();ref();}
+    S.budgets=br.data?.data||{};ref();
+    _invApply('floor3',i3r.data);
+    _invApply('tiendita',itr.data);
+    _invApply('piso2',ipr.data);
     ref();
-  },err=>showErr('Could not load Floor 3 inventory.',err)));
-  S.uns.push(onSnapshot(doc(db,'inventory',mk+'_tiendita'),s=>{
-    const d=s.exists()?s.data():{};
-    _invApply('tiendita', d);
-    ref();
-  },err=>showErr('Could not load Tiendita inventory.',err)));
-  S.uns.push(onSnapshot(doc(db,'inventory',mk+'_piso2'),s=>{
-    const d=s.exists()?s.data():{};
-    _invApply('piso2', d);
-    ref();
-  },err=>showErr('Could not load Piso 2 inventory.',err)));
+  }catch(err){showErr('Could not load data from Supabase. Please check your connection.',err);}
+
+  // Real-time channels
+  const vendorCh=SB.channel('vendors-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'vendors'},async()=>{
+      const {data}=await SB.from('vendors').select('*');
+      if(data){S.vendors=data;ref();}
+    }).subscribe();
+  S.uns.push(()=>SB.removeChannel(vendorCh));
+
+  const productCh=SB.channel('products-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'products'},async()=>{
+      const {data}=await SB.from('products').select('*').order('sortOrder',{ascending:true,nullsFirst:false});
+      if(data){S.products=data;seedCleaningSupplies();ref();}
+    }).subscribe();
+  S.uns.push(()=>SB.removeChannel(productCh));
+
+  const alertCh=SB.channel('alerts-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'alerts'},async()=>{
+      const {data}=await SB.from('alerts').select('*');
+      if(data){S.alerts=data;cleanOldAlerts();updBadges();ref();}
+    }).subscribe();
+  S.uns.push(()=>SB.removeChannel(alertCh));
+
+  const budgetCh=SB.channel('budgets-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'budgets'},async()=>{
+      const {data}=await SB.from('budgets').select('*').eq('monthKey',mk).maybeSingle();
+      S.budgets=data?.data||{};ref();
+    }).subscribe();
+  S.uns.push(()=>SB.removeChannel(budgetCh));
+
+  const invCh=SB.channel('inventory-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'inventory'},async(payload)=>{
+      const key=(payload.new?.monthKeyLoc||payload.old?.monthKeyLoc||'');
+      const loc=key.endsWith('_floor3')?'floor3':key.endsWith('_tiendita')?'tiendita':key.endsWith('_piso2')?'piso2':null;
+      if(!loc)return;
+      const {data}=await SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_'+loc).maybeSingle();
+      _invApply(loc,data);ref();
+    }).subscribe();
+  S.uns.push(()=>SB.removeChannel(invCh));
+
+  const settingsCh=SB.channel('settings-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'settings'},async(payload)=>{
+      if((payload.new?.key||payload.old?.key)==='shiftNote')renderShiftNote(payload.new?.value||null);
+    }).subscribe();
+  S.uns.push(()=>SB.removeChannel(settingsCh));
 }
 
 async function cleanOldAlerts(){
@@ -1404,7 +1441,7 @@ async function cleanOldAlerts(){
   });
   // Delete expired Firestore alerts
   const stale=S.alerts.filter(a=>a.status==='ordered'&&(!a.id||!a.id.startsWith('auto_'))&&new Date(a.createdAt).getTime()<cutoff);
-  for(const a of stale){try{await FB.deleteDoc(FB.doc(FB.db,'alerts',a.id));}catch(x){}}
+  for(const a of stale){try{await SB.from('alerts').delete().eq('id',a.id);}catch(x){}}
 }
 
 // ── NAVIGATION ─────────────────────────────────────────
@@ -1477,7 +1514,7 @@ async function seedCleaningSupplies(){
   if(!missing.length)return;
   for(const p of missing){
     try{
-      await FB.addDoc(FB.collection(FB.db,'products'),{
+      await SB.from('products').insert({
         ...p,
         vendorName:'Guest Supply',
         budgetLine:'Cleaning Supplies',
@@ -1496,7 +1533,7 @@ async function submitOrder(){
   if(!confirm('Save this order to history?'))return;
   const total=items.reduce(function(s,i){return s+i.lt;},0);
   try{
-    await FB.addDoc(FB.collection(FB.db,'orders'),{
+    await SB.from('orders').insert({
       items:items.map(function(i){return{name:i.name,vendor:i.vn,qty:i.qty,total:i.lt};}),
       total:total,
       submittedBy:S.managerName,
@@ -1512,9 +1549,8 @@ async function rOrderHistory(){
   const el=document.getElementById('OH');
   if(!el)return;
   try{
-    const snap=await FB.getDocs(FB.collection(FB.db,'orders'));
-    const orders=[];
-    snap.forEach(function(d){orders.push({id:d.id,...d.data()});});
+    const {data:ordData}=await SB.from('orders').select('*');
+    const orders=ordData||[];
     orders.sort(function(a,b){return (b.submittedAt||'').localeCompare(a.submittedAt||'');});
     const recent=orders.slice(0,5);
     if(!recent.length){el.innerHTML='';return;}
@@ -2015,9 +2051,11 @@ async function saveInv(){
   const loc=S.currentLoc;
   const locName=loc==='floor3'?'Floor 3 Storage':'La Tiendita';
   try{
-    await FB.setDoc(FB.doc(FB.db,'inventory',mkey()+'_'+loc),{
-      ...S.invLoc[loc],savedAt:now(),savedBy:S.managerName
-    });
+    await SB.from('inventory').upsert({
+      monthKeyLoc:mkey()+'_'+loc,
+      qtyData:{...S.invLoc[loc]},
+      savedAt:now(),savedBy:S.managerName
+    },{onConflict:'monthKeyLoc'});
     S.invDirty=false;S.lastSaved=now();
     showOk(locName+' inventory saved by '+S.managerName+'.');
     const ub=document.getElementById('unsaved-banner');if(ub)ub.classList.add('hi');
@@ -2029,9 +2067,11 @@ async function saveInv(){
 
 function resetInvConfirm(){
   if(!confirm('Reset all inventory counts for '+mkey()+'? This cannot be undone.'))return;
-  S.invLoc={floor3:{},tiendita:{}};S.gaps={};S.invDirty=false;S.lastSaved=null;
-  FB.setDoc(FB.doc(FB.db,'inventory',mkey()+'_floor3'),{savedAt:now(),savedBy:S.managerName}).catch(x=>showErr('Could not reset inventory.',x));
-  FB.setDoc(FB.doc(FB.db,'inventory',mkey()+'_tiendita'),{savedAt:now(),savedBy:S.managerName}).catch(x=>showErr('Could not reset inventory.',x));
+  S.invLoc={floor3:{},tiendita:{},piso2:{}};S.gaps={};S.invDirty=false;S.lastSaved=null;
+  const _rmk=mkey(),_rsb=S.managerName;
+  for(const _loc of['floor3','tiendita','piso2']){
+    SB.from('inventory').upsert({monthKeyLoc:_rmk+'_'+_loc,qtyData:{},savedAt:now(),savedBy:_rsb},{onConflict:'monthKeyLoc'}).catch(x=>showErr('Could not reset inventory.',x));
+  }
   rInv();showOk('Inventory reset for '+mkey()+'.');
 }
 
@@ -2114,7 +2154,7 @@ document.addEventListener('touchend',ev=>{
 async function persistOrder(ctx){
   try{
     const updates=[];
-    S.products.forEach((p,idx)=>{if(p.sortOrder!==idx){p.sortOrder=idx;updates.push(FB.updateDoc(FB.doc(FB.db,'products',p.id),{sortOrder:idx}));}});
+    S.products.forEach((p,idx)=>{if(p.sortOrder!==idx){p.sortOrder=idx;updates.push(SB.from('products').update({sortOrder:idx}).eq('id',p.id));}});
     await Promise.all(updates);
   }catch(err2){showErr('Could not save product order. Try again.',err2);}
   if(ctx==='inv')rProds();else rCatalog();
@@ -2175,12 +2215,17 @@ async function doFinalize(){
   if(btn){btn.disabled=true;btn.textContent='Saving...';}
   try{
     const items=getItems(),mk=mkey();
-    await FB.addDoc(FB.collection(FB.db,'orders'),{items,monthKey:mk,total:items.reduce((s,i)=>s+i.lt,0),createdAt:now(),orderedBy:S.managerName});
+    await SB.from('orders').insert({items,monthKey:mk,total:items.reduce((s,i)=>s+i.lt,0),createdAt:now(),orderedBy:S.managerName});
     const sp={};
     for(const i of items)sp['spent_'+i.bl]=(S.budgets['spent_'+i.bl]||0)+i.lt;
-    if(Object.keys(sp).length)await FB.updateDoc(FB.doc(FB.db,'budgets',mk),sp);
-    S.inventory={};S.gaps={};S.invDirty=false;
-    await FB.setDoc(FB.doc(FB.db,'inventory',mk),{savedAt:now(),savedBy:S.managerName,clearedAfterOrder:true});
+    if(Object.keys(sp).length){
+      const newBudgetData={...S.budgets,...sp};
+      await SB.from('budgets').upsert({monthKey:mk,data:newBudgetData},{onConflict:'monthKey'});
+    }
+    S.gaps={};S.invDirty=false;
+    for(const _loc of['floor3','tiendita','piso2']){
+      SB.from('inventory').upsert({monthKeyLoc:mk+'_'+_loc,qtyData:{},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'}).catch(()=>{});
+    }
     showOk('Order finalized by '+S.managerName+'. Inventory reset for next count.');
     go('dashboard');
   }catch(err){showErr('Could not save the order. Please try again.',err);}
@@ -2232,7 +2277,7 @@ async function submitAlert(){
   const nt=document.getElementById('AP-note').value.trim();
   if(!sel.value){showNote('Please select a product.');return;}
   try{
-    await FB.addDoc(FB.collection(FB.db,'alerts'),{productId:sel.value,productName:opt?.dataset?.n||'',budgetLine:opt?.dataset?.bl||'',note:nt,status:'urgent',flaggedBy:S.managerName,createdAt:now()});
+    await SB.from('alerts').insert({productId:sel.value,productName:opt?.dataset?.n||'',budgetLine:opt?.dataset?.bl||'',note:nt,status:'urgent',flaggedBy:S.managerName,createdAt:now()});
     closeMO('MO-alert');showOk('Product flagged as urgent by '+S.managerName+'.');
   }catch(err){showErr('Could not save the alert. Check your connection.',err);}
 }
@@ -2243,7 +2288,7 @@ async function markOrd(id){
     if(a){a.status='ordered';updBadges();ref();}
     return;
   }
-  try{await FB.updateDoc(FB.doc(FB.db,'alerts',id),{status:'ordered',orderedBy:S.managerName,orderedAt:now()});}
+  try{await SB.from('alerts').update({status:'ordered',orderedBy:S.managerName,orderedAt:now()}).eq('id',id);}
   catch(err){showErr('Could not update alert. Try again.',err);}
 }
 async function delAl(id){
@@ -2254,7 +2299,7 @@ async function delAl(id){
     S.alerts=S.alerts.filter(function(a){return a.id!==id;});
     updBadges();ref();return;
   }
-  try{await FB.deleteDoc(FB.doc(FB.db,'alerts',id));}
+  try{await SB.from('alerts').delete().eq('id',id);}
   catch(err){showErr('Could not delete alert. Try again.',err);}
 }
 
@@ -2272,7 +2317,7 @@ async function toggleProdLoc(productId, loc) {
   const status = p.locations[loc] ? 'added to' : 'removed from';
   // Save to Firebase
   try {
-    await FB.updateDoc(FB.doc(FB.db, 'products', productId), { locations: p.locations });
+    await SB.from('products').update({ locations: p.locations }).eq('id', productId);
     showOk(e(p.name).slice(0,30) + ' ' + status + ' ' + locName + '.');
   } catch(err) {
     showErr('Could not update product location.', err);
@@ -2357,7 +2402,7 @@ function rCatalog(){
 function pickCV(v){S.cv=v;rCatalog();}
 function addVendor(){
   const n=prompt('New vendor name:');if(!n?.trim())return;
-  FB.addDoc(FB.collection(FB.db,'vendors'),{name:n.trim(),createdAt:now()})
+  SB.from('vendors').insert({name:n.trim(),createdAt:now()})
     .then(()=>showOk('Vendor "'+n.trim()+'" added.'))
     .catch(err=>showErr('Could not add vendor.',err));
 }
@@ -2395,14 +2440,14 @@ async function saveProd(){
   const cm=document.getElementById('pm-cm').value||'cases';
   const data={name:nm,vendorName:vn,budgetLine:document.getElementById('pm-b').value,partNumber:document.getElementById('pm-pt').value.trim(),pricePerCase:parseFloat(document.getElementById('pm-pr').value)||0,casePack:parseInt(document.getElementById('pm-cp').value)||1,parLevel:parseInt(document.getElementById('pm-pa').value)||0,countMode:cm,photoUrl:document.getElementById('pm-ph').value.trim(),updatedAt:now()};
   try{
-    if(S.epid){await FB.updateDoc(FB.doc(FB.db,'products',S.epid),data);showOk('Product updated.');}
-    else{await FB.addDoc(FB.collection(FB.db,'products'),{...data,createdAt:now()});showOk('Product added.');}
+    if(S.epid){await SB.from('products').update(data).eq('id',S.epid);showOk('Product updated.');}
+    else{await SB.from('products').insert({...data,createdAt:now()});showOk('Product added.');}
     closeMO('MO-product');
   }catch(err){showErr('Could not save product. Please try again.',err);}
 }
 async function delP(id){
   if(!confirm('Delete this product?'))return;
-  try{await FB.deleteDoc(FB.doc(FB.db,'products',id));showOk('Product deleted.');}
+  try{await SB.from('products').delete().eq('id',id);showOk('Product deleted.');}
   catch(err){showErr('Could not delete product.',err);}
 }
 
@@ -2477,7 +2522,7 @@ async function saveParLevels(){
   // the Firebase listener from interfering between sequential awaits
   try{
     await Promise.all(changes.map(ch=>
-      FB.updateDoc(FB.doc(FB.db,'products',ch.id),{parLevel:ch.newPar,updatedAt:now()})
+      SB.from('products').update({parLevel:ch.newPar,updatedAt:now()}).eq('id',ch.id)
     ));
     showOk(changes.length+' par level'+(changes.length!==1?'s':'')+' saved successfully.');
   }catch(err){showErr('Could not save par levels. Please check your connection and try again.',err);}
@@ -2678,7 +2723,7 @@ async function saveBudgets(){
   try{
     const u={};
     for(const l of BL){const el=document.getElementById('bi-'+l.replace(/\s+/g,'-'));u[l]=parseFloat(el?.value)||0;}
-    await FB.setDoc(FB.doc(FB.db,'budgets',mkey()),{...S.budgets,...u});
+    await SB.from('budgets').upsert({monthKey:mkey(),data:{...S.budgets,...u}},{onConflict:'monthKey'});
     showOk('Budgets saved.');
   }catch(err){showErr('Could not save budgets. Check your connection and try again.',err);}
 }
@@ -2870,8 +2915,8 @@ async function confirmPdfImport(){
       const name=(document.getElementById('pn'+i)?.value||'').trim();if(!name)continue;
       const data={name,partNumber:(document.getElementById('pp'+i)?.value||'').trim(),pricePerCase:parseFloat(document.getElementById('ppr'+i)?.value)||0,casePack:parseInt(document.getElementById('pcp'+i)?.value)||1,parLevel:parseInt(document.getElementById('ppa'+i)?.value)||0,countMode:document.getElementById('pcm'+i)?.value||'cases',budgetLine:document.getElementById('pbl'+i)?.value||BL[0],vendorName:products[i].vendorName,emoji:products[i].emoji||'📦',photoUrl:'',createdAt:now()};
       const existing=S.products.find(p=>p.partNumber&&p.partNumber===data.partNumber);
-      if(existing){await FB.updateDoc(FB.doc(FB.db,'products',existing.id),{...data,updatedAt:now()});}
-      else{await FB.addDoc(FB.collection(FB.db,'products'),data);}
+      if(existing){await SB.from('products').update({...data,updatedAt:now()}).eq('id',existing.id);}
+      else{await SB.from('products').insert(data);}
       imported++;
     }
     closeMO('MO-pdf');
@@ -2889,7 +2934,7 @@ async function closeConfirm(yes){
   if(yes){
     for(const a of S.alerts.filter(x=>x.status==='urgent')){
       if(a.id&&a.id.startsWith('auto_')){a.status='ordered';continue;} // local alert — no Firestore doc
-      if(a.id) await FB.updateDoc(FB.doc(FB.db,'alerts',a.id),{status:'ordered',orderedBy:S.managerName,orderedAt:now()});
+      if(a.id) await SB.from('alerts').update({status:'ordered',orderedBy:S.managerName,orderedAt:now()}).eq('id',a.id);
     }
     await doFinalize();
   }
@@ -2932,7 +2977,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.0.5';
+const APP_VERSION='3.0.6';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3137,9 +3182,9 @@ async function confirmXlsxImport(){
       // Update if part number already exists, otherwise add new
       const existing=pn?S.products.find(p=>p.partNumber&&p.partNumber===pn):null;
       if(existing){
-        await FB.updateDoc(FB.doc(FB.db,'products',existing.id),{...data,updatedAt:now()});
+        await SB.from('products').update({...data,updatedAt:now()}).eq('id',existing.id);
       }else{
-        await FB.addDoc(FB.collection(FB.db,'products'),data);
+        await SB.from('products').insert(data);
       }
       imported++;
     }
@@ -3682,8 +3727,7 @@ async function qcSaveAndNext() {
   S.invLoc[QC.loc][p.id] = val;
   S.invDirty = true;
   try {
-    var payload = Object.assign({}, S.invLoc[QC.loc], {savedAt: now(), savedBy: S.managerName});
-    await FB.setDoc(FB.doc(FB.db, 'inventory', mkey() + '_' + QC.loc), payload);
+    await SB.from('inventory').upsert({monthKeyLoc:mkey()+'_'+QC.loc,qtyData:{...S.invLoc[QC.loc]},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'});
     S.invDirty = false;
     S.lastSaved = now();
   } catch(err) { /* non-blocking */ }
@@ -3921,8 +3965,7 @@ function qcScheduleSave() {
 
 async function qcSaveInv() {
   try {
-    const payload = Object.assign({}, S.invLoc[QC.loc], { savedAt: now(), savedBy: S.managerName });
-    await FB.setDoc(FB.doc(FB.db, 'inventory', mkey() + '_' + QC.loc), payload);
+    await SB.from('inventory').upsert({monthKeyLoc:mkey()+'_'+QC.loc,qtyData:{...S.invLoc[QC.loc]},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'});
     S.invDirty = false; S.lastSaved = now();
   } catch (err) { /* non-blocking */ }
 }
@@ -3951,12 +3994,13 @@ async function closeCount() {
   }
   try {
     const today = new Date().toISOString().slice(0,10);
-    await FB.setDoc(FB.doc(FB.db,'countSessions',today+'_'+loc),{
+    await SB.from('count_sessions').upsert({
+      sessionKey:today+'_'+loc,
       location:loc, locationName:locName,
       manager:S.managerName, date:today,
       counted:counted, total:total,
       closedAt:now()
-    });
+    },{onConflict:'sessionKey'});
     showOk(locName + ' count closed by ' + S.managerName + ' (' + counted + '/' + total + ').');
     setTimeout(runSmartAlerts, 300);
   } catch(err) {
@@ -4193,16 +4237,11 @@ function initManager() {
 }
 
 // ── SHIFT HANDOFF NOTE ───────────────────────────────────────────────
-let shiftNoteListener = null;
 
 async function loadShiftNote() {
   try {
-    const docRef = FB.doc(FB.db, 'settings', 'shiftNote');
-    if (shiftNoteListener) shiftNoteListener();
-    shiftNoteListener = FB.onSnapshot(docRef, function(snap) {
-      const data = snap.exists() ? snap.data() : null;
-      renderShiftNote(data);
-    });
+    const {data} = await SB.from('settings').select('value').eq('key','shiftNote').maybeSingle();
+    renderShiftNote(data?.value||null);
   } catch(e) { /* non-blocking */ }
 }
 
@@ -4219,19 +4258,16 @@ function renderShiftNote(data) {
   }
 }
 
-function openShiftNote() {
-  const docRef = FB.doc(FB.db, 'settings', 'shiftNote');
-  FB.getDocs ? null : null; // ensure FB is loaded
+async function openShiftNote() {
   try {
-    FB.onSnapshot(FB.doc(FB.db, 'settings', 'shiftNote'), function(snap) {
-      const prev = document.getElementById('shift-prev-note');
-      if (prev) {
-        const d = snap.exists() ? snap.data() : null;
-        prev.innerHTML = d && d.note ?
-          '<strong>Previous note:</strong><br>' + e(d.note) + '<br><span style="opacity:.5">— ' + e(d.by||'') + ' · ' + (d.at ? fd(d.at) : '') + '</span>' :
-          '<em style="opacity:.5">No previous note</em>';
-      }
-    }, function() {});
+    const {data:sd} = await SB.from('settings').select('value').eq('key','shiftNote').maybeSingle();
+    const prev = document.getElementById('shift-prev-note');
+    if (prev) {
+      const d = sd?.value||null;
+      prev.innerHTML = d && d.note ?
+        '<strong>Previous note:</strong><br>' + e(d.note) + '<br><span style="opacity:.5">— ' + e(d.by||'') + ' · ' + (d.at ? fd(d.at) : '') + '</span>' :
+        '<em style="opacity:.5">No previous note</em>';
+    }
   } catch(err) {}
   openMO('MO-shift');
 }
@@ -4242,9 +4278,9 @@ async function saveShiftNote() {
   if (!note) { showNote('Please write a note before saving.'); return; }
   if (!S.managerName) { showNote('Please select your name first (tap 👤 in the top bar).'); return; }
   try {
-    await FB.setDoc(FB.doc(FB.db, 'settings', 'shiftNote'), {
-      note: note, by: S.managerName, at: now()
-    });
+    await SB.from('settings').upsert({
+      key: 'shiftNote', value: {note: note, by: S.managerName, at: now()}
+    },{onConflict:'key'});
     closeMO('MO-shift');
     showOk('Shift note saved.');
   } catch(err) {
@@ -4300,15 +4336,15 @@ async function generateMonthlyReport() {
   // Order history
   let orders = [];
   try {
-    const snap = await FB.getDocs(FB.collection(FB.db,'orders'));
-    snap.forEach(function(d){ const o=d.data(); if(o.month===month) orders.push(o); });
+    const {data:ordersAll}=await SB.from('orders').select('*');
+    (ordersAll||[]).forEach(function(o){ if(o.month===month||o.monthKey===month) orders.push(o); });
   } catch(e) {}
 
   // Count sessions
   let sessions = [];
   try {
-    const snap2 = await FB.getDocs(FB.collection(FB.db,'countSessions'));
-    snap2.forEach(function(d){ const s=d.data(); if(s.date&&s.date.startsWith(month)) sessions.push(s); });
+    const {data:sessAll}=await SB.from('count_sessions').select('*');
+    (sessAll||[]).forEach(function(s){ if(s.date&&s.date.startsWith(month)) sessions.push(s); });
   } catch(e) {}
 
   const w = window.open('','_blank');
@@ -4622,11 +4658,12 @@ async function astCmdLogCounts(counts,loc){
   // Save directly to Firebase inventory (not just memory)
   let saved=false;
   try{
-    await FB.setDoc(FB.doc(FB.db,'inventory',mkey()+'_'+targetLoc),{
-      ...S.invLoc[targetLoc],
+    await SB.from('inventory').upsert({
+      monthKeyLoc:mkey()+'_'+targetLoc,
+      qtyData:{...S.invLoc[targetLoc]},
       savedAt:new Date().toISOString(),
       savedBy:S.managerName||'Manager'
-    });
+    },{onConflict:'monthKeyLoc'});
     saved=true;
     S.lastSaved=new Date().toISOString();
     // Update last saved display on dashboard
@@ -4834,15 +4871,15 @@ function astExportPDF(){
 }
 
 async function astSaveLog(entry){
-  if(!window._fb)return;
-  try{await window._fb.addDoc(window._fb.collection(window._fb.db,'inv_logs'),{...entry,savedAt:now()});}
+  if(!window._sb)return;
+  try{await window._sb.from('inv_logs').insert({...entry,savedAt:now()});}
   catch(x){console.warn('Could not save count log:',x);}
 }
 async function astLoadLogs(){
-  if(!window._fb)return;
+  if(!window._sb)return;
   try{
-    const snap=await window._fb.getDocs(window._fb.collection(window._fb.db,'inv_logs'));
-    AST_LOGS=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>new Date(b.ts)-new Date(a.ts)).slice(0,50);
+    const {data}=await window._sb.from('inv_logs').select('*').order('ts',{ascending:false}).limit(50);
+    AST_LOGS=(data||[]).sort((a,b)=>new Date(b.ts)-new Date(a.ts));
   }catch(x){console.warn('Could not load count logs:',x);}
 }
 
@@ -4877,7 +4914,7 @@ function syncBadge(){
 // INIT
 (function(){
   const chk=setInterval(()=>{
-    if(window._fb&&typeof S!=='undefined'&&S.products.length>0){
+    if(window._sb&&typeof S!=='undefined'&&S.products.length>0){
       clearInterval(chk);
       astLoadLogs().then(()=>{setTimeout(runSmartAlerts,1500);});
       setInterval(syncBadge,5000);
