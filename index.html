@@ -1456,7 +1456,7 @@ async function cleanOldAlerts(){
     if(!a.id||!a.id.startsWith('auto_'))return true;
     return !(a.status==='ordered'&&new Date(a.createdAt).getTime()<cutoff);
   });
-  // Delete expired Firestore alerts
+  // Delete expired alerts from Supabase
   const stale=S.alerts.filter(a=>a.status==='ordered'&&(!a.id||!a.id.startsWith('auto_'))&&new Date(a.createdAt).getTime()<cutoff);
   for(const a of stale){try{await SB.from('alerts').delete().eq('id',a.id);}catch(x){}}
 }
@@ -1551,10 +1551,12 @@ async function submitOrder(){
   const total=items.reduce(function(s,i){return s+i.lt;},0);
   try{
     await SB.from('orders').insert({
-      items:items.map(function(i){return{name:i.name,vendor:i.vn,qty:i.qty,total:i.lt};}),
+      items:items.map(function(i){return{name:i.name,partNumber:i.pn,budgetLine:i.bl,vendor:i.vn,cases:i.cases,pricePerCase:i.pp,total:i.lt};}),
       total:total,
+      monthKey:mkey(),
       submittedBy:S.managerName,
       submittedAt:now(),
+      createdAt:now(),
       month:mkey()
     });
     showOk('Order saved to history by '+S.managerName+'. Total: '+fmt(total));
@@ -2285,9 +2287,11 @@ function exportOrd(){
   const items=getItems();
   if(!items.length){showNote('No items to export.');return;}
   let txt='Order Summary\n'+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' - Prepared by '+S.managerName+'\n'+'='.repeat(52)+'\n\n';
-  const bv={};for(const i of items)(bv[i.vn]||(bv[i.vn]=[])).push(i);
-  for(const[v,vi]of Object.entries(bv)){
-    txt+=v.toUpperCase()+'\n'+'-'.repeat(40)+'\n';
+  // Group by Budget Line (matching what's shown on screen)
+  for(const bl of BL){
+    const vi=items.filter(i=>i.bl===bl);
+    if(!vi.length)continue;
+    txt+=bl.toUpperCase()+'\n'+'-'.repeat(40)+'\n';
     for(const i of vi){txt+='  '+i.name;if(i.pn)txt+=' [#'+i.pn+']';txt+='\n  '+i.cases+' case'+(i.cases>1?'s':'')+' @ $'+i.pp.toFixed(2)+' = '+fmt(i.lt)+'\n';}
     txt+='  Subtotal: '+fmt(vi.reduce((s,i)=>s+i.lt,0))+'\n\n';
   }
@@ -2364,7 +2368,6 @@ async function toggleProdLoc(productId, loc) {
   // Update locally
   const locName = LOCS[loc] ? LOCS[loc].name : loc;
   const status = p.locations[loc] ? 'added to' : 'removed from';
-  // Save to Firebase
   try {
     await SB.from('products').update({ locations: p.locations }).eq('id', productId);
     showOk(e(p.name).slice(0,30) + ' ' + status + ' ' + locName + '.');
@@ -2562,13 +2565,12 @@ async function saveParLevels(){
     changes.push({id:p.id,newPar});
   }
   if(!changes.length){showNote('No changes detected. Make sure you changed a value before saving.');return;}
-  // Update local state immediately before Firebase can fire the listener
+  // Optimistically update local state before Supabase real-time fires
   for(const ch of changes){
     const idx=S.products.findIndex(x=>x.id===ch.id);
     if(idx!==-1)S.products[idx]={...S.products[idx],parLevel:ch.newPar};
   }
-  // Fire all Firebase updates simultaneously — Promise.all prevents
-  // the Firebase listener from interfering between sequential awaits
+  // Fire all updates simultaneously to avoid listener race between awaits
   try{
     await Promise.all(changes.map(ch=>
       SB.from('products').update({parLevel:ch.newPar,updatedAt:now()}).eq('id',ch.id)
@@ -3026,7 +3028,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.0';
+const APP_VERSION='3.1.1';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3361,7 +3363,7 @@ function qcRenderSelect(root) {
     wrap.appendChild(card);
   });
 
-  const locLabel = QC.loc ? (QC.loc === 'floor3' ? 'Floor 3 Storage' : 'La Tiendita') : 'a location';
+  const locLabel = QC.loc ? (LOCS[QC.loc] ? LOCS[QC.loc].name : QC.loc) : 'a location';
   const btn = qcEl('button', {cls: 'QC-start-btn', txt: '⚡ Start counting ' + locLabel});
   if (!QC.loc) btn.setAttribute('disabled', 'true');
   btn.addEventListener('click', qcStartCount);
@@ -3576,10 +3578,11 @@ function qcRenderListItems() {
     const par = p.parLevel || 0;
     const diff = hasCnt ? par - Number(val) : null;
     const isUrg = urgIds.has(p.id);
+    const cm2 = isEquip(p) ? 'units' : 'cases';
     let pillCls = 'qcp-no', pillTxt = 'Not counted';
     if (isUrg && hasCnt) { pillCls = 'qcp-urg'; pillTxt = '⚠ ' + val + ' (urgent)'; }
-    else if (hasCnt && diff <= 0) { pillCls = 'qcp-ok'; pillTxt = '✓ ' + val + ' cases'; }
-    else if (hasCnt) { pillCls = 'qcp-cnt'; pillTxt = val + ' cases'; }
+    else if (hasCnt && diff <= 0) { pillCls = 'qcp-ok'; pillTxt = '✓ ' + val + ' ' + cm2; }
+    else if (hasCnt) { pillCls = 'qcp-cnt'; pillTxt = val + ' ' + cm2; }
 
     const row = qcEl('div', {cls: 'QC-list-item'});
     row.addEventListener('click', function() { qcOpenCounter(p.id); });
@@ -3652,11 +3655,8 @@ function qcRenderCounter(root) {
   const par = p.parLevel || 0;
   const locVal = S.invLoc[loc][p.id];
   const curVal = (locVal !== undefined && locVal !== '') ? Number(locVal) : '';
+  // All other locs for combined panel
   const otherLocs = Object.keys(LOCS).filter(function(k){ return k !== loc; });
-  const otherLoc = otherLocs[0] || null;
-  const otherLocName = otherLoc ? LOCS[otherLoc].name : '';
-  const otherVal = S.invLoc[otherLoc][p.id];
-  const otherCounted = otherVal !== undefined && otherVal !== '';
   const allProds = S.products.length;
   const counted = S.products.filter(function(x){ return S.invLoc[loc][x.id] !== undefined && S.invLoc[loc][x.id] !== ''; }).length;
   const pct = allProds > 0 ? Math.round((counted / allProds) * 100) : 0;
@@ -3699,19 +3699,25 @@ function qcRenderCounter(root) {
   const unit = qcEl('div', {cls: 'QC-step-unit', txt: 'Counting in ' + cm + (cm === 'units' ? ' (' + (p.casePack||1) + ' per case)' : '')});
   wrap.appendChild(stepper); wrap.appendChild(unit);
 
-  // Combined section
+  // Combined section — shows all other locations
   const combined = qcEl('div', {id: 'qc-combined'});
-  if (otherCounted || curVal !== '') {
-    const thisNum = curVal !== '' ? Number(curVal) : 0;
-    const otherNum = otherCounted ? Number(otherVal) : 0;
-    const total = thisNum + otherNum;
-    const diff = par - total;
+  const thisNum = curVal !== '' ? Number(curVal) : 0;
+  let otherTotal = 0, anyOtherCounted = false;
+  const otherRows = otherLocs.map(function(ol){
+    const ov = S.invLoc[ol][p.id];
+    const oCounted = ov !== undefined && ov !== '';
+    if(oCounted){anyOtherCounted=true;otherTotal+=Number(ov);}
+    return '<div class="QC-comb-row"><span class="QC-comb-lbl">' + (LOCS[ol]?LOCS[ol].short:ol) + (oCounted?'':' (not counted)') + '</span>' +
+      '<span class="QC-comb-val" style="' + (oCounted?'':'color:var(--tm)') + '">' + (oCounted?Number(ov)+' '+cm:'?') + '</span></div>';
+  }).join('');
+  if(anyOtherCounted || curVal !== ''){
+    const grandTotal = thisNum + otherTotal;
+    const diff = par - grandTotal;
     combined.className = diff <= 0 ? 'QC-combined' : 'QC-comb-warn';
-    combined.innerHTML = '<div class="QC-comb-row"><span class="QC-comb-lbl">' + otherLocName + (otherCounted ? '' : ' (not counted yet)') + '</span>' +
-      '<span class="QC-comb-val" style="' + (otherCounted ? '' : 'color:var(--tm)') + '">' + (otherCounted ? otherNum + ' ' + cm : '?') + '</span></div>' +
-      '<div class="QC-comb-row" style="margin-top:5px"><span class="QC-comb-lbl">Combined total</span>' +
-      '<span class="QC-comb-val" style="' + (diff <= 0 ? 'color:var(--grn)' : 'color:var(--amb)') + '">' +
-      (otherCounted ? total + ' ' + cm + (diff <= 0 ? ' ✓ at par' : ' · need ' + diff + ' more') : '? (other location uncounted)') +
+    combined.innerHTML = otherRows +
+      '<div class="QC-comb-row" style="margin-top:5px;border-top:1px solid var(--bds);padding-top:5px"><span class="QC-comb-lbl">Combined total</span>' +
+      '<span class="QC-comb-val" style="' + (diff<=0?'color:var(--grn)':'color:var(--amb)') + '">' +
+      (anyOtherCounted ? grandTotal+' '+cm+(diff<=0?' ✓ at par':' · need '+diff+' more') : '? (other locations uncounted)') +
       '</span></div>';
   }
   wrap.appendChild(combined);
@@ -3752,19 +3758,22 @@ function qcRefreshCombined(p, curNum) {
   const loc = QC.loc;
   const cm = isEquip(p) ? 'units' : 'cases';
   const par = p.parLevel || 0;
-  const otherLoc = loc === 'floor3' ? 'tiendita' : 'floor3';
-  const otherLocName = loc === 'floor3' ? 'La Tiendita' : 'Floor 3 Storage';
-  const otherVal = S.invLoc[otherLoc][p.id];
-  const otherCounted = otherVal !== undefined && otherVal !== '';
-  const otherNum = otherCounted ? Number(otherVal) : 0;
-  const total = curNum + otherNum;
-  const diff = par - total;
+  const otherLocs = Object.keys(LOCS).filter(function(k){ return k !== loc; });
+  let otherTotal = 0, anyOtherCounted = false;
+  const otherRows = otherLocs.map(function(ol){
+    const ov = S.invLoc[ol][p.id];
+    const oCounted = ov !== undefined && ov !== '';
+    if(oCounted){anyOtherCounted=true;otherTotal+=Number(ov);}
+    return '<div class="QC-comb-row"><span class="QC-comb-lbl">' + (LOCS[ol]?LOCS[ol].short:ol) + (oCounted?'':' (not counted)') + '</span>' +
+      '<span class="QC-comb-val" style="' + (oCounted?'':'color:var(--tm)') + '">' + (oCounted?Number(ov)+' '+cm:'?') + '</span></div>';
+  }).join('');
+  const grandTotal = curNum + otherTotal;
+  const diff = par - grandTotal;
   combined.className = diff <= 0 ? 'QC-combined' : 'QC-comb-warn';
-  combined.innerHTML = '<div class="QC-comb-row"><span class="QC-comb-lbl">' + otherLocName + (otherCounted ? '' : ' (not counted yet)') + '</span>' +
-    '<span class="QC-comb-val" style="' + (otherCounted ? '' : 'color:var(--tm)') + '">' + (otherCounted ? otherNum + ' ' + cm : '?') + '</span></div>' +
-    '<div class="QC-comb-row" style="margin-top:5px"><span class="QC-comb-lbl">Combined total</span>' +
-    '<span class="QC-comb-val" style="' + (diff <= 0 ? 'color:var(--grn)' : 'color:var(--amb)') + '">' +
-    (otherCounted ? total + ' ' + cm + (diff <= 0 ? ' ✓ at par' : ' · need ' + diff + ' more') : '? (other location uncounted)') +
+  combined.innerHTML = otherRows +
+    '<div class="QC-comb-row" style="margin-top:5px;border-top:1px solid var(--bds);padding-top:5px"><span class="QC-comb-lbl">Combined total</span>' +
+    '<span class="QC-comb-val" style="' + (diff<=0?'color:var(--grn)':'color:var(--amb)') + '">' +
+    (anyOtherCounted ? grandTotal+' '+cm+(diff<=0?' ✓ at par':' · need '+diff+' more') : '? (other locations uncounted)') +
     '</span></div>';
 }
 
@@ -4087,7 +4096,7 @@ function qcRenderDone(root) {
 
   const otherBtn = qcEl('button', {cls: 'QC-start-btn', txt: '📦 Count other location'});
   otherBtn.style.marginBottom = '10px';
-  otherBtn.addEventListener('click', function() { QC.loc = QC.loc === 'floor3' ? 'tiendita' : 'floor3'; QC.view = 'select'; rQuickCount(); });
+  otherBtn.addEventListener('click', function() { QC.loc = null; QC.view = 'select'; rQuickCount(); });
 
   const ordBtn = qcEl('button', {cls: 'QC-start-btn', txt: '🛒 View order summary'});
   ordBtn.style.cssText = 'background:var(--s2);color:var(--ts);box-shadow:none;border:1px solid var(--bdr)';
