@@ -961,7 +961,7 @@ input,select,textarea{font-family:inherit}
     <!-- ORDER SUMMARY -->
     <div class="PG" id="pg-order">
       <div class="PH fbet">
-        <div><div class="PT">Order Summary</div><div class="PD">Grouped by vendor &middot; Ready to place</div></div>
+        <div><div class="PT">Order Summary</div><div class="PD">Grouped by Yield Account &middot; Ready to place</div></div>
         <button class="btn btn-o btn-sm" onclick="exportOrd()">&#128196; Export</button>
       </div>
       <div id="OC"></div>
@@ -3028,7 +3028,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.1';
+const APP_VERSION='3.1.2';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -4183,7 +4183,8 @@ function qrRenderList() {
     const nm = document.createElement('div');
     nm.className = 'QRP-name'; nm.textContent = p.name;
     const mt = document.createElement('div');
-    mt.className = 'QRP-meta'; mt.textContent = (p.partNumber ? '#' + p.partNumber : '') + ' · ' + qcEmoji(p);
+    const txtEmoji = (p.photoUrl||!p.emoji||p.emoji.startsWith('&#'))?'📦':p.emoji;
+    mt.className = 'QRP-meta'; mt.textContent = (p.partNumber ? '#' + p.partNumber : '') + ' · ' + txtEmoji;
     info.appendChild(nm); info.appendChild(mt);
     row.appendChild(info);
 
