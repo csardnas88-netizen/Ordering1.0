@@ -293,6 +293,22 @@ input,select,textarea{font-family:inherit}
 .FB{width:100%;padding:14px;border-radius:var(--r2);background:linear-gradient(135deg,var(--gd),var(--gl));color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 4px 14px rgba(184,151,46,.3);border:none;cursor:pointer;transition:opacity .2s}
 .FB:hover{opacity:.9}
 .FB:disabled{opacity:.5;cursor:not-allowed}
+/* Order check */
+.OR{cursor:pointer;transition:background .15s,opacity .15s}
+.OR.or-done{background:var(--grd);border-color:var(--grb);opacity:.75}
+.OR.or-done .ORN{text-decoration:line-through;color:var(--tm)}
+.OR.or-done .ORP{color:var(--grn)}
+.or-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-right:10px;transition:all .15s}
+.OR.or-done .or-check{background:var(--grn);border-color:var(--grn);color:#fff;font-weight:700}
+.ord-prog-wrap{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px 16px;margin-bottom:16px;box-shadow:var(--sh1)}
+.ord-prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ord-prog-label{font-size:11px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.08em}
+.ord-prog-count{font-size:13px;font-weight:700;color:var(--grn)}
+.ord-prog-bar{height:6px;background:var(--s3);border-radius:99px;overflow:hidden}
+.ord-prog-fill{height:100%;background:var(--grn);border-radius:99px;transition:width .3s}
+.OVB.ovb-done .OVBN{color:var(--grn)}
+.OVB.ovb-done .OVBH{border-bottom-color:var(--grb)}
+.tap-hint{text-align:center;font-size:10px;color:var(--tm);margin-bottom:14px;letter-spacing:.04em}
 /* ALERTS */
 .AC{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px;margin-bottom:7px;box-shadow:var(--sh1)}
 .AC.acu{border-color:var(--rb);background:var(--rd)}
@@ -1253,6 +1269,8 @@ const S={
 };
 const INV={query:'',view:'vendor',filter:'all'};
 const CAT={query:'',view:'vendor'};
+// Order page — items marked as already called/submitted
+let ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mkey())||'[]'));
 let OrderSettings={approvalDays:2,vendors:{}};
 let SB=null;
 
@@ -2160,18 +2178,48 @@ async function persistOrder(ctx){
 }
 
 // ── ORDER SUMMARY ──────────────────────────────────────
+function toggleOrdCheck(pid){
+  if(ORD_CHECKED.has(pid))ORD_CHECKED.delete(pid);else ORD_CHECKED.add(pid);
+  localStorage.setItem('jw_ord_ck_'+mkey(),JSON.stringify([...ORD_CHECKED]));
+  rOrd();
+}
+
 function rOrd(){
   const items=getItems(),ui=new Set(S.alerts.filter(a=>a.status==='urgent').map(a=>a.productId));
   const c=document.getElementById('OC');if(!c)return;
   if(!items.length){c.innerHTML=emptyState('&#9989;','Nothing to order','Complete an inventory count and any items below par will appear here.');return;}
-  const bv={};for(const i of items)(bv[i.vn]||(bv[i.vn]=[])).push(i);
-  let html='',gd=0;
-  for(const[v,vi]of Object.entries(bv)){
+
+  // Group by budget line (bl), preserving BL order
+  const bb={};for(const bl of BL)bb[bl]=[];
+  for(const i of items)(bb[i.bl]||(bb[i.bl]=[])).push(i);
+
+  const total=items.length,done=[...ORD_CHECKED].filter(id=>items.find(i=>i.pid===id)).length;
+  const pct=total?Math.round(done/total*100):0;
+
+  // Progress bar
+  let html='<div class="ord-prog-wrap">'+
+    '<div class="ord-prog-top"><span class="ord-prog-label">Items ordered</span><span class="ord-prog-count">'+done+' of '+total+' &#10003;</span></div>'+
+    '<div class="ord-prog-bar"><div class="ord-prog-fill" style="width:'+pct+'%"></div></div></div>'+
+    '<div class="tap-hint">Tap an item to mark it as ordered</div>';
+
+  let gd=0;
+  for(const[bl,vi]of Object.entries(bb)){
+    if(!vi.length)continue;
     const vt=vi.reduce((s,i)=>s+i.lt,0);gd+=vt;
-    html+='<div class="OVB"><div class="OVBH"><div class="OVBN">'+e(v)+'</div><div class="OVBT">'+fmt(vt)+'</div></div>';
-    html+=vi.map(i=>'<div class="OR '+(ui.has(i.pid)?'oru':'')+'"><div><div class="ORN '+(ui.has(i.pid)?'tr':'')+'">'+ e(i.name)+(ui.has(i.pid)?' &#9888;':'')+'</div><div class="ORD">'+i.cases+' case'+(i.cases>1?'s':'')+' &times; $'+i.pp.toFixed(2)+(i.pn?' &middot; #'+e(i.pn):'')+'</div></div><div class="ORP">'+fmt(i.lt)+'</div></div>').join('');
+    const allDone=vi.every(i=>ORD_CHECKED.has(i.pid));
+    html+='<div class="OVB'+(allDone?' ovb-done':'')+'">'+
+      '<div class="OVBH"><div class="OVBN">'+e(bl)+(allDone?' &#10003;':'')+'</div><div class="OVBT">'+fmt(vt)+'</div></div>';
+    html+=vi.map(i=>{
+      const ck=ORD_CHECKED.has(i.pid),urg=ui.has(i.pid)&&!ck;
+      return '<div class="OR'+(ck?' or-done':urg?' oru':'')+'" onclick="toggleOrdCheck(\''+i.pid+'\')">'+
+        '<div class="or-check">'+(ck?'&#10003;':'')+'</div>'+
+        '<div class="OR-body"><div class="ORN">'+e(i.name)+(urg?' &#9888;':'')+'</div>'+
+        '<div class="ORD">'+i.cases+' case'+(i.cases>1?'s':'')+' &times; $'+i.pp.toFixed(2)+(i.pn?' &middot; #'+e(i.pn):'')+'</div></div>'+
+        '<div class="ORP">'+fmt(i.lt)+'</div></div>';
+    }).join('');
     html+='</div>';
   }
+
   const tb=BL.reduce((s,l)=>s+(S.budgets[l]||0),0),ts=BL.reduce((s,l)=>s+(S.budgets['spent_'+l]||0),0);
   const rm=tb-ts,af=rm-gd,safe=af>=0;
   html+='<div class="BI"><div class="CT mb8">Budget Impact</div>'+
@@ -2179,7 +2227,7 @@ function rOrd(){
     '<div class="BIR"><span class="BIL">This order total</span><span>'+fmt(gd)+'</span></div>'+
     '<div class="BIR"><span class="BIL">Remaining after order</span><span class="'+(safe?'bi-s':'bi-o')+'">'+fmt(Math.abs(af))+' '+(safe?'left &#10003;':'OVER BUDGET &#9888;')+'</span></div></div>'+
     '<button class="FB" id="finalize-btn" onclick="finalize()">Finalize &amp; Mark as Ordered</button>'+
-    '<button class="FB" style="background:var(--grn);margin-top:8px" onclick="submitOrder()">📤 Submit &amp; Save Order History</button>';
+    '<button class="FB" style="background:var(--grn);margin-top:8px" onclick="submitOrder()">&#128228; Submit &amp; Save Order History</button>';
   c.innerHTML=html;
   rOrderHistory();
 }
@@ -2221,6 +2269,7 @@ async function doFinalize(){
       const newBudgetData={...S.budgets,...sp};
       await SB.from('budgets').upsert({monthKey:mk,data:newBudgetData},{onConflict:'monthKey'});
     }
+    ORD_CHECKED.clear();localStorage.removeItem('jw_ord_ck_'+mk);
     S.gaps={};S.invDirty=false;
     for(const _loc of['floor3','tiendita','piso2']){
       SB.from('inventory').upsert({monthKeyLoc:mk+'_'+_loc,qtyData:{},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'}).catch(()=>{});
@@ -2976,7 +3025,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.0.8';
+const APP_VERSION='3.0.9';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
