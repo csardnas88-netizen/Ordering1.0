@@ -309,6 +309,17 @@ input,select,textarea{font-family:inherit}
 .OR.or-done .ORP{color:var(--grn)}
 .or-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-right:10px;transition:all .15s}
 .OR.or-done .or-check{background:var(--grn);border-color:var(--grn);color:#fff;font-weight:700}
+.OR.or-partial{background:var(--ad);border-color:var(--ab)}
+.OR.or-partial .or-check{background:var(--amb);border-color:var(--amb);color:#fff;font-weight:700}
+.OR.or-partial .ORP{color:var(--amb)}
+.ord-qty-wrap{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
+.ord-qty-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;background:none;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;transition:opacity .15s}
+.ord-qty-btn:hover{opacity:.7}
+.or-done .ord-qty-btn{color:var(--grn)}
+.or-partial .ord-qty-btn{color:var(--amb)}
+.ord-qty-num{font-size:13px;font-weight:700;min-width:20px;text-align:center}
+.ord-qty-info{font-size:10px;font-weight:600;letter-spacing:.02em}
+.ord-carry-badge{display:inline-block;background:var(--ad);color:var(--amb);font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;border:1px solid var(--ab);margin-left:4px;letter-spacing:.02em;vertical-align:middle}
 .ord-prog-wrap{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px 16px;margin-bottom:16px;box-shadow:var(--sh1)}
 .ord-prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .ord-prog-label{font-size:11px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.08em}
@@ -1267,7 +1278,7 @@ const OS_KEY='jw_order_settings';
 
 // ── STATE ──────────────────────────────────────────────
 const S={
-  products:[],vendors:[],budgets:{},
+  products:[],vendors:[],budgets:{},pendingCarry:{},
   // inventory now keyed by location: S.invLoc['floor3'][productId] = qty
   invLoc:{floor3:{},tiendita:{},piso2:{}},
   // combined read across all three locations
@@ -1292,6 +1303,7 @@ const CAT={query:'',view:'vendor'};
 // Order page — items marked as already called/submitted
 let S_VIEW_MONTH=mkey();
 let ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mkey())||'[]'));
+let ORD_QTY=JSON.parse(localStorage.getItem('jw_ord_qty_'+mkey())||'{}');
 let OrderSettings={approvalDays:2,vendors:{}};
 let SB=null;
 
@@ -1404,19 +1416,22 @@ async function listen(){
   // Initial parallel load (vkey() so month navigation works)
   try{
     const vk=vkey();
-    const [vr,pr,ar,br,i3r,itr,ipr]=await Promise.all([
+    const [vr,pr,ar,br,i3r,itr,ipr,pcr]=await Promise.all([
       SB.from('vendors').select('*'),
       SB.from('products').select('*').order('sortOrder',{ascending:true,nullsFirst:false}),
       SB.from('alerts').select('*'),
       SB.from('budgets').select('*').eq('monthKey',vk).maybeSingle(),
       SB.from('inventory').select('*').eq('monthKeyLoc',vk+'_floor3').maybeSingle(),
       SB.from('inventory').select('*').eq('monthKeyLoc',vk+'_tiendita').maybeSingle(),
-      SB.from('inventory').select('*').eq('monthKeyLoc',vk+'_piso2').maybeSingle()
+      SB.from('inventory').select('*').eq('monthKeyLoc',vk+'_piso2').maybeSingle(),
+      SB.from('settings').select('value').eq('key','pending_carry').maybeSingle()
     ]);
     if(vr.data){S.vendors=vr.data;ref();}
     if(pr.data){S.products=pr.data;seedCleaningSupplies();ref();}
     if(ar.data){S.alerts=ar.data;cleanOldAlerts();updBadges();ref();}
-    S.budgets=br.data?.data||{};ref();
+    S.budgets=br.data?.data||{};
+    S.pendingCarry=pcr.data?.value||{};
+    ref();
     _invApply('floor3',i3r.data);
     _invApply('tiendita',itr.data);
     _invApply('piso2',ipr.data);
@@ -1466,7 +1481,9 @@ async function listen(){
 
   const settingsCh=SB.channel('settings-rt')
     .on('postgres_changes',{event:'*',schema:'public',table:'settings'},async(payload)=>{
-      if((payload.new?.key||payload.old?.key)==='shiftNote')renderShiftNote(payload.new?.value||null);
+      const _sk=payload.new?.key||payload.old?.key;
+      if(_sk==='shiftNote')renderShiftNote(payload.new?.value||null);
+      if(_sk==='pending_carry'){S.pendingCarry=payload.new?.value||{};ref();}
     }).subscribe();
   S.uns.push(()=>SB.removeChannel(settingsCh));
 }
@@ -2201,10 +2218,17 @@ async function persistOrder(ctx){
 }
 
 // ── ORDER SUMMARY ──────────────────────────────────────
-function toggleOrdCheck(pid){
-  if(ORD_CHECKED.has(pid))ORD_CHECKED.delete(pid);else ORD_CHECKED.add(pid);
+function toggleOrdCheck(pid,defaultCases){
+  if(ORD_CHECKED.has(pid)){ORD_CHECKED.delete(pid);delete ORD_QTY[pid];}
+  else{ORD_CHECKED.add(pid);if(defaultCases&&ORD_QTY[pid]===undefined)ORD_QTY[pid]=defaultCases;}
   localStorage.setItem('jw_ord_ck_'+vkey(),JSON.stringify([...ORD_CHECKED]));
-  rOrd();
+  saveOrdQty();rOrd();
+}
+function saveOrdQty(){localStorage.setItem('jw_ord_qty_'+vkey(),JSON.stringify(ORD_QTY));}
+function adjOrdQty(pid,delta,max){
+  const cur=ORD_QTY[pid]!==undefined?ORD_QTY[pid]:max;
+  ORD_QTY[pid]=Math.max(1,Math.min(max,cur+delta));
+  saveOrdQty();rOrd();
 }
 
 function rOrd(){
@@ -2239,11 +2263,26 @@ function rOrd(){
     });
     html+=viSorted.map(i=>{
       const ck=ORD_CHECKED.has(i.pid),urg=ui.has(i.pid)&&!ck;
-      return '<div class="OR'+(ck?' or-done':urg?' oru':'')+'" onclick="toggleOrdCheck(\''+i.pid+'\')">'+
+      const ordQty=ck?(ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases):0;
+      const isPartial=ck&&ordQty<i.cases;
+      const remaining=i.cases-ordQty;
+      let cls='OR'+(ck&&!isPartial?' or-done':ck&&isPartial?' or-partial':urg?' oru':'');
+      const carryBadge=i.carryCases>0?'<span class="ord-carry-badge">&#8634; +'+i.carryCases+' de mes ant.</span>':'';
+      const qtyHtml=ck?
+        '<div class="ord-qty-wrap">'+
+        '<button class="ord-qty-btn" onclick="event.stopPropagation();adjOrdQty(\''+i.pid+'\',-1,'+i.cases+')">&#8722;</button>'+
+        '<span class="ord-qty-num">'+ordQty+'</span>'+
+        '<button class="ord-qty-btn" onclick="event.stopPropagation();adjOrdQty(\''+i.pid+'\',1,'+i.cases+')">&#43;</button>'+
+        '<span class="ord-qty-info" style="color:'+(isPartial?'var(--amb)':'var(--grn)')+'">'+
+        (isPartial?'de '+i.cases+' · '+remaining+' pendientes ⚠':'todos ordenados ✓')+
+        '</span></div>':'';
+      const displayPrice=ck?fmt(ordQty*i.pp):fmt(i.lt);
+      return '<div class="'+cls+'" onclick="toggleOrdCheck(\''+i.pid+'\','+i.cases+')">'+
         '<div class="or-check">'+(ck?'&#10003;':'')+'</div>'+
-        '<div class="OR-body"><div class="ORN">'+e(i.name)+(urg?' &#9888;':'')+'</div>'+
-        '<div class="ORD">'+i.cases+' case'+(i.cases>1?'s':'')+' &times; $'+i.pp.toFixed(2)+(i.pn?' &middot; #'+e(i.pn):'')+'</div></div>'+
-        '<div class="ORP">'+fmt(i.lt)+'</div></div>';
+        '<div class="OR-body"><div class="ORN">'+e(i.name)+(urg?' &#9888;':'')+carryBadge+'</div>'+
+        '<div class="ORD">'+i.cases+' case'+(i.cases>1?'s':'')+' &times; $'+i.pp.toFixed(2)+(i.pn?' &middot; #'+e(i.pn):'')+'</div>'+
+        qtyHtml+'</div>'+
+        '<div class="ORP">'+displayPrice+'</div></div>';
     }).join('');
     html+='</div>';
   }
@@ -2262,16 +2301,22 @@ function rOrd(){
 
 function getItems(){
   const out=[];
+  const pc=S.pendingCarry||{};
   for(const p of S.products){
     const oh=S.inventory[p.id];if(oh===undefined||oh==='')continue;
     const par=p.parLevel||0,cp=p.casePack||1,cm=isEquip(p)?'units':'cases';
-    const diff=par-Number(oh);if(diff<=0)continue;
-    let cases=0;
-    if(cm==='cases'){cases=diff;}
-    else{const dec=S.gaps[p.id];if(diff<cp&&dec!=='include')continue;cases=Math.ceil(diff/cp);}
+    const diff=par-Number(oh);
+    const carryCases=pc[p.id]?.cases||0;
+    let belowParCases=0;
+    if(diff>0){
+      if(cm==='cases'){belowParCases=diff;}
+      else{const dec=S.gaps[p.id];if(diff>=cp||dec==='include')belowParCases=Math.ceil(diff/cp);}
+    }
+    const cases=belowParCases+carryCases;
     if(cases<=0)continue;
     const lt=cases*(p.pricePerCase||0);
-    out.push({pid:p.id,name:p.name,pn:p.partNumber||'',vn:p.vendorName,bl:p.budgetLine,cases,pp:p.pricePerCase||0,lt});
+    out.push({pid:p.id,name:p.name,pn:p.partNumber||'',vn:p.vendorName,bl:p.budgetLine,
+      cases,belowParCases,carryCases,pp:p.pricePerCase||0,lt});
   }
   return out;
 }
@@ -2297,12 +2342,27 @@ async function doFinalize(){
       const newBudgetData={...S.budgets,...sp};
       await SB.from('budgets').upsert({monthKey:mk,data:newBudgetData},{onConflict:'monthKey'});
     }
-    ORD_CHECKED.clear();localStorage.removeItem('jw_ord_ck_'+mk);
+    // Save carry-over: items not fully ordered roll to next month
+    const carry={...S.pendingCarry};
+    for(const i of items){
+      const oq=ORD_CHECKED.has(i.pid)?(ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases):0;
+      const rem=i.cases-oq;
+      if(rem>0)carry[i.pid]={cases:rem,fromMonth:mk,name:i.name,bl:i.bl,pp:i.pp};
+      else delete carry[i.pid];
+    }
+    S.pendingCarry=carry;
+    if(Object.keys(carry).length){
+      SB.from('settings').upsert({key:'pending_carry',value:carry},{onConflict:'key'}).catch(()=>{});
+    }else{
+      SB.from('settings').delete().eq('key','pending_carry').catch(()=>{});
+    }
+    ORD_CHECKED.clear();ORD_QTY={};
+    localStorage.removeItem('jw_ord_ck_'+mk);localStorage.removeItem('jw_ord_qty_'+mk);
     S.gaps={};S.invDirty=false;
     for(const _loc of['floor3','tiendita','piso2']){
       SB.from('inventory').upsert({monthKeyLoc:mk+'_'+_loc,qtyData:{},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'}).catch(()=>{});
     }
-    showOk('Order finalized by '+S.managerName+'. Inventory reset for next count.');
+    showOk('Order finalized by '+S.managerName+'. Inventory reset for next count.'+(Object.keys(carry).length?' Pending cases carried to next month.':''));
     go('dashboard');
   }catch(err){showErr('Could not save the order. Please try again.',err);}
   finally{S.finalizing=false;if(btn){btn.disabled=false;btn.textContent='Finalize & Mark as Ordered';}}
@@ -3053,14 +3113,17 @@ async function switchMonth(mk){
   S_VIEW_MONTH=mk;
   S.invLoc={floor3:{},tiendita:{},piso2:{}};S.budgets={};S.lastSaved=null;
   ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mk)||'[]'));
+  ORD_QTY=JSON.parse(localStorage.getItem('jw_ord_qty_'+mk)||'{}');
   try{
-    const[br,i3r,itr,ipr]=await Promise.all([
+    const[br,i3r,itr,ipr,pcr]=await Promise.all([
       SB.from('budgets').select('*').eq('monthKey',mk).maybeSingle(),
       SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_floor3').maybeSingle(),
       SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_tiendita').maybeSingle(),
-      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_piso2').maybeSingle()
+      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_piso2').maybeSingle(),
+      SB.from('settings').select('value').eq('key','pending_carry').maybeSingle()
     ]);
     S.budgets=br.data?.data||{};
+    S.pendingCarry=pcr.data?.value||{};
     function _a(loc,row){if(!row)return;const q=row.qtyData||{};for(const[k,v] of Object.entries(q))S.invLoc[loc][k]=v;if(row.savedAt)S.lastSaved=row.savedAt;}
     _a('floor3',i3r.data);_a('tiendita',itr.data);_a('piso2',ipr.data);
   }catch(err){showErr('Could not load data for '+fmtMonthKey(mk)+'.',err);}
@@ -3092,7 +3155,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.4';
+const APP_VERSION='3.1.6';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
