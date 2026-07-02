@@ -2234,10 +2234,13 @@ function saveOrdQty(){localStorage.setItem('jw_ord_qty_'+vkey(),JSON.stringify(O
 let _carrySaveTimer=null;
 function scheduleCarrySave(){
   if(_carrySaveTimer)clearTimeout(_carrySaveTimer);
-  _carrySaveTimer=setTimeout(flushCarry,1500);
+  _carrySaveTimer=setTimeout(()=>flushCarryAsync().catch(()=>{}),1500);
 }
-function flushCarry(){
-  _carrySaveTimer=null;
+// fire-and-forget wrapper for inline callers
+function flushCarry(){flushCarryAsync().catch(()=>{});}
+// awaitable: must be awaited before switching months so carry lands in DB first
+async function flushCarryAsync(){
+  if(_carrySaveTimer){clearTimeout(_carrySaveTimer);_carrySaveTimer=null;}
   const mk=vkey(),items=getItems();
   const carry={...S.pendingCarry};
   // Only update carry for items that have been explicitly checked.
@@ -2251,9 +2254,9 @@ function flushCarry(){
   }
   S.pendingCarry=carry;
   if(Object.keys(carry).length){
-    SB.from('settings').upsert({key:'pending_carry',value:carry},{onConflict:'key'}).catch(()=>{});
+    try{await SB.from('settings').upsert({key:'pending_carry',value:carry},{onConflict:'key'});}catch(e){}
   }else{
-    SB.from('settings').delete().eq('key','pending_carry').catch(()=>{});
+    try{await SB.from('settings').delete().eq('key','pending_carry');}catch(e){}
   }
 }
 function adjOrdQty(pid,delta,max){
@@ -3154,6 +3157,9 @@ function nextMonthKey(mk){const[y,m]=mk.split('-').map(Number);return m===12?(y+
 function fmtMonthKey(mk){const[y,m]=mk.split('-').map(Number);return['January','February','March','April','May','June','July','August','September','October','November','December'][m-1]+' '+y;}
 async function switchMonth(mk){
   if(mk>mkey())return;
+  // Flush any pending carry NOW (awaited) before switching months so it lands in DB
+  // before we reload S.pendingCarry for the new month view.
+  await flushCarryAsync().catch(()=>{});
   S_VIEW_MONTH=mk;
   S.invLoc={floor3:{},tiendita:{},piso2:{}};S.budgets={};S.lastSaved=null;
   ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mk)||'[]'));
@@ -3199,7 +3205,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.8';
+const APP_VERSION='3.1.9';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
