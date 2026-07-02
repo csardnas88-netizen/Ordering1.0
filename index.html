@@ -35,6 +35,8 @@ window._sb=supabase.createClient(
   --grn:#2D9E45;--grd:#EFF7F2;--grb:#B0D9C2;
   /* Status — amber (below par) */
   --amb:#E67E22;--ad:#FDF5EA;--ab:#E8CFA0;
+  /* Status — blue (partial / pending) */
+  --blu:#3B7DD8;--bld:#EBF2FF;--blb:#9EC0F0;
   /* Brand — navy (primary) */
   --nvy:#1E2D4A;--nvy2:#16223A;--nvy3:#253656;--nv2:#2A3D5C;
   /* Layout */
@@ -164,7 +166,7 @@ input,select,textarea{font-family:inherit}
 .mnav-btn:hover:not(:disabled){background:var(--s3);color:var(--txt)}
 .mnav-btn:disabled{opacity:.25;cursor:default}
 .mnav-lbl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ts);min-width:100px;text-align:center}
-.pm-bar{background:var(--amb);color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pm-bar{background:var(--nvy);color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .pm-bar-btns{display:flex;gap:6px;align-items:center}
 .pm-bar-btns button{background:rgba(255,255,255,.25);border:none;color:#fff;font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;cursor:pointer;line-height:1.5}
 .pm-bar-btns button:disabled{opacity:.35;cursor:default}
@@ -309,17 +311,17 @@ input,select,textarea{font-family:inherit}
 .OR.or-done .ORP{color:var(--grn)}
 .or-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-right:10px;transition:all .15s}
 .OR.or-done .or-check{background:var(--grn);border-color:var(--grn);color:#fff;font-weight:700}
-.OR.or-partial{background:var(--ad);border-color:var(--ab)}
-.OR.or-partial .or-check{background:var(--amb);border-color:var(--amb);color:#fff;font-weight:700}
-.OR.or-partial .ORP{color:var(--amb)}
+.OR.or-partial{background:var(--bld);border-color:var(--blb)}
+.OR.or-partial .or-check{background:var(--blu);border-color:var(--blu);color:#fff;font-weight:700}
+.OR.or-partial .ORP{color:var(--blu)}
 .ord-qty-wrap{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
 .ord-qty-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;background:none;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;transition:opacity .15s}
 .ord-qty-btn:hover{opacity:.7}
 .or-done .ord-qty-btn{color:var(--grn)}
-.or-partial .ord-qty-btn{color:var(--amb)}
+.or-partial .ord-qty-btn{color:var(--blu)}
 .ord-qty-num{font-size:13px;font-weight:700;min-width:20px;text-align:center}
 .ord-qty-info{font-size:10px;font-weight:600;letter-spacing:.02em}
-.ord-carry-badge{display:inline-block;background:var(--ad);color:var(--amb);font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;border:1px solid var(--ab);margin-left:4px;letter-spacing:.02em;vertical-align:middle}
+.ord-carry-badge{display:inline-block;background:var(--bld);color:var(--blu);font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;border:1px solid var(--blb);margin-left:4px;letter-spacing:.02em;vertical-align:middle}
 .ord-prog-wrap{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px 16px;margin-bottom:16px;box-shadow:var(--sh1)}
 .ord-prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .ord-prog-label{font-size:11px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.08em}
@@ -2292,8 +2294,8 @@ function rOrd(){
       '<div class="OVBH"><div class="OVBN">'+e(bl)+(allDone?' &#10003;':'')+'</div><div class="OVBT">'+fmt(vt)+'</div></div>';
     const viSorted=[...vi].sort((a,b)=>{
       const ac=ORD_CHECKED.has(a.pid)?1:0,bc=ORD_CHECKED.has(b.pid)?1:0;
-      if(ac!==bc)return ac-bc; // pendientes primero
-      return (ui.has(b.pid)?1:0)-(ui.has(a.pid)?1:0); // urgentes primero entre pendientes
+      if(ac!==bc)return ac-bc; // pending first
+      return (ui.has(b.pid)?1:0)-(ui.has(a.pid)?1:0); // urgent first among pending
     });
     html+=viSorted.map(i=>{
       const ck=ORD_CHECKED.has(i.pid),urg=ui.has(i.pid)&&!ck;
@@ -2301,14 +2303,14 @@ function rOrd(){
       const isPartial=ck&&ordQty<i.cases;
       const remaining=i.cases-ordQty;
       let cls='OR'+(ck&&!isPartial?' or-done':ck&&isPartial?' or-partial':urg?' oru':'');
-      const carryBadge=i.carryCases>0?'<span class="ord-carry-badge">&#8634; +'+i.carryCases+' de mes ant.</span>':'';
+      const carryBadge=i.carryCases>0?'<span class="ord-carry-badge">&#8634; +'+i.carryCases+' prev. mo.</span>':'';
       const qtyHtml=ck?
         '<div class="ord-qty-wrap">'+
         '<button class="ord-qty-btn" onclick="event.stopPropagation();adjOrdQty(\''+i.pid+'\',-1,'+i.cases+')">&#8722;</button>'+
         '<span class="ord-qty-num">'+ordQty+'</span>'+
         '<button class="ord-qty-btn" onclick="event.stopPropagation();adjOrdQty(\''+i.pid+'\',1,'+i.cases+')">&#43;</button>'+
-        '<span class="ord-qty-info" style="color:'+(isPartial?'var(--amb)':'var(--grn)')+'">'+
-        (isPartial?'de '+i.cases+' · '+remaining+' pendientes ⚠':'todos ordenados ✓')+
+        '<span class="ord-qty-info" style="color:'+(isPartial?'var(--blu)':'var(--grn)')+'">'+
+        (isPartial?'of '+i.cases+' · '+remaining+' pending ⚠':'all ordered ✓')+
         '</span></div>':'';
       const displayPrice=ck?fmt(ordQty*i.pp):fmt(i.lt);
       return '<div class="'+cls+'" onclick="toggleOrdCheck(\''+i.pid+'\','+i.cases+')">'+
@@ -3205,7 +3207,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.9';
+const APP_VERSION='3.2.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
