@@ -2220,8 +2220,13 @@ async function persistOrder(ctx){
 
 // ── ORDER SUMMARY ──────────────────────────────────────
 function toggleOrdCheck(pid,defaultCases){
-  if(ORD_CHECKED.has(pid)){ORD_CHECKED.delete(pid);delete ORD_QTY[pid];}
-  else{ORD_CHECKED.add(pid);if(defaultCases&&ORD_QTY[pid]===undefined)ORD_QTY[pid]=defaultCases;}
+  if(ORD_CHECKED.has(pid)){
+    ORD_CHECKED.delete(pid);delete ORD_QTY[pid];
+    if(S.pendingCarry)delete S.pendingCarry[pid]; // unchecking = not yet ordered, clear any interim carry
+  }else{
+    ORD_CHECKED.add(pid);
+    if(defaultCases&&ORD_QTY[pid]===undefined)ORD_QTY[pid]=defaultCases;
+  }
   localStorage.setItem('jw_ord_ck_'+vkey(),JSON.stringify([...ORD_CHECKED]));
   saveOrdQty();scheduleCarrySave();rOrd();
 }
@@ -2235,8 +2240,11 @@ function flushCarry(){
   _carrySaveTimer=null;
   const mk=vkey(),items=getItems();
   const carry={...S.pendingCarry};
+  // Only update carry for items that have been explicitly checked.
+  // Unchecked items are "pending decision" — never touch their carry here.
   for(const i of items){
-    const oq=ORD_CHECKED.has(i.pid)?(ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases):0;
+    if(!ORD_CHECKED.has(i.pid))continue;
+    const oq=ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases;
     const rem=i.cases-oq;
     if(rem>0)carry[i.pid]={cases:rem,fromMonth:mk,name:i.name,bl:i.bl,pp:i.pp};
     else delete carry[i.pid];
@@ -3191,7 +3199,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.7';
+const APP_VERSION='3.1.8';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
