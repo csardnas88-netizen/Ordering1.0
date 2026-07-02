@@ -1599,6 +1599,7 @@ async function submitOrder(){
       month:vkey()
     });
     showOk('Order saved to history by '+S.managerName+'. Total: '+fmt(total));
+    flushCarry();
     rOrderHistory();
   }catch(err){showErr('Could not save order.',err);}
 }
@@ -2222,13 +2223,35 @@ function toggleOrdCheck(pid,defaultCases){
   if(ORD_CHECKED.has(pid)){ORD_CHECKED.delete(pid);delete ORD_QTY[pid];}
   else{ORD_CHECKED.add(pid);if(defaultCases&&ORD_QTY[pid]===undefined)ORD_QTY[pid]=defaultCases;}
   localStorage.setItem('jw_ord_ck_'+vkey(),JSON.stringify([...ORD_CHECKED]));
-  saveOrdQty();rOrd();
+  saveOrdQty();scheduleCarrySave();rOrd();
 }
 function saveOrdQty(){localStorage.setItem('jw_ord_qty_'+vkey(),JSON.stringify(ORD_QTY));}
+let _carrySaveTimer=null;
+function scheduleCarrySave(){
+  if(_carrySaveTimer)clearTimeout(_carrySaveTimer);
+  _carrySaveTimer=setTimeout(flushCarry,1500);
+}
+function flushCarry(){
+  _carrySaveTimer=null;
+  const mk=vkey(),items=getItems();
+  const carry={...S.pendingCarry};
+  for(const i of items){
+    const oq=ORD_CHECKED.has(i.pid)?(ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases):0;
+    const rem=i.cases-oq;
+    if(rem>0)carry[i.pid]={cases:rem,fromMonth:mk,name:i.name,bl:i.bl,pp:i.pp};
+    else delete carry[i.pid];
+  }
+  S.pendingCarry=carry;
+  if(Object.keys(carry).length){
+    SB.from('settings').upsert({key:'pending_carry',value:carry},{onConflict:'key'}).catch(()=>{});
+  }else{
+    SB.from('settings').delete().eq('key','pending_carry').catch(()=>{});
+  }
+}
 function adjOrdQty(pid,delta,max){
   const cur=ORD_QTY[pid]!==undefined?ORD_QTY[pid]:max;
   ORD_QTY[pid]=Math.max(1,Math.min(max,cur+delta));
-  saveOrdQty();rOrd();
+  saveOrdQty();scheduleCarrySave();rOrd();
 }
 
 function rOrd(){
@@ -2302,6 +2325,8 @@ function rOrd(){
 function getItems(){
   const out=[];
   const pc=S.pendingCarry||{};
+  const seen=new Set();
+  // 1. Below-par items from this month's count (+ any carry added on top)
   for(const p of S.products){
     const oh=S.inventory[p.id];if(oh===undefined||oh==='')continue;
     const par=p.parLevel||0,cp=p.casePack||1,cm=isEquip(p)?'units':'cases';
@@ -2314,9 +2339,20 @@ function getItems(){
     }
     const cases=belowParCases+carryCases;
     if(cases<=0)continue;
+    seen.add(p.id);
     const lt=cases*(p.pricePerCase||0);
     out.push({pid:p.id,name:p.name,pn:p.partNumber||'',vn:p.vendorName,bl:p.budgetLine,
       cases,belowParCases,carryCases,pp:p.pricePerCase||0,lt});
+  }
+  // 2. Carry-over items not yet counted this month — show them regardless
+  for(const[pid,carry] of Object.entries(pc)){
+    if(seen.has(pid)||!carry?.cases)continue;
+    const p=S.products.find(x=>x.id===pid);
+    if(!p)continue;
+    const lt=carry.cases*(p.pricePerCase||0);
+    out.push({pid,name:p.name,pn:p.partNumber||'',vn:p.vendorName,
+      bl:p.budgetLine||carry.bl,cases:carry.cases,belowParCases:0,
+      carryCases:carry.cases,pp:p.pricePerCase||0,lt});
   }
   return out;
 }
@@ -3155,7 +3191,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.6';
+const APP_VERSION='3.1.7';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
