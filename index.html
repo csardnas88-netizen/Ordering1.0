@@ -159,6 +159,15 @@ input,select,textarea{font-family:inherit}
 .dh-hero{background:var(--bg);padding:16px;border-bottom:1px solid var(--bdr)}
 .dh-center-top{display:flex;flex-direction:column;align-items:center;text-align:center;padding-bottom:14px;border-bottom:1px solid var(--bdr);margin-bottom:14px}
 .dh-ey{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--tm);margin-bottom:10px}
+.mnav{display:flex;align-items:center;gap:8px;justify-content:center}
+.mnav-btn{background:none;border:none;font-size:22px;color:rgba(255,255,255,.7);cursor:pointer;padding:2px 8px;border-radius:6px;line-height:1;transition:all .15s}
+.mnav-btn:hover:not(:disabled){background:rgba(255,255,255,.14);color:#fff}
+.mnav-btn:disabled{opacity:.2;cursor:default}
+.mnav-lbl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.9);min-width:100px;text-align:center}
+.pm-bar{background:var(--amb);color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pm-bar-btns{display:flex;gap:6px;align-items:center}
+.pm-bar-btns button{background:rgba(255,255,255,.25);border:none;color:#fff;font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;cursor:pointer;line-height:1.5}
+.pm-bar-btns button:disabled{opacity:.35;cursor:default}
 .dh-sub{font-size:12px;color:var(--ts);margin-top:6px;white-space:nowrap;font-weight:600}
 .dh-meta{font-size:10px;color:var(--tm);margin-top:3px;white-space:nowrap}
 .dh-ring{width:84px;height:84px}
@@ -872,6 +881,14 @@ input,select,textarea{font-family:inherit}
         <div class="TB-badge hi" id="TBB" onclick="go('alerts')"><span class="pdot"></span><span id="TBC">0</span> urgent</div>
       </div>
     </div>
+    <div class="pm-bar hi" id="pm-bar">
+      <span id="pm-bar-lbl">&#128197; Viewing — Past Month</span>
+      <div class="pm-bar-btns">
+        <button onclick="switchMonth(prevMonthKey(vkey()))">&#8249;</button>
+        <button id="pm-bar-next" onclick="switchMonth(nextMonthKey(vkey()))">&#8250;</button>
+        <button onclick="switchMonth(mkey())">Return to Today</button>
+      </div>
+    </div>
     <!-- DASHBOARD -->
     <div class="PG on" id="pg-dashboard">
       <!-- HERO (Option C — Bold Dark, centered ring) -->
@@ -1273,6 +1290,7 @@ const S={
 const INV={query:'',view:'vendor',filter:'all'};
 const CAT={query:'',view:'vendor'};
 // Order page — items marked as already called/submitted
+let S_VIEW_MONTH=mkey();
 let ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mkey())||'[]'));
 let OrderSettings={approvalDays:2,vendors:{}};
 let SB=null;
@@ -1372,8 +1390,6 @@ async function seedProducts(){
 
 // ── LISTENERS ──────────────────────────────────────────
 async function listen(){
-  const mk=mkey();
-
   // Helper: apply a Supabase inventory row into S.invLoc
   function _invApply(loc,row){
     if(!row)return;
@@ -1385,16 +1401,17 @@ async function listen(){
     if(row.savedAt)S.lastSaved=row.savedAt;
   }
 
-  // Initial parallel load
+  // Initial parallel load (vkey() so month navigation works)
   try{
+    const vk=vkey();
     const [vr,pr,ar,br,i3r,itr,ipr]=await Promise.all([
       SB.from('vendors').select('*'),
       SB.from('products').select('*').order('sortOrder',{ascending:true,nullsFirst:false}),
       SB.from('alerts').select('*'),
-      SB.from('budgets').select('*').eq('monthKey',mk).maybeSingle(),
-      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_floor3').maybeSingle(),
-      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_tiendita').maybeSingle(),
-      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_piso2').maybeSingle()
+      SB.from('budgets').select('*').eq('monthKey',vk).maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',vk+'_floor3').maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',vk+'_tiendita').maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',vk+'_piso2').maybeSingle()
     ]);
     if(vr.data){S.vendors=vr.data;ref();}
     if(pr.data){S.products=pr.data;seedCleaningSupplies();ref();}
@@ -1429,8 +1446,9 @@ async function listen(){
   S.uns.push(()=>SB.removeChannel(alertCh));
 
   const budgetCh=SB.channel('budgets-rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'budgets'},async()=>{
-      const {data}=await SB.from('budgets').select('*').eq('monthKey',mk).maybeSingle();
+    .on('postgres_changes',{event:'*',schema:'public',table:'budgets'},async(payload)=>{
+      if((payload.new?.monthKey||payload.old?.monthKey)!==vkey())return;
+      const {data}=await SB.from('budgets').select('*').eq('monthKey',vkey()).maybeSingle();
       S.budgets=data?.data||{};ref();
     }).subscribe();
   S.uns.push(()=>SB.removeChannel(budgetCh));
@@ -1438,9 +1456,10 @@ async function listen(){
   const invCh=SB.channel('inventory-rt')
     .on('postgres_changes',{event:'*',schema:'public',table:'inventory'},async(payload)=>{
       const key=(payload.new?.monthKeyLoc||payload.old?.monthKeyLoc||'');
+      if(!key.startsWith(vkey()+'_'))return;
       const loc=key.endsWith('_floor3')?'floor3':key.endsWith('_tiendita')?'tiendita':key.endsWith('_piso2')?'piso2':null;
       if(!loc)return;
-      const {data}=await SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_'+loc).maybeSingle();
+      const {data}=await SB.from('inventory').select('*').eq('monthKeyLoc',vkey()+'_'+loc).maybeSingle();
       _invApply(loc,data);ref();
     }).subscribe();
   S.uns.push(()=>SB.removeChannel(invCh));
@@ -1556,11 +1575,11 @@ async function submitOrder(){
     await SB.from('orders').insert({
       items:items.map(function(i){return{name:i.name,partNumber:i.pn,budgetLine:i.bl,vendor:i.vn,cases:i.cases,pricePerCase:i.pp,total:i.lt};}),
       total:total,
-      monthKey:mkey(),
+      monthKey:vkey(),
       submittedBy:S.managerName,
       submittedAt:now(),
       createdAt:now(),
-      month:mkey()
+      month:vkey()
     });
     showOk('Order saved to history by '+S.managerName+'. Total: '+fmt(total));
     rOrderHistory();
@@ -1624,10 +1643,8 @@ function onPhotoUpload(input) {
 }
 // ── DASHBOARD ──────────────────────────────────────────
 function rDash(){
-  const d=new Date();
-  const mn=d.toLocaleString('en-US',{month:'long',year:'numeric'});
-  const el=document.getElementById('ih-month');if(el)el.textContent=mn;
-  const bmlEl=document.getElementById('bml');if(bmlEl)bmlEl.textContent=mn;
+  rMonthNav();
+  const bmlEl=document.getElementById('bml');if(bmlEl)bmlEl.textContent=fmtMonthKey(vkey());
 
   const totP=S.products.length;
   const totC=S.products.filter(x=>getTotalCount(x.id)!==null).length;
@@ -2075,7 +2092,7 @@ async function saveInv(){
   const locName=loc==='floor3'?'Floor 3 Storage':'La Tiendita';
   try{
     await SB.from('inventory').upsert({
-      monthKeyLoc:mkey()+'_'+loc,
+      monthKeyLoc:vkey()+'_'+loc,
       qtyData:{...S.invLoc[loc]},
       savedAt:now(),savedBy:S.managerName
     },{onConflict:'monthKeyLoc'});
@@ -2089,13 +2106,13 @@ async function saveInv(){
 }
 
 function resetInvConfirm(){
-  if(!confirm('Reset all inventory counts for '+mkey()+'? This cannot be undone.'))return;
+  if(!confirm('Reset all inventory counts for '+vkey()+'? This cannot be undone.'))return;
   S.invLoc={floor3:{},tiendita:{},piso2:{}};S.gaps={};S.invDirty=false;S.lastSaved=null;
-  const _rmk=mkey(),_rsb=S.managerName;
+  const _rmk=vkey(),_rsb=S.managerName;
   for(const _loc of['floor3','tiendita','piso2']){
     SB.from('inventory').upsert({monthKeyLoc:_rmk+'_'+_loc,qtyData:{},savedAt:now(),savedBy:_rsb},{onConflict:'monthKeyLoc'}).catch(x=>showErr('Could not reset inventory.',x));
   }
-  rInv();showOk('Inventory reset for '+mkey()+'.');
+  rInv();showOk('Inventory reset for '+vkey()+'.');
 }
 
 // ── SEARCH ─────────────────────────────────────────────
@@ -2186,7 +2203,7 @@ async function persistOrder(ctx){
 // ── ORDER SUMMARY ──────────────────────────────────────
 function toggleOrdCheck(pid){
   if(ORD_CHECKED.has(pid))ORD_CHECKED.delete(pid);else ORD_CHECKED.add(pid);
-  localStorage.setItem('jw_ord_ck_'+mkey(),JSON.stringify([...ORD_CHECKED]));
+  localStorage.setItem('jw_ord_ck_'+vkey(),JSON.stringify([...ORD_CHECKED]));
   rOrd();
 }
 
@@ -2267,7 +2284,7 @@ async function doFinalize(){
   const btn=document.getElementById('finalize-btn');
   if(btn){btn.disabled=true;btn.textContent='Saving...';}
   try{
-    const items=getItems(),mk=mkey();
+    const items=getItems(),mk=vkey();
     await SB.from('orders').insert({items,monthKey:mk,total:items.reduce((s,i)=>s+i.lt,0),createdAt:now(),orderedBy:S.managerName});
     const sp={};
     for(const i of items)sp['spent_'+i.bl]=(S.budgets['spent_'+i.bl]||0)+i.lt;
@@ -2763,7 +2780,7 @@ function runSmartAlerts(){
 // ── BUDGET ─────────────────────────────────────────────
 function rBudget(){
   const bmlEl=document.getElementById('bml');
-  if(bmlEl)bmlEl.textContent=new Date().toLocaleString('en-US',{month:'long',year:'numeric'});
+  if(bmlEl)bmlEl.textContent=fmtMonthKey(vkey());
   const bsb=document.getElementById('BSB');
   if(bsb)bsb.innerHTML=BL.map(l=>'<div class="BRI"><div class="BRIL">'+e(l)+'</div><div class="bii-wrap"><span class="bii-sym">$</span><input class="BRII" type="number" min="0" step="100" id="bi-'+l.replace(/\s+/g,'-')+'" value="'+(S.budgets[l]||'')+'" placeholder="0.00"/></div></div>').join('');
   const ov=document.getElementById('budget-overview');
@@ -2777,7 +2794,7 @@ async function saveBudgets(){
   try{
     const u={};
     for(const l of BL){const el=document.getElementById('bi-'+l.replace(/\s+/g,'-'));u[l]=parseFloat(el?.value)||0;}
-    await SB.from('budgets').upsert({monthKey:mkey(),data:{...S.budgets,...u}},{onConflict:'monthKey'});
+    await SB.from('budgets').upsert({monthKey:vkey(),data:{...S.budgets,...u}},{onConflict:'monthKey'});
     showOk('Budgets saved.');
   }catch(err){showErr('Could not save budgets. Check your connection and try again.',err);}
 }
@@ -3022,6 +3039,45 @@ function showNote(msg){toast('','Note',msg);}
 
 // ── UTILS ──────────────────────────────────────────────
 function mkey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function vkey(){return S_VIEW_MONTH||mkey();}
+function prevMonthKey(mk){const[y,m]=mk.split('-').map(Number);return m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');}
+function nextMonthKey(mk){const[y,m]=mk.split('-').map(Number);return m===12?(y+1)+'-01':y+'-'+String(m+1).padStart(2,'0');}
+function fmtMonthKey(mk){const[y,m]=mk.split('-').map(Number);return['January','February','March','April','May','June','July','August','September','October','November','December'][m-1]+' '+y;}
+async function switchMonth(mk){
+  if(mk>mkey())return;
+  S_VIEW_MONTH=mk;
+  S.invLoc={floor3:{},tiendita:{},piso2:{}};S.budgets={};S.lastSaved=null;
+  ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mk)||'[]'));
+  try{
+    const[br,i3r,itr,ipr]=await Promise.all([
+      SB.from('budgets').select('*').eq('monthKey',mk).maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_floor3').maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_tiendita').maybeSingle(),
+      SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_piso2').maybeSingle()
+    ]);
+    S.budgets=br.data?.data||{};
+    function _a(loc,row){if(!row)return;const q=row.qtyData||{};for(const[k,v] of Object.entries(q))S.invLoc[loc][k]=v;if(row.savedAt)S.lastSaved=row.savedAt;}
+    _a('floor3',i3r.data);_a('tiendita',itr.data);_a('piso2',ipr.data);
+  }catch(err){showErr('Could not load data for '+fmtMonthKey(mk)+'.',err);}
+  ref();rMonthNav();
+}
+function rMonthNav(){
+  const cur=mkey(),vw=vkey(),isPast=vw<cur;
+  const el=document.getElementById('ih-month');
+  if(el)el.innerHTML='<div class="mnav">'+
+    '<button class="mnav-btn" onclick="switchMonth(prevMonthKey(vkey()))">&#8249;</button>'+
+    '<span class="mnav-lbl">'+fmtMonthKey(vw)+'</span>'+
+    '<button class="mnav-btn"'+(vw>=cur?' disabled':'')+' onclick="switchMonth(nextMonthKey(vkey()))">&#8250;</button>'+
+    '</div>';
+  const bar=document.getElementById('pm-bar');
+  if(bar){
+    bar.classList.toggle('hi',!isPast);
+    const lbl=document.getElementById('pm-bar-lbl');
+    if(lbl)lbl.textContent='📅 Viewing '+fmtMonthKey(vw)+' — Past Month';
+    const nb=document.getElementById('pm-bar-next');
+    if(nb)nb.disabled=(vw>=cur);
+  }
+}
 function now(){return new Date().toISOString();}
 function fmt(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n||0);}
 function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -3031,7 +3087,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.1.3';
+const APP_VERSION='3.1.4';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3788,7 +3844,7 @@ async function qcSaveAndNext() {
   S.invLoc[QC.loc][p.id] = val;
   S.invDirty = true;
   try {
-    await SB.from('inventory').upsert({monthKeyLoc:mkey()+'_'+QC.loc,qtyData:{...S.invLoc[QC.loc]},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'});
+    await SB.from('inventory').upsert({monthKeyLoc:vkey()+'_'+QC.loc,qtyData:{...S.invLoc[QC.loc]},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'});
     S.invDirty = false;
     S.lastSaved = now();
   } catch(err) { /* non-blocking */ }
@@ -4026,7 +4082,7 @@ function qcScheduleSave() {
 
 async function qcSaveInv() {
   try {
-    await SB.from('inventory').upsert({monthKeyLoc:mkey()+'_'+QC.loc,qtyData:{...S.invLoc[QC.loc]},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'});
+    await SB.from('inventory').upsert({monthKeyLoc:vkey()+'_'+QC.loc,qtyData:{...S.invLoc[QC.loc]},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'});
     S.invDirty = false; S.lastSaved = now();
   } catch (err) { /* non-blocking */ }
 }
@@ -4386,8 +4442,8 @@ function parBadge(p, loc) {
 'use strict';
 // ── MONTHLY REPORT ───────────────────────────────────────────────────
 async function generateMonthlyReport() {
-  const month = mkey();
-  const monthName = new Date().toLocaleString('en-US',{month:'long',year:'numeric'});
+  const month = vkey();
+  const monthName = fmtMonthKey(vkey());
 
   // Gather data
   const locs = Object.keys(LOCS);
@@ -4721,7 +4777,7 @@ async function astCmdLogCounts(counts,loc){
   let saved=false;
   try{
     await SB.from('inventory').upsert({
-      monthKeyLoc:mkey()+'_'+targetLoc,
+      monthKeyLoc:vkey()+'_'+targetLoc,
       qtyData:{...S.invLoc[targetLoc]},
       savedAt:new Date().toISOString(),
       savedBy:S.managerName||'Manager'
