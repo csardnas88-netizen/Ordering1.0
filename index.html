@@ -2232,7 +2232,12 @@ function rOrd(){
     const allDone=vi.every(i=>ORD_CHECKED.has(i.pid));
     html+='<div class="OVB'+(allDone?' ovb-done':'')+'">'+
       '<div class="OVBH"><div class="OVBN">'+e(bl)+(allDone?' &#10003;':'')+'</div><div class="OVBT">'+fmt(vt)+'</div></div>';
-    html+=vi.map(i=>{
+    const viSorted=[...vi].sort((a,b)=>{
+      const ac=ORD_CHECKED.has(a.pid)?1:0,bc=ORD_CHECKED.has(b.pid)?1:0;
+      if(ac!==bc)return ac-bc; // pendientes primero
+      return (ui.has(b.pid)?1:0)-(ui.has(a.pid)?1:0); // urgentes primero entre pendientes
+    });
+    html+=viSorted.map(i=>{
       const ck=ORD_CHECKED.has(i.pid),urg=ui.has(i.pid)&&!ck;
       return '<div class="OR'+(ck?' or-done':urg?' oru':'')+'" onclick="toggleOrdCheck(\''+i.pid+'\')">'+
         '<div class="or-check">'+(ck?'&#10003;':'')+'</div>'+
