@@ -1333,6 +1333,7 @@ async function boot(){
   vbnCheck();
   await seed();
   cleanOldMonth();
+  await loadOrdState(); // sync checked/qty from Supabase — fixes cross-device loss
   listen();
   hideLoad();
   initManager();
@@ -2230,7 +2231,7 @@ function toggleOrdCheck(pid,defaultCases){
     if(defaultCases&&ORD_QTY[pid]===undefined)ORD_QTY[pid]=defaultCases;
   }
   localStorage.setItem('jw_ord_ck_'+vkey(),JSON.stringify([...ORD_CHECKED]));
-  saveOrdQty();scheduleCarrySave();rOrd();
+  saveOrdQty();scheduleOrdSave();scheduleCarrySave();rOrd();
 }
 function saveOrdQty(){localStorage.setItem('jw_ord_qty_'+vkey(),JSON.stringify(ORD_QTY));}
 let _carrySaveTimer=null;
@@ -2261,10 +2262,40 @@ async function flushCarryAsync(){
     try{await SB.from('settings').delete().eq('key','pending_carry');}catch(e){}
   }
 }
+// ── ORDER STATE SYNC (Supabase) ──────────────────────────
+// Keeps ORD_CHECKED + ORD_QTY in Supabase so all devices/managers stay in sync.
+let _ordSaveTimer=null;
+function scheduleOrdSave(){
+  if(_ordSaveTimer)clearTimeout(_ordSaveTimer);
+  _ordSaveTimer=setTimeout(()=>flushOrdState().catch(()=>{}),2000);
+}
+async function flushOrdState(){
+  _ordSaveTimer=null;
+  const mk=vkey();
+  try{
+    if(ORD_CHECKED.size||Object.keys(ORD_QTY).length){
+      await SB.from('settings').upsert({key:'ord_state_'+mk,value:{checked:[...ORD_CHECKED],qty:ORD_QTY}},{onConflict:'key'});
+    }else{
+      await SB.from('settings').delete().eq('key','ord_state_'+mk);
+    }
+  }catch(e){}
+}
+async function loadOrdState(mk){
+  mk=mk||mkey();
+  try{
+    const{data}=await SB.from('settings').select('value').eq('key','ord_state_'+mk).maybeSingle();
+    if(data?.value){
+      ORD_CHECKED=new Set(data.value.checked||[]);
+      ORD_QTY=data.value.qty||{};
+      localStorage.setItem('jw_ord_ck_'+mk,JSON.stringify([...ORD_CHECKED]));
+      localStorage.setItem('jw_ord_qty_'+mk,JSON.stringify(ORD_QTY));
+    }
+  }catch(e){}
+}
 function adjOrdQty(pid,delta,max){
   const cur=ORD_QTY[pid]!==undefined?ORD_QTY[pid]:max;
   ORD_QTY[pid]=Math.max(1,Math.min(max,cur+delta));
-  saveOrdQty();scheduleCarrySave();rOrd();
+  saveOrdQty();scheduleOrdSave();scheduleCarrySave();rOrd();
 }
 
 function rOrd(){
@@ -2407,6 +2438,7 @@ async function doFinalize(){
     }
     ORD_CHECKED.clear();ORD_QTY={};
     localStorage.removeItem('jw_ord_ck_'+mk);localStorage.removeItem('jw_ord_qty_'+mk);
+    SB.from('settings').delete().eq('key','ord_state_'+mk).catch(()=>{});
     S.gaps={};S.invDirty=false;
     for(const _loc of['floor3','tiendita','piso2']){
       SB.from('inventory').upsert({monthKeyLoc:mk+'_'+_loc,qtyData:{},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'}).catch(()=>{});
@@ -3159,23 +3191,28 @@ function nextMonthKey(mk){const[y,m]=mk.split('-').map(Number);return m===12?(y+
 function fmtMonthKey(mk){const[y,m]=mk.split('-').map(Number);return['January','February','March','April','May','June','July','August','September','October','November','December'][m-1]+' '+y;}
 async function switchMonth(mk){
   if(mk>mkey())return;
-  // Flush any pending carry NOW (awaited) before switching months so it lands in DB
-  // before we reload S.pendingCarry for the new month view.
-  await flushCarryAsync().catch(()=>{});
+  // Flush carry + ord state for current month before switching
+  await Promise.all([flushCarryAsync(),flushOrdState()]).catch(()=>{});
   S_VIEW_MONTH=mk;
   S.invLoc={floor3:{},tiendita:{},piso2:{}};S.budgets={};S.lastSaved=null;
+  // Seed from localStorage while Supabase loads
   ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mk)||'[]'));
   ORD_QTY=JSON.parse(localStorage.getItem('jw_ord_qty_'+mk)||'{}');
   try{
-    const[br,i3r,itr,ipr,pcr]=await Promise.all([
+    const[br,i3r,itr,ipr,pcr,osr]=await Promise.all([
       SB.from('budgets').select('*').eq('monthKey',mk).maybeSingle(),
       SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_floor3').maybeSingle(),
       SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_tiendita').maybeSingle(),
       SB.from('inventory').select('*').eq('monthKeyLoc',mk+'_piso2').maybeSingle(),
-      SB.from('settings').select('value').eq('key','pending_carry').maybeSingle()
+      SB.from('settings').select('value').eq('key','pending_carry').maybeSingle(),
+      SB.from('settings').select('value').eq('key','ord_state_'+mk).maybeSingle()
     ]);
     S.budgets=br.data?.data||{};
     S.pendingCarry=pcr.data?.value||{};
+    if(osr.data?.value){
+      ORD_CHECKED=new Set(osr.data.value.checked||[]);
+      ORD_QTY=osr.data.value.qty||{};
+    }
     function _a(loc,row){if(!row)return;const q=row.qtyData||{};for(const[k,v] of Object.entries(q))S.invLoc[loc][k]=v;if(row.savedAt)S.lastSaved=row.savedAt;}
     _a('floor3',i3r.data);_a('tiendita',itr.data);_a('piso2',ipr.data);
   }catch(err){showErr('Could not load data for '+fmtMonthKey(mk)+'.',err);}
@@ -3207,7 +3244,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.2.0';
+const APP_VERSION='3.2.1';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
