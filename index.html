@@ -75,6 +75,9 @@ input,select,textarea{font-family:inherit}
 .nc-inp{width:100%;padding:12px 14px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);font-size:15px;color:var(--txt);outline:none;transition:border-color .2s;margin-bottom:16px}
 .nc-inp:focus{border-color:var(--gold)}
 .nc-btn{width:100%;padding:14px;border-radius:var(--r2);background:linear-gradient(135deg,var(--gd),var(--gl));color:#fff;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 4px 14px rgba(184,151,46,.3);border:none;cursor:pointer}
+.nc-err{color:var(--red);font-size:12px;font-weight:600;min-height:18px;margin-bottom:10px;text-align:center}
+.sb-logout{width:100%;margin-top:10px;background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.45);font-size:11px;font-weight:600;padding:7px;border-radius:var(--r1);cursor:pointer;letter-spacing:.05em;transition:all .15s}
+.sb-logout:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.75)}
 /* SHELL */
 #APP{display:flex;height:100vh;overflow:hidden}
 /* SIDEBAR */
@@ -850,9 +853,12 @@ input,select,textarea{font-family:inherit}
     <div class="nc-logo">Ordering System</div>
     <div class="nc-sub">Housekeeping &middot; Ordering System</div>
     <div class="nc-div"></div>
-    <div class="nc-lbl">Your name</div>
-    <input class="nc-inp" id="nc-inp" placeholder="e.g. Carlos M." maxlength="30" autocomplete="name"/>
-    <button class="nc-btn" onclick="setMgrName()">Enter App &rarr;</button>
+    <div class="nc-lbl">Email</div>
+    <input class="nc-inp" id="nc-email" type="email" placeholder="your@email.com" autocomplete="email"/>
+    <div class="nc-lbl" style="margin-top:2px">Password</div>
+    <input class="nc-inp" id="nc-pass" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password"/>
+    <div class="nc-err" id="nc-err"></div>
+    <button class="nc-btn" id="nc-submit" onclick="doLogin()">Sign In &rarr;</button>
   </div>
 </div>
 <div id="APP">
@@ -883,6 +889,7 @@ input,select,textarea{font-family:inherit}
         <div class="SB-av" id="SB-av">--</div>
         <div><div class="SB-nm" id="SB-nm">Manager</div><div class="SB-rl">Housekeeping</div></div>
       </div>
+      <button class="sb-logout" onclick="doLogout()">Sign out</button>
     </div>
   </nav>
   <div class="MN">
@@ -890,7 +897,7 @@ input,select,textarea{font-family:inherit}
       <button class="TB-menu" onclick="toggleSB()">&#9776;</button>
       <div class="TB-title" id="TBT">Dashboard</div>
       <div class="TB-right">
-        <div class="TB-mgr" id="TB-mgr" onclick="openManagerSelect()">👤 <span id="TB-mgr-name">Select</span></div>
+        <div class="TB-mgr" id="TB-mgr">👤 <span id="TB-mgr-name">—</span></div>
         <div class="TB-badge hi" id="TBB" onclick="go('alerts')"><span class="pdot"></span><span id="TBC">0</span> urgent</div>
       </div>
     </div>
@@ -1312,20 +1319,58 @@ let SB=null;
 // ── BOOTSTRAP ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',async()=>{
   SB=window._sb;
-  const stored=localStorage.getItem('jw_manager_name');
-  if(stored){S.managerName=stored;renderUserInfo();await boot();}
-  else{document.getElementById('LS').classList.add('out');setTimeout(()=>{document.getElementById('LS').style.display='none';document.getElementById('NS').classList.add('on');},420);}
+  SB.auth.onAuthStateChange((event,_session)=>{
+    if(event==='SIGNED_OUT')location.reload();
+  });
+  const {data:{session}}=await SB.auth.getSession();
+  if(session){await bootWithSession(session);}
+  else{
+    document.getElementById('LS').classList.add('out');
+    setTimeout(()=>{document.getElementById('LS').style.display='none';document.getElementById('NS').classList.add('on');},420);
+  }
 });
 
-function setMgrName(){
-  const v=document.getElementById('nc-inp').value.trim();
-  if(!v){document.getElementById('nc-inp').style.borderColor='var(--red)';return;}
-  S.managerName=v;localStorage.setItem('jw_manager_name',v);
+async function bootWithSession(session){
+  try{
+    const{data}=await SB.from('allowed_users').select('name').eq('email',session.user.email).maybeSingle();
+    if(!data){
+      await SB.auth.signOut();
+      showLoginErr('Access denied. Contact your administrator.');
+      document.getElementById('LS').classList.add('out');
+      setTimeout(()=>{document.getElementById('LS').style.display='none';document.getElementById('NS').classList.add('on');},420);
+      return;
+    }
+    S.managerName=data.name||session.user.email.split('@')[0];
+  }catch(e){S.managerName=session.user.email.split('@')[0];}
+  localStorage.setItem('jw_manager_name',S.managerName);
   renderUserInfo();
-  document.getElementById('NS').classList.remove('on');
-  document.getElementById('LS').style.display='flex';
-  document.getElementById('LS').classList.remove('out');
-  boot();
+  await boot();
+}
+
+async function doLogin(){
+  const email=(document.getElementById('nc-email').value||'').trim();
+  const pass=document.getElementById('nc-pass').value||'';
+  if(!email||!pass){showLoginErr('Please enter your email and password.');return;}
+  const btn=document.getElementById('nc-submit');
+  btn.disabled=true;btn.textContent='Signing in…';
+  showLoginErr('');
+  try{
+    const{data,error}=await SB.auth.signInWithPassword({email,password:pass});
+    if(error){showLoginErr(error.message);btn.disabled=false;btn.textContent='Sign In →';return;}
+    document.getElementById('NS').classList.remove('on');
+    document.getElementById('LS').style.display='flex';
+    document.getElementById('LS').classList.remove('out');
+    await bootWithSession(data.session);
+  }catch(e){showLoginErr('Could not sign in. Check your connection.');btn.disabled=false;btn.textContent='Sign In →';}
+}
+
+function showLoginErr(msg){const el=document.getElementById('nc-err');if(el)el.textContent=msg;}
+
+async function doLogout(){
+  if(!confirm('Sign out?'))return;
+  await SB.auth.signOut();
+  localStorage.removeItem('jw_manager_name');
+  location.reload();
 }
 
 async function boot(){
@@ -1585,27 +1630,6 @@ async function seedCleaningSupplies(){
   }
 }
 
-async function submitOrder(){
-  const items=getItems();
-  if(!items.length){showNote('Nothing to order yet.');return;}
-  if(!S.managerName){showNote('Please select your name first (👤 top bar).');return;}
-  if(!confirm('Save this order to history?'))return;
-  const total=items.reduce(function(s,i){return s+i.lt;},0);
-  try{
-    await SB.from('orders').insert({
-      items:items.map(function(i){return{name:i.name,partNumber:i.pn,budgetLine:i.bl,vendor:i.vn,cases:i.cases,pricePerCase:i.pp,total:i.lt};}),
-      total:total,
-      monthKey:vkey(),
-      submittedBy:S.managerName,
-      submittedAt:now(),
-      createdAt:now(),
-      month:vkey()
-    });
-    showOk('Order saved to history by '+S.managerName+'. Total: '+fmt(total));
-    flushCarry();
-    rOrderHistory();
-  }catch(err){showErr('Could not save order.',err);}
-}
 
 async function rOrderHistory(){
   const el=document.getElementById('OH');
@@ -2360,8 +2384,7 @@ function rOrd(){
     '<div class="BIR"><span class="BIL">Available budget</span><span>'+fmt(rm)+'</span></div>'+
     '<div class="BIR"><span class="BIL">This order total</span><span>'+fmt(gd)+'</span></div>'+
     '<div class="BIR"><span class="BIL">Remaining after order</span><span class="'+(safe?'bi-s':'bi-o')+'">'+fmt(Math.abs(af))+' '+(safe?'left &#10003;':'OVER BUDGET &#9888;')+'</span></div></div>'+
-    '<button class="FB" id="finalize-btn" onclick="finalize()">Finalize &amp; Mark as Ordered</button>'+
-    '<button class="FB" style="background:var(--grn);margin-top:8px" onclick="submitOrder()">&#128228; Submit &amp; Save Order History</button>';
+    '<button class="FB" id="finalize-btn" onclick="finalize()">Place Order</button>';
   c.innerHTML=html;
   rOrderHistory();
 }
@@ -2446,7 +2469,7 @@ async function doFinalize(){
     showOk('Order finalized by '+S.managerName+'. Inventory reset for next count.'+(Object.keys(carry).length?' Pending cases carried to next month.':''));
     go('dashboard');
   }catch(err){showErr('Could not save the order. Please try again.',err);}
-  finally{S.finalizing=false;if(btn){btn.disabled=false;btn.textContent='Finalize & Mark as Ordered';}}
+  finally{S.finalizing=false;if(btn){btn.disabled=false;btn.textContent='Place Order';}}
 }
 
 function exportOrd(){
@@ -3244,7 +3267,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.2.1';
+const APP_VERSION='3.2.3';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -3464,7 +3487,7 @@ async function confirmXlsxImport(){
 
 document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'){document.querySelectorAll('.MO.on').forEach(m=>m.classList.remove('on'));closeSB();}
-  if(ev.key==='Enter'&&document.getElementById('NS').classList.contains('on'))setMgrName();
+  if(ev.key==='Enter'&&document.getElementById('NS').classList.contains('on'))doLogin();
 });
 window.addEventListener('beforeunload',ev=>{if(S.invDirty){ev.preventDefault();ev.returnValue='You have unsaved inventory counts.';}});
 </script>
@@ -4499,16 +4522,9 @@ function setManagerCustom() {
   setManager(name);
 }
 
-function initManager() {
-  const saved = S.managerName;
-  const el = document.getElementById('TB-mgr-name');
-  if (saved) {
-    if (el) el.textContent = saved.split(' ')[0];
-  } else {
-    if (el) el.textContent = 'Select';
-    // Auto-open manager select on first load
-    setTimeout(openManagerSelect, 800);
-  }
+function initManager(){
+  const el=document.getElementById('TB-mgr-name');
+  if(el&&S.managerName)el.textContent=S.managerName.split(' ')[0];
 }
 
 // ── SHIFT HANDOFF NOTE ───────────────────────────────────────────────
