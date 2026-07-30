@@ -113,8 +113,6 @@ input,select,textarea{font-family:inherit}
 .PG.on{display:block;height:calc(100vh - var(--hh));overflow-y:auto}
 #pg-quickcount{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none}
 #pg-quickcount.on{display:block}
-#pg-qrcodes{position:absolute;top:var(--hh);left:0;right:0;bottom:0;overflow-y:auto;display:none;padding:20px}
-#pg-qrcodes.on{display:block}
 #qc-root{padding:20px}
 /* SHARED */
 .PH{margin-bottom:24px}
@@ -674,15 +672,6 @@ input,select,textarea{font-family:inherit}
 .QC-done-stat-val{font-size:20px;font-weight:700;color:var(--txt)}
 .QC-done-stat-lbl{font-size:9px;color:var(--tm);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
 
-/* ── QR CODES & SCANNER ──────────────────────────────────────────── */
-.QR-wrap{max-width:1000px;margin:0 auto}
-.QR-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px}
-.QR-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-.QR-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px;text-align:center;box-shadow:var(--sh1)}
-.QR-card-canvas{display:flex;align-items:center;justify-content:center;margin-bottom:8px}
-.QR-card-name{font-size:11px;font-weight:600;color:var(--txt);line-height:1.3;min-height:28px;display:flex;align-items:center;justify-content:center}
-.QR-card-pn{font-size:10px;color:var(--tm);margin-top:2px}
-}
 /* SCANNER MODAL */
 .SCM{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:700;display:none;align-items:center;justify-content:center;flex-direction:column}
 .SCM.on{display:flex}
@@ -692,16 +681,6 @@ input,select,textarea{font-family:inherit}
 .SCM-close{font-size:18px;color:var(--tm);cursor:pointer;padding:4px 8px}
 #scm-reader{width:100%}
 .SCM-status{padding:12px 18px;font-size:12px;color:var(--tm);text-align:center}
-
-/* ── QR CODES PAGE (print) ───────────────────────────────────────── */
-.QRP-wrap{max-width:520px;margin:0 auto}
-.QRP-row{display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r1);padding:9px 12px;margin-bottom:6px;box-shadow:var(--sh1)}
-.QRP-qr{width:40px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--bds);border-radius:6px;overflow:hidden}
-.QRP-info{flex:1;min-width:0}
-.QRP-name{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.QRP-meta{font-size:10px;color:var(--tm);margin-top:1px}
-.QRP-copies{width:54px;padding:7px 8px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);font-size:13px;text-align:center;color:var(--txt);outline:none;flex-shrink:0}
-.QRP-copies:focus{border-color:var(--gold)}
 
 /* ── QUICK COUNT — SCAN MODE ─────────────────────────────────────── */
 .QC-mode-tabs{display:flex;border-bottom:1px solid var(--bds);margin-bottom:14px}
@@ -780,25 +759,6 @@ input,select,textarea{font-family:inherit}
 }
 
 
-/* ── BELOW PAR PAGE (Option C — Dark Navy) ──────────────────────── */
-#pg-belowpar{background:var(--bg);margin:-20px;padding:20px;min-height:calc(100% + 40px)}
-#pg-belowpar .PT{color:#fff}
-#pg-belowpar .PD{color:rgba(255,255,255,.45)}
-.bp-summary{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--red);margin-bottom:12px}
-.bp-card{background:var(--sur);border:1px solid var(--bdr);border-left:4px solid var(--amb);border-radius:var(--r2);padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:opacity .15s;box-shadow:var(--sh1)}
-.bp-card.bp-crit{border-left-color:var(--red)}
-.bp-card:active{opacity:.8}
-.bp-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
-.bp-name{font-size:13px;font-weight:600;color:var(--txt);line-height:1.3;flex:1}
-.bp-val{font-size:15px;font-weight:800;flex-shrink:0}
-.bp-bar-wrap{height:8px;background:var(--s3);border-radius:4px;overflow:hidden;margin-bottom:8px}
-.bp-bar{height:100%;border-radius:3px;transition:width .4s}
-.bp-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:10px}
-.bp-vendor{color:var(--tm);background:var(--s2);padding:2px 8px;border-radius:20px}
-.bp-locs{color:var(--ts);background:var(--s2);padding:2px 8px;border-radius:20px}
-.bp-need{margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:99px;color:#fff}
-
-
 /* ── INVENTORY FILTER PILLS ──────────────────────────────────────── */
 .inv-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .inv-fp{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);color:var(--ts);background:var(--sur);transition:all .15s;user-select:none}
@@ -822,6 +782,114 @@ input,select,textarea{font-family:inherit}
 .prog-locs{font-size:10px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 
 .PMT-sec{color:var(--tm);opacity:.7}
+
+/* ── INVENTORY & ORDER (merged) ────────────────────────────────────── */
+.io-toolbar2{display:flex;gap:8px;flex-wrap:wrap;margin:-6px 0 12px}
+.io-tbtn{font-family:inherit;font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--bdr);background:var(--sur);color:var(--ts);cursor:pointer}
+.io-tbtn:hover{border-color:var(--tm)}
+.io-tbtn.on{background:var(--nvy);border-color:var(--nvy);color:#fff}
+.io-tw{overflow-x:auto;border:1px solid var(--bdr);border-radius:var(--r2);background:var(--sur)}
+.io-table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.io-table thead th{background:var(--s3);color:var(--ts);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:9px 4px;border-bottom:1px solid var(--bdr);white-space:nowrap}
+.io-table th.io-l,.io-table td.io-l{text-align:left;padding-left:14px}
+.io-table th.io-ord{color:var(--gd)}
+.io-table td{padding:10px 4px;text-align:center;border-bottom:1px solid var(--bdr);font-variant-numeric:tabular-nums}
+.io-table tr.io-row{cursor:pointer}
+.io-table tr.io-row:hover td{filter:brightness(.97)}
+.io-table tr.io-row:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.io-table tr.io-row.io-open td{border-bottom-color:var(--gold)}
+.io-name{color:var(--txt);line-height:1.35;font-weight:500}
+.io-sub{font-size:10.5px;margin-top:2px}
+.io-sub.io-c-carry{color:var(--blu)}
+.io-sub.io-c-zero{color:var(--red)}
+.io-sub.io-c-done{color:var(--grn)}
+.io-locsub{display:none;font-size:10.5px;color:var(--tm);margin-top:2px}
+.io-dash{color:var(--tm)}
+.io-tot{font-weight:700}
+.io-out td.io-tot{color:var(--red)} .io-out{background:var(--rd)}
+.io-below td.io-tot{color:var(--amb)} .io-below{background:var(--ad)}
+.io-atpar td.io-tot{color:var(--grn)} .io-atpar{background:var(--grd)}
+.io-uncounted .io-name{color:var(--tm)}
+.io-partial{background:var(--bld)} .io-partial td.io-tot{color:var(--blu)}
+.io-done{background:var(--grd);opacity:.6}
+.io-toord{color:var(--amb);font-weight:700}
+.io-toord.io-c-done{color:var(--grn);font-weight:600}
+.io-toord.io-c-partial{color:var(--blu)}
+.io-toord.io-c-non{color:var(--tm);font-weight:400}
+.io-drag{display:none;cursor:grab;color:var(--tm);padding:0 6px;touch-action:none}
+.io-rearrange .io-drag{display:inline-block}
+.io-rearrange tr.io-row{cursor:grab}
+.io-rearrange tr.io-row.dragging{opacity:.4}
+.io-rearrange tr.io-row.drag-over td{border-top:2px solid var(--gold)}
+
+/* Detail panel */
+.io-panel td{padding:0;border-bottom:2px solid var(--gold)}
+.io-panel-in{padding:14px 16px}
+.io-panel-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.io-panel-nm{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.io-panel-nm-txt{font-size:14px;font-weight:600;color:var(--txt)}
+.io-edit-btn{font-size:12px;color:var(--tm);cursor:pointer;padding:2px 5px;border-radius:5px}
+.io-edit-btn:hover{color:var(--gd);background:var(--gt)}
+.io-panel-meta{font-size:10.5px;color:var(--tm);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.io-panel-meta .io-edit-btn{font-size:10px}
+.io-inline-edit{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.io-inline-edit input{font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--bdr);border-radius:6px;background:var(--sur);color:var(--txt);flex:1;min-width:0}
+.io-inline-edit button{font-family:inherit;font-size:10px;padding:5px 9px;border-radius:6px;border:none;cursor:pointer;white-space:nowrap}
+.io-inline-save{background:var(--nvy);color:#fff}
+.io-inline-cancel{background:var(--s3);color:var(--ts)}
+.io-badge{font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+.io-badge.io-b-done{color:var(--grn);border-color:var(--grb);background:var(--grd)}
+.io-badge.io-b-partial{color:var(--blu);border-color:var(--blb);background:var(--bld)}
+.io-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}
+.io-step{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r1);padding:10px 5px;text-align:center}
+.io-step.io-has{background:var(--bld);border-color:var(--blb)}
+.io-step.io-na{opacity:.45}
+.io-step-l{font-size:10px;color:var(--tm);margin-bottom:7px}
+.io-step.io-has .io-step-l{color:var(--blu)}
+.io-step-c{display:flex;align-items:center;justify-content:center;gap:8px}
+.io-step-c button{font-family:inherit;width:28px;height:28px;border-radius:var(--r1);border:none;background:var(--s3);color:var(--ts);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.io-step.io-has button{background:var(--sur);color:var(--blu)}
+.io-step-c button:disabled{opacity:.35;cursor:default}
+.io-step-v{font-size:18px;min-width:26px;font-weight:600}
+.io-step-v.io-e{color:var(--tm);font-weight:400}
+.io-calc{background:var(--s2);border-radius:var(--r1);padding:10px 12px;font-size:12px;color:var(--ts);line-height:1.65;margin-bottom:11px}
+.io-calc b{font-weight:700;color:var(--txt)}
+.io-calc .io-a{color:var(--amb);font-weight:700}
+.io-calc .io-c{color:var(--blu);font-weight:700}
+.io-warn{background:var(--ad);border:1px solid var(--ab);border-radius:var(--r1);padding:10px 12px;margin-bottom:11px;display:flex;gap:9px;font-size:11.5px;color:var(--amb);line-height:1.6}
+.io-ordbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--ad);border:1px solid var(--ab);border-radius:var(--r1);padding:11px 13px;flex-wrap:wrap}
+.io-ordbar.io-b-done{background:var(--grd);border-color:var(--grb)}
+.io-ordbar.io-b-partial{background:var(--bld);border-color:var(--blb)}
+.io-ordbar-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--amb)}
+.io-ordbar.io-b-done .io-ordbar-l{color:var(--grn)}
+.io-ordbar.io-b-partial .io-ordbar-l{color:var(--blu)}
+.io-qty{display:inline-flex;align-items:center;gap:8px;background:var(--sur);border:1px solid var(--ab);border-radius:var(--r1);padding:3px 8px}
+.io-ordbar.io-b-partial .io-qty,.io-ordbar.io-b-done .io-qty{border-color:var(--blb)}
+.io-qty button{font-family:inherit;border:none;background:none;font-size:15px;color:var(--amb);cursor:pointer;line-height:1;padding:2px 3px}
+.io-ordbar.io-b-partial .io-qty button,.io-ordbar.io-b-done .io-qty button{color:var(--blu)}
+.io-qty span{font-size:14px;min-width:20px;text-align:center;color:var(--txt);font-weight:700}
+.io-flagbtn{font-size:11px;color:var(--red);background:var(--rd);border:1px solid var(--rb);padding:6px 11px;border-radius:var(--r1);cursor:pointer}
+.io-flagbtn:hover{filter:brightness(.96)}
+
+.io-bottombar{position:sticky;bottom:0;left:0;right:0;background:var(--nvy);padding:11px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 -4px 16px rgba(30,45,74,.18);border-radius:0 0 var(--r2) var(--r2);margin-top:0}
+.io-bb-s{font-size:10.5px;color:var(--blb)}
+.io-bb-v{font-size:15px;color:#fff;margin-top:2px;font-weight:600}
+.io-bb-v em{font-style:normal;font-size:11px;margin-left:5px}
+.io-bb-v em.io-ok{color:var(--grn)}
+.io-bb-v em.io-over{color:#E8776A}
+
+@media (max-width:860px){
+  .io-table{min-width:0}
+  .io-table th.io-loc,.io-table td.io-loc{display:none}
+  .io-locsub{display:block}
+  .io-steps{gap:6px}
+}
+
+/* Catalog rearrange mode */
+.cat-drag{cursor:grab;color:var(--tm);font-size:15px;padding:2px 2px;flex-shrink:0;align-self:center;touch-action:none}
+.CI.cat-rearrange{cursor:grab}
+.CI.cat-rearrange.dragging{opacity:.4}
+.CI.cat-rearrange.drag-over{border-top:2px solid var(--gold)}
 
 /* ── QUICK COUNT BUDGET LINE (SHELF) FILTER ──────────────────────── */
 .QC-bl-label{font-size:11px;font-weight:700;color:var(--ts);margin:14px 0 8px;letter-spacing:.02em}
@@ -871,13 +939,9 @@ input,select,textarea{font-family:inherit}
     <div class="SB-nav">
       <div class="nh">Main</div>
       <div class="NI on"  data-p="dashboard"     onclick="go('dashboard')"><span class="ic">&#8862;</span>Dashboard</div>
-      <div class="NI"     data-p="inventory"     onclick="go('inventory')"><span class="ic">&#128230;</span>Inventory Count</div>
+      <div class="NI"     data-p="inventory"     onclick="go('inventory')"><span class="ic">&#128230;</span>Inventory &amp; Order</div>
       <div class="NI"     data-p="quickcount"    onclick="go('quickcount')"><span class="ic">&#9889;</span>Quick Count</div>
-      <div class="NI"     data-p="qrcodes"      onclick="go('qrcodes')"><span class="ic">&#128241;</span>QR Codes</div>
-      <div class="NI"     data-p="order"         onclick="go('order')"><span class="ic">&#128722;</span>Order Summary</div>
       <div class="nh" style="margin-top:6px">Management</div>
-      <div class="NI"     data-p="alerts"        onclick="go('alerts')"><span class="ic">&#128276;</span>Urgent Alerts<span class="bd hi" id="nb">0</span></div>
-      <div class="NI"     data-p="belowpar"      onclick="go('belowpar')"><span class="ic">&#9888;&#65039;</span>Below Par<span class="bd hi" id="bp-badge">0</span></div>
       <div class="NI"     data-p="catalog"       onclick="go('catalog')"><span class="ic">&#128203;</span>Product Catalog</div>
       <div class="NI"     data-p="parlevels"     onclick="go('parlevels')"><span class="ic">&#127919;</span>Par Levels</div>
       <div class="NI"     data-p="ordersettings" onclick="go('ordersettings')"><span class="ic">&#9881;&#65039;</span>Order Settings</div>
@@ -961,27 +1025,19 @@ input,select,textarea{font-family:inherit}
         <div id="urg-strip"></div>
       </div>
     </div>
-    <!-- INVENTORY -->
+    <!-- INVENTORY & ORDER -->
     <div class="PG" id="pg-inventory">
       <div class="PH fbet">
-        <div><div class="PT">Inventory Count</div><div class="PD">Count cases on hand &middot; Units for equipment</div></div>
+        <div><div class="PT">Inventory &amp; Order</div><div class="PD">Count on hand, see what to order, and mark it ordered &mdash; all in one place</div></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-o btn-sm" id="io-rearrange-btn" onclick="toggleRearrange()">&#10021; Rearrange</button>
+          <button class="btn btn-o btn-sm" onclick="exportOrd()">&#128196; Export</button>
           <button class="btn btn-o btn-sm" onclick="resetInvConfirm()">&#128260; Reset</button>
-          <button class="btn btn-g btn-sm" id="save-inv-btn" onclick="saveInv()">&#128190; Save</button>
         </div>
       </div>
       <div class="IPR">
         <div><div class="IPC" id="IPC">0 / 0</div><div class="IPS">products counted</div></div>
         <div class="IPBW"><div class="IPBF" id="IPBF" style="width:0%"></div></div>
-      </div>
-      <!-- Location toggle -->
-      <div class="loc-bar">
-        <div class="loc-toggle">
-          <div class="loc-btn on" id="loc-btn-floor3" onclick="setLoc('floor3')">&#128230; Floor 3 Storage</div>
-          <div class="loc-btn" id="loc-btn-tiendita" onclick="setLoc('tiendita')">&#127978; La Tiendita</div>
-          <div class="loc-btn" id="loc-btn-piso2" onclick="setLoc('piso2')">&#129529; 2nd Floor Laundry</div>
-        </div>
-        <div class="loc-sub" id="loc-sub">Counting Floor 3 Storage</div>
       </div>
       <div class="search-bar-row">
         <div class="search-wrap">
@@ -989,22 +1045,29 @@ input,select,textarea{font-family:inherit}
           <input class="search-inp" id="inv-search" type="search" placeholder="Search products, part numbers..." oninput="onInvSearch(this.value)" autocomplete="off"/>
           <button class="search-clear hi" id="inv-search-clear" onclick="clearInvSearch()">&#10005;</button>
         </div>
-        <div class="view-toggle">
-          <div class="VTG on" id="inv-vt-vendor" onclick="setInvView('vendor')">Vendor</div>
-          <div class="VTG" id="inv-vt-budget" onclick="setInvView('budget')">Budget</div>
-        </div>
       </div>
-      <div class="VTabs" id="VTabs"></div>
       <div class="inv-filter-row" id="inv-filter-row"></div>
-      <div id="PList"></div>
-    </div>
-    <!-- ORDER SUMMARY -->
-    <div class="PG" id="pg-order">
-      <div class="PH fbet">
-        <div><div class="PT">Order Summary</div><div class="PD">Grouped by Yield Account &middot; Ready to place</div></div>
-        <button class="btn btn-o btn-sm" onclick="exportOrd()">&#128196; Export</button>
+      <div class="io-toolbar2">
+        <button class="io-tbtn" id="io-hide-btn" onclick="toggleHideOrdered()">Hide ordered</button>
+        <button class="io-tbtn" id="io-sort-btn" onclick="toggleSortMode()">Sort: urgency</button>
       </div>
-      <div id="OC"></div>
+      <div class="io-tw">
+        <table class="io-table">
+          <thead><tr>
+            <th class="io-l">Product</th>
+            <th class="io-loc">F3</th><th class="io-loc">Tnd</th><th class="io-loc">P2</th>
+            <th>Total</th><th>Par</th><th class="io-ord">To order</th>
+          </tr></thead>
+          <tbody id="IO-tbody"></tbody>
+        </table>
+      </div>
+      <div class="io-bottombar" id="io-bottombar">
+        <div>
+          <div class="io-bb-s" id="io-bb-s">&nbsp;</div>
+          <div class="io-bb-v" id="io-bb-v">&nbsp;</div>
+        </div>
+        <button class="btn btn-g" id="finalize-btn" onclick="finalize()">Place Order</button>
+      </div>
       <div id="OH" style="margin-top:20px"></div>
     </div>
     <!-- ALERTS -->
@@ -1013,16 +1076,12 @@ input,select,textarea{font-family:inherit}
       <div id="AL"></div>
       <div class="AAA" onclick="openAlertMO()">&#65291; Flag a product as urgent</div>
     </div>
-    <!-- BELOW PAR -->
-    <div class="PG" id="pg-belowpar">
-      <div class="PH"><div class="PT">Below Par</div><div class="PD">All products under their par level &mdash; sorted by urgency</div></div>
-      <div id="BP-list"></div>
-    </div>
     <!-- CATALOG -->
     <div class="PG" id="pg-catalog">
       <div class="PH fbet">
         <div><div class="PT">Product Catalog</div><div class="PD">Manage vendors, products and par levels</div></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-o btn-sm" id="cat-rearrange-btn" onclick="toggleCatRearrange()">&#10021; Rearrange</button>
           <button class="btn btn-pdf btn-sm" onclick="openPdfImport()">&#128196; Import PDF</button>
           <button class="btn btn-pdf btn-sm" style="background:linear-gradient(135deg,#1a6e2e,#2d9e45)" onclick="openXlsxImport()">&#128196; Import Excel</button>
           <button class="btn btn-o btn-sm" onclick="addVendor()">&#65291; Vendor</button>
@@ -1096,10 +1155,6 @@ input,select,textarea{font-family:inherit}
       <div id="qc-root"></div>
     </div>
 
-    <!-- BOX COUNT -->
-    <div class="PG" id="pg-qrcodes">
-      <div id="qr-root"></div>
-    </div>
 <!-- MODALS -->
 <!-- MANAGER SELECT MODAL -->
 <div class="MO" id="MO-manager">
@@ -1307,8 +1362,8 @@ const S={
   finalizing:false,
   currentLoc:'floor3', // active location for counting
 };
-const INV={query:'',view:'vendor',filter:'all'};
-const CAT={query:'',view:'vendor'};
+const INV={query:'',view:'vendor',filter:'all',hideOrdered:false,sort:'urgency',rearrange:false,open:null,editingName:null,editingPar:null};
+const CAT={query:'',view:'vendor',rearrange:false};
 // Order page — items marked as already called/submitted
 let S_VIEW_MONTH=mkey();
 let ORD_CHECKED=new Set(JSON.parse(localStorage.getItem('jw_ord_ck_'+mkey())||'[]'));
@@ -1559,7 +1614,7 @@ function go(p){
   document.querySelectorAll('.NI').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p)?.classList.add('on');
   document.querySelector('[data-p="'+p+'"]')?.classList.add('on');
-  const T={dashboard:'Dashboard',inventory:'Inventory Count',order:'Order Summary',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count',qrcodes:'QR Codes',belowpar:'Below Par'};
+  const T={dashboard:'Dashboard',inventory:'Inventory & Order',alerts:'Urgent Alerts',catalog:'Product Catalog',parlevels:'Par Levels',ordersettings:'Order Settings',budget:'Budget Setup',quickcount:'Quick Count'};
   document.getElementById('TBT').textContent=T[p]||p;
   closeSB();render(p);
   // Reset all scroll positions on page change
@@ -1572,16 +1627,13 @@ function go(p){
 function ref(){render(S.page);}
 function render(p){
   if(p==='dashboard')rDash();
-  else if(p==='inventory')rInv();
-  else if(p==='order')rOrd();
+  else if(p==='inventory')rInvOrd();
   else if(p==='alerts')rAlerts();
-  else if(p==='belowpar')rBelowPar();
   else if(p==='catalog')rCatalog();
   else if(p==='parlevels')rParLevels();
   else if(p==='ordersettings')rOrderSettings();
   else if(p==='budget')rBudget();
   else if(p==='quickcount')rQuickCount();
-  else if(p==='qrcodes')rQrCodes();
 }
 
 
@@ -1720,7 +1772,7 @@ function rDash(){
     const ps2=S.products.filter(x=>x.vendorName===v);
     const tot=ps2.length,cnt=ps2.filter(x=>S.inventory[x.id]!==undefined&&S.inventory[x.id]!=='').length;
     const vpct=tot>0?Math.round((cnt/tot)*100):0,done=vpct>=100;
-    var _oc="go('inventory');setTimeout(()=>pickV('"+e(v)+"'),120)";
+    var _oc="go('inventory');setTimeout(()=>{const el=document.getElementById('inv-search');if(el){el.value='"+e(v).replace(/'/g,"\\'")+"';onInvSearch(el.value);}},120)";
     return '<div class="vp-card" onclick="'+_oc+'">'+
       '<div class="vp-name">'+e(v)+'<span class="vp-count">'+cnt+' / '+tot+'</span></div>'+
       '<div class="vp-bar"><div class="vp-fill '+(done?'done':'')+'" style="width:'+vpct+'%"></div></div>'+
@@ -1765,12 +1817,6 @@ function rDashAggregate(){
   }
   if(!items.length){el.innerHTML='';return;}
   items.sort(function(a,b){return a.pct-b.pct;});
-  // Update sidebar badge
-  const bpBadge=document.getElementById('bp-badge');
-  if(bpBadge){
-    if(items.length>0){bpBadge.textContent=items.length;bpBadge.classList.remove('hi');}
-    else{bpBadge.classList.add('hi');}
-  }
   const top=items.slice(0,5);
   el.innerHTML='<div class="dh-agg-wrap">'+
     '<div class="dh-agg-title">⚠ Below Par — Action Required</div>'+
@@ -1782,61 +1828,10 @@ function rDashAggregate(){
         '<div class="dh-agg-val" style="color:'+color+'">'+it.total+'/'+it.par+'</div>'+
       '</div>';
     }).join('')+
-    (items.length>5?'<div class="dh-agg-more" onclick="go(\'belowpar\')" style="cursor:pointer;text-decoration:underline">+' + (items.length-5) + ' more below par — view all</div>':'')+
+    (items.length>5?'<div class="dh-agg-more" onclick="go(\'inventory\')" style="cursor:pointer;text-decoration:underline">+' + (items.length-5) + ' more below par — view all</div>':'')+
   '</div>';
 }
 
-function getBelowParItems(){
-  const items=[];
-  for(const p of S.products){
-    if(!Number(p.parLevel))continue;
-    const locs=['floor3','tiendita','piso2'];
-    let total=0,anyCounted=false;
-    const breakdown={};
-    for(const loc of locs){
-      const on=!(p.locations&&p.locations[loc]===false);
-      if(!on)continue;
-      const v=S.invLoc[loc]?S.invLoc[loc][p.id]:undefined;
-      if(v!==undefined&&v!==''){anyCounted=true;total+=Number(v);breakdown[loc]=Number(v);}
-    }
-    if(!anyCounted)continue;
-    const par=Number(p.parLevel);
-    const pct=Math.round((total/par)*100);
-    if(total<par)items.push({p,total,par,pct,breakdown});
-  }
-  items.sort(function(a,b){return a.pct-b.pct;});
-  return items;
-}
-
-function rBelowPar(){
-  const el=document.getElementById('BP-list');
-  if(!el)return;
-  const items=getBelowParItems();
-  if(!items.length){
-    el.innerHTML=emptyState('&#9989;','All stocked up','Every counted product is at or above its par level. Nice work.');
-    return;
-  }
-  const shortLoc={floor3:'F3',tiendita:'TD',piso2:'2nd'};
-  el.innerHTML='<div class="bp-summary">'+items.length+' product'+(items.length>1?'s':'')+' below par</div>'+
-    items.map(function(it){
-      const color=it.total===0?'var(--red)':it.pct<50?'var(--red)':'var(--amb)';
-      const need=it.par-it.total;
-      const locParts=Object.keys(it.breakdown).map(function(l){return shortLoc[l]+': '+it.breakdown[l];}).join(' · ');
-      const isCrit=it.total===0||it.pct<30;
-      return '<div class="bp-card'+(isCrit?' bp-crit':'')+'" style="border-left-color:'+color+'" onclick="go(\'catalog\')">'+
-        '<div class="bp-top">'+
-          '<div class="bp-name">'+e(it.p.name)+'</div>'+
-          '<div class="bp-val" style="color:'+color+'">'+it.total+'/'+it.par+'</div>'+
-        '</div>'+
-        '<div class="bp-bar-wrap"><div class="bp-bar" style="width:'+Math.min(it.pct,100)+'%;background:'+color+'"></div></div>'+
-        '<div class="bp-meta">'+
-          '<span class="bp-vendor">'+e(it.p.vendorName||'')+'</span>'+
-          (locParts?'<span class="bp-locs">'+locParts+'</span>':'')+
-          '<span class="bp-need" style="background:'+color+'">+'+need+' needed</span>'+
-        '</div>'+
-      '</div>';
-    }).join('');
-}
 // ── INVENTORY ──────────────────────────────────────────
 
 // ── LOCATIONS ──────────────────────────────────────────────────────
@@ -1845,20 +1840,6 @@ const LOCS={
   tiendita:{name:'La Tiendita', icon:'&#127978;', short:'Tiendita'},
   piso2:{name:'2nd Floor Laundry Chemicals', icon:'&#129529;', short:'2nd Floor'}
 };
-
-function setLoc(loc){
-  S.currentLoc=loc;
-  // Update toggle UI
-  document.getElementById('loc-btn-floor3')?.classList.toggle('on',loc==='floor3');
-  document.getElementById('loc-btn-tiendita')?.classList.toggle('on',loc==='tiendita');
-  document.getElementById('loc-btn-piso2')?.classList.toggle('on',loc==='piso2');
-  const sub=document.getElementById('loc-sub');
-  if(sub)sub.textContent='Counting '+LOCS[loc].name;
-  // Update save button label
-  const saveBtn=document.getElementById('save-inv-btn');
-  if(saveBtn)saveBtn.textContent='&#128190; Save '+LOCS[loc].short;
-  rInv();
-}
 
 function getLocCount(productId,loc){
   const v=S.invLoc[loc][productId];
@@ -1875,71 +1856,11 @@ function bothCounted(productId){
   return getLocCount(productId,'floor3')!==null&&getLocCount(productId,'tiendita')!==null;
 }
 
-function rInv(){
-  // Sync location toggle UI state
-  const loc=S.currentLoc;
-  document.getElementById('loc-btn-floor3')?.classList.toggle('on',loc==='floor3');
-  document.getElementById('loc-btn-tiendita')?.classList.toggle('on',loc==='tiendita');
-  document.getElementById('loc-btn-piso2')?.classList.toggle('on',loc==='piso2');
-  const sub=document.getElementById('loc-sub');
-  if(sub)sub.textContent='Counting '+LOCS[loc].name;
-  const saveBtn=document.getElementById('save-inv-btn');
-  if(saveBtn)saveBtn.innerHTML='&#128190; Save '+LOCS[loc].short;
-  rVTabs();rProds();updProg();
-}
 function activeVendors(){
   const withP=new Set(S.products.map(p=>p.vendorName).filter(Boolean));
   return[...new Set([...S.vendors.map(v=>v.name),...S.products.map(p=>p.vendorName)].filter(Boolean))].filter(v=>withP.has(v)).sort();
 }
 function allV(){return activeVendors();}
-function rVTabs(){
-  const vs=allV();
-  if(!S.vf||!vs.includes(S.vf))S.vf=vs[0]||null;
-  const el=document.getElementById('VTabs');
-  if(el)el.innerHTML=vs.map(v=>'<div class="VT '+(S.vf===v?'on':'')+'" onclick="pickV(\''+e(v)+'\')">'+e(v)+'</div>').join('');
-  const tabsEl=document.getElementById('VTabs');
-  if(tabsEl)tabsEl.style.display=(INV.view==='budget'||INV.query)?'none':'flex';
-}
-function pickV(v){S.vf=v;rInv();}
-
-function rProds(){
-  const c=document.getElementById('PList');if(!c)return;
-  const ui=new Set(S.alerts.filter(a=>a.status==='urgent').map(a=>a.productId));
-  // Render filter pills based on the current location's relevant products
-  const locProds=S.products.filter(function(p){
-    const loc=S.currentLoc;
-    if(loc==='piso2')return p.locations&&p.locations.piso2===true;
-    return !p.locations||p.locations[loc]!==false;
-  });
-  rInvFilters(locProds);
-  if(INV.query){
-    const q=INV.query;
-    let matches=S.products.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.partNumber||'').toLowerCase().includes(q)||(p.budgetLine||'').toLowerCase().includes(q));
-    matches=applyInvFilter(matches);
-    if(!matches.length){c.innerHTML='<div class="srch-no-results">No products match "'+e(INV.query)+'"</div>';return;}
-    const byV={};for(const p of matches)(byV[p.vendorName]||(byV[p.vendorName]=[])).push(p);
-    let html='';for(const[v,ps2]of Object.entries(byV)){html+='<div class="srch-group-hdr">'+e(v)+'</div>';html+=ps2.map(p=>pCard(p,ui.has(p.id))).join('');}
-    c.innerHTML=html;return;
-  }
-  if(INV.view==='budget'){
-    let html='';
-    for(const bl of BL){
-      let ps2=S.products.filter(p=>p.budgetLine===bl).sort((a,b)=>(a.sortOrder??999)-(b.sortOrder??999));
-      ps2=applyInvFilter(ps2);
-      if(!ps2.length)continue;
-      html+='<div class="budget-group-hdr">'+e(bl)+'</div>';
-      html+=ps2.map(p=>pCard(p,ui.has(p.id))).join('');
-    }
-    c.innerHTML=html||emptyState('&#128230;','Nothing here','No products match this filter right now.');return;
-  }
-  let ps=S.products.filter(p=>p.vendorName===S.vf);
-  if(!ps.length){c.innerHTML=emptyState('&#128230;','No products for this vendor','Add products to start counting this vendor inventory.','<button class="btn btn-g btn-sm" onclick="go(\'catalog\')">Add Products</button>');return;}
-  ps=applyInvFilter(ps);
-  if(!ps.length){c.innerHTML=emptyState('&#9989;','Nothing here','No products match this filter right now.');return;}
-  const sorted=[...ps].sort((a,b)=>{if(ui.has(a.id)&&!ui.has(b.id))return -1;if(!ui.has(a.id)&&ui.has(b.id))return 1;return(a.sortOrder??999)-(b.sortOrder??999);});
-  c.innerHTML=sorted.map(p=>pCard(p,ui.has(p.id))).join('');
-}
-
 function isEquip(p){
   const nm=(p.name||'').toLowerCase();
   return p.countMode==='units'||EQUIP.some(k=>nm.includes(k));
@@ -1962,12 +1883,13 @@ function invProductStatus(p){
 }
 
 function invFilterCounts(prods){
-  const c={all:prods.length,out:0,below:0,atpar:0};
+  const c={all:prods.length,out:0,below:0,atpar:0,uncounted:0};
   for(const p of prods){
     const s=invProductStatus(p);
     if(s==='out')c.out++;
     else if(s==='below')c.below++;
     else if(s==='atpar')c.atpar++;
+    else if(s==='uncounted')c.uncounted++;
   }
   return c;
 }
@@ -1978,9 +1900,10 @@ function rInvFilters(prods){
   const c=invFilterCounts(prods);
   const pills=[
     {id:'all',label:'All',count:c.all,cls:''},
-    {id:'out',label:'Out',count:c.out,cls:'fp-out'},
+    {id:'out',label:'Zero',count:c.out,cls:'fp-out'},
     {id:'below',label:'Below Par',count:c.below,cls:'fp-below'},
-    {id:'atpar',label:'At Par',count:c.atpar,cls:'fp-atpar'}
+    {id:'atpar',label:'OK',count:c.atpar,cls:'fp-atpar'},
+    {id:'uncounted',label:'Not Counted',count:c.uncounted,cls:''}
   ];
   row.innerHTML=pills.map(function(p){
     const active=INV.filter===p.id?' active':'';
@@ -1991,18 +1914,7 @@ function rInvFilters(prods){
 
 function setInvFilter(f){
   INV.filter=f;
-  rProds();
-}
-
-function applyInvFilter(prods){
-  if(INV.filter==='all')return prods;
-  return prods.filter(function(p){
-    const s=invProductStatus(p);
-    if(INV.filter==='out')return s==='out';
-    if(INV.filter==='below')return s==='below';
-    if(INV.filter==='atpar')return s==='atpar';
-    return true;
-  });
+  rInvOrd();
 }
 
 
@@ -2016,118 +1928,270 @@ function emptyState(icon,title,desc,actionHtml){
   '</div>';
 }
 
-function pCard(p,isU){
-  const cm=isEquip(p)?'units':'cases';
-  const loc=S.currentLoc;
-  const locVal=S.invLoc[loc][p.id];
-  const ct=locVal!==undefined&&locVal!=='';
-  const locCount=ct?Number(locVal):null;
-
-  // Combined total across both locations
-  const totalCount=getTotalCount(p.id);
-  const par=p.parLevel||0,cp=p.casePack||1;
-
-  // Pill uses combined count for order recommendation
-  const combined=totalCount!==null?totalCount:null;
-  const diff=combined!==null?par-combined:0;
-  let casesToOrder=0,gapAlert=false;
-  if(combined!==null&&diff>0){
-    if(cm==='cases'){casesToOrder=diff;}
-    else{casesToOrder=Math.ceil(diff/cp);gapAlert=diff<cp;}
+// ── INVENTORY & ORDER (merged screen) ─────────────────────────────
+function ioRowData(p,itemsMap){
+  const item=itemsMap.get(p.id);
+  const st=invProductStatus(p); // 'out'|'below'|'atpar'|'uncounted'
+  const checked=ORD_CHECKED.has(p.id);
+  const needed=item?item.cases:0;
+  const carryCases=item?item.carryCases:((S.pendingCarry&&S.pendingCarry[p.id]&&S.pendingCarry[p.id].cases)||0);
+  const orderedQty=checked?(ORD_QTY[p.id]!==undefined?ORD_QTY[p.id]:needed):null;
+  const orderState=checked?(orderedQty>=needed?'done':'partial'):null;
+  return{p,st,checked,needed,carryCases,orderedQty,orderState};
+}
+function ioRank(st,orderState){
+  if(orderState==='done')return 6;
+  if(orderState==='partial')return 5;
+  if(st==='out')return 0;
+  if(st==='below')return 1;
+  if(st==='uncounted')return 2;
+  return 3;
+}
+function ioRowClass(st,orderState){
+  if(orderState==='done')return 'io-done';
+  if(orderState==='partial')return 'io-partial';
+  if(st==='out')return 'io-out';
+  if(st==='below')return 'io-below';
+  if(st==='uncounted')return 'io-uncounted';
+  return 'io-atpar';
+}
+function ioFilterSort(allRows){
+  let rows=allRows;
+  if(INV.query){
+    const q=INV.query;
+    rows=rows.filter(r=>(r.p.name||'').toLowerCase().includes(q)||(r.p.partNumber||'').toLowerCase().includes(q)||(r.p.budgetLine||'').toLowerCase().includes(q)||(r.p.vendorName||'').toLowerCase().includes(q));
   }
-  let pill='';
-  if(!ct)pill='<span class="OP op-nc">Not counted</span>';
-  else if(combined!==null&&diff<=0)pill='<span class="OP op-ok">&#10003; OK</span>';
-  else if(combined!==null&&isU)pill='<span class="OP op-u">&#9888; '+casesToOrder+' case'+(casesToOrder>1?'s':'')+'</span>';
-  else if(combined!==null)pill='<span class="OP op-g">'+casesToOrder+' case'+(casesToOrder>1?'s':'')+'</span>';
-  else pill='<span class="OP op-nc">Not counted</span>';
-
-  const dec=S.gaps[p.id];
-  let cga='';
-  if(gapAlert&&!dec){
-    cga='<div class="CGA">&#9888; You need <strong>'+diff+' unit'+(diff>1?'s':'')+'</strong> but the case contains <strong>'+cp+'</strong>.'+'<div class="CGA-btns"><div class="CGB CGB-i" onclick="decG(&quot;'+p.id+'&quot;,&quot;include&quot;)">Include full case</div><div class="CGB CGB-f" onclick="decG(&quot;'+p.id+'&quot;,&quot;flag&quot;)">Flag for next order</div></div></div>';
+  if(INV.filter!=='all')rows=rows.filter(r=>r.st===INV.filter);
+  if(INV.hideOrdered)rows=rows.filter(r=>r.orderState!=='done'&&r.orderState!=='partial');
+  rows=[...rows];
+  if(INV.sort==='name')rows.sort((a,b)=>(a.p.name||'').localeCompare(b.p.name||''));
+  else if(INV.sort==='manual')rows.sort((a,b)=>(a.p.sortOrder??999)-(b.p.sortOrder??999));
+  else rows.sort((a,b)=>{const d=ioRank(a.st,a.orderState)-ioRank(b.st,b.orderState);return d!==0?d:(a.p.name||'').localeCompare(b.p.name||'');});
+  return rows;
+}
+function ioRenderBottomBar(allRows){
+  let spent=0,ordCount=0,pendingVal=0,pendCount=0;
+  for(const r of allRows){
+    if(r.orderState){spent+=(r.orderedQty||0)*(r.p.pricePerCase||0);ordCount++;}
+    else if(r.needed>0){pendingVal+=r.needed*(r.p.pricePerCase||0);pendCount++;}
   }
-
-  // Combined total card — show when both locations counted
-  let combinedCard='';
-  const f3=getLocCount(p.id,'floor3');
-  const ti=getLocCount(p.id,'tiendita');
-  const p2=getLocCount(p.id,'piso2');
-  if(f3!==null||ti!==null||p2!==null){
-    const tot=(f3||0)+(ti||0)+(p2||0);
-    const needsOrder=par-tot;
-    const pctFill=par>0?Math.min((tot/par)*100,100):100;
-    // Status color
-    let barColor='var(--grn)',barBg='var(--grd)',statusTxt='&#10003; Stocked';
-    if(tot===0){barColor='var(--red)';barBg='var(--rd)';statusTxt='&#9888; OUT';}
-    else if(par&&tot<par*0.5){barColor='var(--red)';barBg='var(--rd)';statusTxt='order '+needsOrder;}
-    else if(par&&tot<par){barColor='var(--amb)';barBg='var(--ad)';statusTxt='order '+needsOrder;}
-    // Location chips
-    const locChips='&#128230; '+(f3!==null?f3:'\u2013')+' &nbsp; &#127978; '+(ti!==null?ti:'\u2013')+(p2!==null?' &nbsp; &#129529; '+p2:'');
-    combinedCard='<div class="prog-card">'+
-      '<div class="prog-bar-outer" style="background:var(--s3)">'+
-        '<div class="prog-bar-fill" style="width:'+pctFill+'%;background:'+barColor+';opacity:.18"></div>'+
-        '<div class="prog-bar-content">'+
-          '<span class="prog-have" style="color:'+barColor+'">'+tot+' of '+par+' '+cm+'</span>'+
-          '<span class="prog-locs">'+locChips+' &middot; '+statusTxt+'</span>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
+  const s=document.getElementById('io-bb-s'),v=document.getElementById('io-bb-v'),btn=document.getElementById('finalize-btn');
+  if(!s||!v)return;
+  const tb=BL.reduce((s2,l)=>s2+(S.budgets[l]||0),0),ts=BL.reduce((s2,l)=>s2+(S.budgets['spent_'+l]||0),0);
+  const avail=tb-ts;
+  if(ordCount===0){
+    s.textContent=pendCount+(pendCount===1?' item':' items')+' to order · '+fmt(pendingVal);
+    v.innerHTML=fmt(avail)+' <em class="io-ok">available budget</em>';
+  }else{
+    const left=avail-spent;
+    s.textContent=ordCount+' of '+(ordCount+pendCount)+' ordered · '+fmt(pendingVal)+' left to order';
+    v.innerHTML=fmt(spent)+' <em class="'+(left>=0?'io-ok':'io-over')+'">'+(left>=0?'ordered · '+fmt(left)+' left':'ordered · OVER by '+fmt(-left))+'</em>';
   }
-
-  const th=p.photoUrl?'<img src="'+e(p.photoUrl)+'" alt="" onerror="this.style.display=\'none\';this.parentElement.textContent=\''+(p.emoji||'📦')+'\'">':( p.emoji||'📦');
-  const da='draggable="true" ondragstart="onDragStart(event,\''+p.id+'\',\'inv\')" ondragend="onDragEnd(event,\''+p.id+'\',\'inv\')" ondragover="onDragOver(event,\''+p.id+'\',\'inv\')" ondrop="onDrop(event,\''+p.id+'\',\'inv\')" ontouchstart="onTouchStart(event,\''+p.id+'\',\'inv\')"';
-  return '<div class="PC '+(isU?'pu':ct&&diff<=0?'pok':'')+'" id="pc-'+p.id+'" '+da+'>'+
-    '<div class="PC-main">'+
-    '<div class="drag-handle" title="Drag to reorder">&#8286;</div>'+
-    '<div class="PTH">'+th+'</div>'+
-    '<div class="PIN">'+
-      '<div class="PNM">'+e(p.name)+'</div>'+
-      '<div class="PMT">Par <strong>'+par+'</strong> '+cm+'<span class="PMT-sec">'+(p.pricePerCase?' &middot; $'+(p.pricePerCase||0).toFixed(2)+'/case':'')+(p.partNumber?' &middot; #'+e(p.partNumber):'')+'</span></div>'+
-      '<div class="PUNIT">Counting in <strong>'+cm+'</strong>'+(cm==='units'?' ('+cp+' per case)':'')+'</div>'+
-      (isU?'<div class="PUL">&#9888; Flagged urgent</div>':'')+
-    '</div>'+
-    '<div class="PCTR">'+
-      '<div class="STPR">'+
-        '<button class="SB3" onclick="adj(\''+p.id+'\',\'-1\')">&#8722;</button>'+
-        '<input class="SV3" type="number" min="0" value="'+(ct?locVal:'')+'" placeholder="0" oninput="upd(\''+p.id+'\',this.value)" onchange="upd(\''+p.id+'\',this.value)"/>'+
-        '<button class="SB3" onclick="adj(\''+p.id+'\',\'1\')">+</button>'+
-      '</div>'+
-      pill+
-    '</div>'+
-    '</div>'+combinedCard+'</div>'+cga;
+  if(btn)btn.disabled=(ordCount===0&&pendCount===0);
 }
-
-
-function adj(id,d2){
-  const cur=S.invLoc[S.currentLoc][id];
-  upd(id,Math.max(0,(Number(cur??0))+d2));
+function ioToOrderCell(r){
+  if(r.orderState==='done')return '<span class="io-toord io-c-done">'+r.orderedQty+' &#10003;</span>';
+  if(r.orderState==='partial')return '<span class="io-toord io-c-partial">'+r.orderedQty+' / '+r.needed+' &#9686;</span>';
+  if(r.needed>0)return '<span class="io-toord">'+r.needed+'</span>';
+  if(r.st==='uncounted')return '<span class="io-toord io-c-non">Not counted</span>';
+  return '<span class="io-toord io-c-non">&mdash;</span>';
 }
-function upd(id,v){
-  S.invLoc[S.currentLoc][id]=Math.max(0,Number(v)||0);
-  delete S.gaps[id];
-  S.invDirty=true;
-  const p=S.products.find(x=>x.id===id);if(!p)return;
-  const isU=S.alerts.some(a=>a.productId===id&&a.status==='urgent');
-  const card=document.getElementById('pc-'+id);
-  if(card){const nx=card.nextElementSibling;if(nx?.classList.contains('CGA'))nx.remove();card.outerHTML=pCard(p,isU);}
-  updProg();
+function ioRowHTML(r){
+  const p=r.p,pid=p.id,st=r.st,orderState=r.orderState;
+  const cls='io-row '+ioRowClass(st,orderState)+(INV.open===pid?' io-open':'');
+  const f3=getLocCount(pid,'floor3'),ti=getLocCount(pid,'tiendita'),p2=getLocCount(pid,'piso2');
+  const tot=getTotalCount(pid);
+  const locSub='F3 '+(f3===null?'&mdash;':f3)+' &middot; Tnd '+(ti===null?'&mdash;':ti)+' &middot; P2 '+(p2===null?'&mdash;':p2);
+  let sub='';
+  if(orderState==='done')sub='<div class="io-sub io-c-done">'+r.orderedQty+' case'+(r.orderedQty===1?'':'s')+' ordered &#10003;</div>';
+  else if(orderState==='partial'){const pend=r.needed-r.orderedQty;sub='<div class="io-sub io-c-carry">'+r.orderedQty+' of '+r.needed+' ordered &middot; '+pend+' pending &rarr; next month</div>';}
+  else if(r.carryCases>0)sub='<div class="io-sub io-c-carry">&#8635; +'+r.carryCases+' prev. mo.</div>';
+  else if(st==='out')sub='<div class="io-sub io-c-zero">Zero on hand</div>';
+  const dragAttrs=INV.rearrange?(' draggable="true" ondragstart="onDragStart(event,\''+pid+'\',\'inv\')" ondragend="onDragEnd(event,\''+pid+'\',\'inv\')" ondragover="onDragOver(event,\''+pid+'\',\'inv\')" ondrop="onDrop(event,\''+pid+'\',\'inv\')" ontouchstart="onTouchStart(event,\''+pid+'\',\'inv\')"'):'';
+  const clickAttr=INV.rearrange?'':(' onclick="ioToggleOpen(\''+pid+'\')"');
+  let html='<tr class="'+cls+'" id="io-row-'+pid+'" data-pid="'+pid+'" tabindex="0" role="button" aria-expanded="'+(INV.open===pid)+'"'+clickAttr+dragAttrs+'>'
+    +'<td class="io-l"><span class="io-drag" title="Drag to reorder">&#10021;</span><span class="io-name">'+e(p.name)+'</span>'+sub+'<div class="io-locsub">'+locSub+'</div></td>'
+    +'<td class="io-loc">'+(f3===null?'<span class="io-dash">&mdash;</span>':f3)+'</td>'
+    +'<td class="io-loc">'+(ti===null?'<span class="io-dash">&mdash;</span>':ti)+'</td>'
+    +'<td class="io-loc">'+(p2===null?'<span class="io-dash">&mdash;</span>':p2)+'</td>'
+    +'<td class="io-tot">'+(tot===null?'<span class="io-dash">&mdash;</span>':tot)+'</td>'
+    +'<td>'+(p.parLevel||0)+'</td>'
+    +'<td>'+ioToOrderCell(r)+'</td>'
+    +'</tr>';
+  if(INV.open===pid)html+=ioPanelHTML(r);
+  return html;
 }
-function decG(id,dec){
-  S.gaps[id]=dec;
-  const p=S.products.find(x=>x.id===id);if(!p)return;
-  const isU=S.alerts.some(a=>a.productId===id&&a.status==='urgent');
-  const card=document.getElementById('pc-'+id);
-  if(card){const nx=card.nextElementSibling;if(nx?.classList.contains('CGA'))nx.remove();card.outerHTML=pCard(p,isU);}
-  if(dec==='flag')showOk(p.name+' flagged for next order cycle.');
+function ioStepHTML(p,loc,label){
+  const v=S.invLoc[loc][p.id];
+  const has=v!==undefined&&v!=='';
+  const na=loc==='piso2'?!(p.locations&&p.locations.piso2===true):(p.locations&&p.locations[loc]===false);
+  return '<div class="io-step'+(has?' io-has':'')+(na?' io-na':'')+'">'
+    +'<div class="io-step-l">'+label+(na?' &middot; n/a':'')+'</div>'
+    +'<div class="io-step-c">'
+    +'<button type="button" onclick="ioStepAdjust(\''+p.id+'\',\''+loc+'\',-1)"'+(na?' disabled':'')+' aria-label="Less '+label+'">&minus;</button>'
+    +'<span class="io-step-v'+(has?'':' io-e')+'">'+(has?Number(v):'&mdash;')+'</span>'
+    +'<button type="button" onclick="ioStepAdjust(\''+p.id+'\',\''+loc+'\',1)"'+(na?' disabled':'')+' aria-label="More '+label+'">+</button>'
+    +'</div></div>';
 }
-function updProg(){
-  const tot=S.products.length;
-  const loc=S.currentLoc;
-  const cnt=S.products.filter(p=>S.invLoc[loc][p.id]!==undefined&&S.invLoc[loc][p.id]!=='').length;
+function ioPanelHTML(r){
+  const p=r.p,pid=p.id,cm=isEquip(p)?'units':'cases',par=p.parLevel||0;
+  let html='<tr class="io-panel"><td colspan="7"><div class="io-panel-in">';
+  html+='<div class="io-panel-hd"><div>';
+  if(INV.editingName===pid){
+    html+='<div class="io-inline-edit"><input type="text" id="io-edit-name-inp" value="'+e(p.name)+'" onkeydown="if(event.key===\'Enter\')ioSaveEditName(\''+pid+'\');if(event.key===\'Escape\')ioCancelEdit();"/>'
+      +'<button class="io-inline-save" onclick="ioSaveEditName(\''+pid+'\')">Save</button>'
+      +'<button class="io-inline-cancel" onclick="ioCancelEdit()">Cancel</button></div>';
+  }else{
+    html+='<div class="io-panel-nm"><span class="io-panel-nm-txt">'+e(p.name)+'</span><span class="io-edit-btn" onclick="ioStartEditName(\''+pid+'\')" title="Edit name">&#9998;</span></div>';
+  }
+  if(INV.editingPar===pid){
+    html+='<div class="io-inline-edit" style="margin-top:5px"><input type="number" min="0" id="io-edit-par-inp" value="'+par+'" style="max-width:90px" onkeydown="if(event.key===\'Enter\')ioSaveEditPar(\''+pid+'\');if(event.key===\'Escape\')ioCancelEdit();"/>'
+      +'<span style="font-size:11px;color:var(--tm)">'+cm+'</span>'
+      +'<button class="io-inline-save" onclick="ioSaveEditPar(\''+pid+'\')">Save</button>'
+      +'<button class="io-inline-cancel" onclick="ioCancelEdit()">Cancel</button></div>';
+  }else{
+    html+='<div class="io-panel-meta">Par <strong>'+par+'</strong> '+cm+(p.pricePerCase?' &middot; $'+Number(p.pricePerCase).toFixed(2)+'/case':'')+'<span class="io-edit-btn" onclick="ioStartEditPar(\''+pid+'\')" title="Edit par level">&#9998;</span></div>';
+  }
+  html+='</div>';
+  if(r.orderState==='done')html+='<span class="io-badge io-b-done">Ordered</span>';
+  else if(r.orderState==='partial')html+='<span class="io-badge io-b-partial">Partial</span>';
+  html+='</div>';
+  html+='<div class="io-steps">'+ioStepHTML(p,'floor3','Floor 3')+ioStepHTML(p,'tiendita','Tiendita')+ioStepHTML(p,'piso2','2nd Floor')+'</div>';
+  const tot=getTotalCount(pid);
+  if(tot===null){
+    html+='<div class="io-calc">Not counted yet.'+(r.carryCases>0?' Already <span class="io-c">'+r.carryCases+' pending from last month</span>.':'')+'</div>';
+  }else{
+    const short=Math.max(0,par-tot);
+    let c='<b>'+tot+'</b> on hand of <b>'+par+'</b> par';
+    c+=short>0?(' &rarr; <span class="io-a">'+short+' short</span>'):(' &rarr; <span style="color:var(--grn);font-weight:700">at par</span>');
+    if(r.carryCases>0)c+=' &middot; plus <span class="io-c">'+r.carryCases+' pending from last month</span>';
+    if(r.needed>0)c+=' = <b>'+r.needed+' '+cm+'</b>';
+    html+='<div class="io-calc">'+c+'</div>';
+  }
+  if(r.orderState==='partial'){
+    const pend=r.needed-r.orderedQty;
+    html+='<div class="io-warn"><span>&#9888;</span><div><b>'+pend+' '+(pend===1?cm.replace(/s$/,''):cm)+' will carry to next month.</b><br>It will automatically appear on next month&#39;s order.</div></div>';
+  }
+  if(r.orderState===null){
+    if(r.needed>0){
+      html+='<div class="io-ordbar"><div class="io-ordbar-l"><span>Order</span><span style="font-weight:700;color:var(--txt)">'+r.needed+' '+cm+'</span></div>'
+        +'<button class="btn btn-g btn-sm" onclick="ioMarkOrdered(\''+pid+'\')">Mark ordered</button></div>';
+    }else{
+      html+='<div class="io-calc" style="margin-bottom:0">Nothing to order &mdash; at par.</div>';
+    }
+  }else{
+    const bcls=r.orderState==='done'?'io-b-done':'io-b-partial';
+    html+='<div class="io-ordbar '+bcls+'"><div class="io-ordbar-l"><span>Adjust to</span><span class="io-qty">'
+      +'<button onclick="ioAdjOrdered(\''+pid+'\',-1)" aria-label="Fewer cases">&minus;</button><span>'+r.orderedQty+(r.orderState==='partial'?' / '+r.needed:'')+'</span><button onclick="ioAdjOrdered(\''+pid+'\',1)" aria-label="More cases">+</button>'
+      +'</span></div><button class="btn btn-o btn-sm" onclick="ioUndoOrder(\''+pid+'\')">Undo order</button></div>';
+  }
+  const isFlagged=S.alerts.some(a=>a.productId===pid&&a.status==='urgent');
+  if(!isFlagged)html+='<div style="margin-top:11px"><span class="io-flagbtn" onclick="ioFlagUrgent(\''+pid+'\')">&#9888; Flag urgent</span></div>';
+  html+='</div></td></tr>';
+  return html;
+}
+function ioToggleOpen(pid){
+  INV.open=(INV.open===pid)?null:pid;
+  INV.editingName=null;INV.editingPar=null;
+  rInvOrd();
+  if(INV.open===pid)setTimeout(()=>{document.getElementById('io-row-'+pid)?.scrollIntoView({block:'nearest',behavior:'smooth'});},50);
+}
+let _invLocSaveTimers={};
+function scheduleInvLocSave(loc){
+  if(_invLocSaveTimers[loc])clearTimeout(_invLocSaveTimers[loc]);
+  _invLocSaveTimers[loc]=setTimeout(()=>flushInvLocSave(loc).catch(()=>{}),1500);
+}
+async function flushInvLocSave(loc){
+  _invLocSaveTimers[loc]=null;
+  try{
+    await SB.from('inventory').upsert({monthKeyLoc:vkey()+'_'+loc,qtyData:{...S.invLoc[loc]},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'});
+    S.lastSaved=now();
+  }catch(e){showErr('Could not save the count for this location. Check your connection and try again.',e);}
+}
+function ioStepAdjust(pid,loc,delta){
+  const cur=S.invLoc[loc][pid];
+  S.invLoc[loc][pid]=Math.max(0,(cur===undefined||cur===''?0:Number(cur))+delta);
+  delete S.gaps[pid];
+  scheduleInvLocSave(loc);
+  rInvOrd();
+  setTimeout(()=>{document.getElementById('io-row-'+pid)?.scrollIntoView({block:'nearest'});},0);
+}
+function ioMarkOrdered(pid){
+  const p=S.products.find(x=>x.id===pid);if(!p)return;
+  const itemsMap=new Map(getItems().map(i=>[i.pid,i]));
+  const r=ioRowData(p,itemsMap);
+  if(r.needed<=0)return;
+  toggleOrdCheck(pid,r.needed);
+}
+function ioUndoOrder(pid){toggleOrdCheck(pid);}
+function ioAdjOrdered(pid,delta){
+  const p=S.products.find(x=>x.id===pid);if(!p)return;
+  const itemsMap=new Map(getItems().map(i=>[i.pid,i]));
+  const r=ioRowData(p,itemsMap);
+  adjOrdQty(pid,delta,Math.max(r.needed,1));
+}
+function ioStartEditName(pid){INV.editingName=pid;INV.editingPar=null;rInvOrd();setTimeout(()=>document.getElementById('io-edit-name-inp')?.focus(),0);}
+function ioStartEditPar(pid){INV.editingPar=pid;INV.editingName=null;rInvOrd();setTimeout(()=>document.getElementById('io-edit-par-inp')?.focus(),0);}
+function ioCancelEdit(){INV.editingName=null;INV.editingPar=null;rInvOrd();}
+async function ioSaveEditName(pid){
+  const inp=document.getElementById('io-edit-name-inp');if(!inp)return;
+  const nm=inp.value.trim();
+  if(!nm){showNote('Please enter a product name.');return;}
+  const p=S.products.find(x=>x.id===pid);if(!p)return;
+  const prev=p.name;
+  p.name=nm;INV.editingName=null;rInvOrd();
+  try{await SB.from('products').update({name:nm,updatedAt:now()}).eq('id',pid);}
+  catch(err){p.name=prev;rInvOrd();showErr('Could not save the new name. Check your connection and try again.',err);}
+}
+async function ioSaveEditPar(pid){
+  const inp=document.getElementById('io-edit-par-inp');if(!inp)return;
+  const val=Math.max(0,parseInt(inp.value)||0);
+  const p=S.products.find(x=>x.id===pid);if(!p)return;
+  const prev=p.parLevel;
+  p.parLevel=val;INV.editingPar=null;rInvOrd();
+  try{await SB.from('products').update({parLevel:val,updatedAt:now()}).eq('id',pid);}
+  catch(err){p.parLevel=prev;rInvOrd();showErr('Could not save the new par level. Check your connection and try again.',err);}
+}
+function ioFlagUrgent(pid){
+  openAlertMO();
+  setTimeout(()=>{const sel=document.getElementById('AP-sel');if(sel)sel.value=pid;},0);
+}
+function toggleHideOrdered(){
+  INV.hideOrdered=!INV.hideOrdered;
+  const b=document.getElementById('io-hide-btn');
+  if(b){b.classList.toggle('on',INV.hideOrdered);b.textContent=INV.hideOrdered?'Show ordered':'Hide ordered';}
+  rInvOrd();
+}
+function toggleSortMode(){
+  INV.sort=INV.sort==='urgency'?'name':(INV.sort==='name'?'manual':'urgency');
+  const b=document.getElementById('io-sort-btn');
+  if(b)b.textContent='Sort: '+(INV.sort==='urgency'?'urgency':INV.sort==='name'?'name':'my order');
+  rInvOrd();
+}
+function toggleRearrange(){
+  INV.rearrange=!INV.rearrange;
+  if(INV.rearrange){INV.sort='manual';INV.open=null;}
+  const b=document.getElementById('io-rearrange-btn');
+  if(b){b.classList.toggle('btn-g',INV.rearrange);b.classList.toggle('btn-o',!INV.rearrange);b.innerHTML=INV.rearrange?'&#10003; Done':'&#10021; Rearrange';}
+  const sb=document.getElementById('io-sort-btn');
+  if(sb)sb.textContent='Sort: '+(INV.sort==='urgency'?'urgency':INV.sort==='name'?'name':'my order');
+  rInvOrd();
+}
+function rInvOrd(){
+  const tbody=document.getElementById('IO-tbody');
+  if(!tbody)return;
+  const itemsMap=new Map(getItems().map(i=>[i.pid,i]));
+  const allRows=S.products.map(p=>ioRowData(p,itemsMap));
+  rInvFilters(S.products);
+  const rows=ioFilterSort(allRows);
+  tbody.innerHTML=rows.length?rows.map(ioRowHTML).join(''):('<tr><td colspan="7" style="padding:0">'+emptyState('&#128230;','Nothing here','No products match this filter right now.')+'</td></tr>');
+  const tot=S.products.length,cnt=S.products.filter(p=>S.inventory[p.id]!==undefined&&S.inventory[p.id]!=='').length;
   const el=document.getElementById('IPC'),bar=document.getElementById('IPBF');
   if(el)el.textContent=cnt+' / '+tot;
   if(bar)bar.style.width=(tot>0?(cnt/tot)*100:0)+'%';
+  ioRenderBottomBar(allRows);
+  const tw=document.querySelector('.io-tw');if(tw)tw.classList.toggle('io-rearrange',INV.rearrange);
+  rOrderHistory();
 }
 
 async function saveInv(){
@@ -2164,17 +2228,9 @@ function resetInvConfirm(){
 function onInvSearch(val){
   INV.query=val.trim().toLowerCase();
   const clr=document.getElementById('inv-search-clear');if(clr)clr.classList.toggle('hi',!INV.query);
-  const tabs=document.getElementById('VTabs');if(tabs)tabs.style.display=INV.query?'none':'flex';
-  rProds();
+  rInvOrd();
 }
 function clearInvSearch(){const inp=document.getElementById('inv-search');if(inp)inp.value='';onInvSearch('');}
-function setInvView(v){
-  INV.view=v;
-  document.getElementById('inv-vt-vendor')?.classList.toggle('on',v==='vendor');
-  document.getElementById('inv-vt-budget')?.classList.toggle('on',v==='budget');
-  const tabs=document.getElementById('VTabs');if(tabs)tabs.style.display=(v==='budget'||INV.query)?'none':'flex';
-  rProds();
-}
 function onCatSearch(val){
   CAT.query=val.trim().toLowerCase();
   const clr=document.getElementById('cat-search-clear');if(clr)clr.classList.toggle('hi',!CAT.query);
@@ -2192,12 +2248,16 @@ function setCatView(v){
 
 // ── DRAG & DROP ────────────────────────────────────────
 let dragSrcId=null,dragSrcCtx=null,touchDragId=null,touchDragCtx=null,touchClone=null;
-function onDragStart(ev,id,ctx){dragSrcId=id;dragSrcCtx=ctx;ev.dataTransfer.effectAllowed='move';setTimeout(()=>document.getElementById((ctx==='inv'?'pc-':'ci-')+id)?.classList.add('dragging'),0);}
-function onDragEnd(ev,id,ctx){document.querySelectorAll('.PC,.CI').forEach(el=>el.classList.remove('dragging','drag-over'));}
-function onDragOver(ev,id,ctx){ev.preventDefault();if(dragSrcId===id)return;document.querySelectorAll('.PC,.CI').forEach(el=>el.classList.remove('drag-over'));document.getElementById((ctx==='inv'?'pc-':'ci-')+id)?.classList.add('drag-over');}
+const DRAG_SEL='.PC,.CI,.io-row';
+const DRAG_PFX={inv:'io-row-',cat:'ci-'};
+function dragElFor(id,ctx){return document.getElementById((DRAG_PFX[ctx]||'pc-')+id);}
+function dragIdFrom(el){return el.id.replace('pc-','').replace('ci-','').replace('io-row-','');}
+function onDragStart(ev,id,ctx){dragSrcId=id;dragSrcCtx=ctx;ev.dataTransfer.effectAllowed='move';setTimeout(()=>dragElFor(id,ctx)?.classList.add('dragging'),0);}
+function onDragEnd(ev,id,ctx){document.querySelectorAll(DRAG_SEL).forEach(el=>el.classList.remove('dragging','drag-over'));}
+function onDragOver(ev,id,ctx){ev.preventDefault();if(dragSrcId===id)return;document.querySelectorAll(DRAG_SEL).forEach(el=>el.classList.remove('drag-over'));dragElFor(id,ctx)?.classList.add('drag-over');}
 function onDrop(ev,targetId,ctx){
   ev.preventDefault();
-  document.querySelectorAll('.PC,.CI').forEach(el=>el.classList.remove('drag-over','dragging'));
+  document.querySelectorAll(DRAG_SEL).forEach(el=>el.classList.remove('drag-over','dragging'));
   if(!dragSrcId||dragSrcId===targetId||dragSrcCtx!==ctx)return;
   const si=S.products.findIndex(p=>p.id===dragSrcId);
   const ti=S.products.findIndex(p=>p.id===targetId);
@@ -2210,7 +2270,7 @@ function onTouchStart(ev,id,ctx){
   // Drag only works on desktop with mouse (window.matchMedia)
   if(window.matchMedia('(max-width:768px)').matches)return;
   touchDragId=id;touchDragCtx=ctx;
-  const card=document.getElementById((ctx==='inv'?'pc-':'ci-')+id);if(!card)return;
+  const card=dragElFor(id,ctx);if(!card)return;
   touchClone=card.cloneNode(true);
   touchClone.style.cssText='position:fixed;opacity:.7;pointer-events:none;z-index:9999;width:'+card.offsetWidth+'px;transform:scale(1.02)';
   document.body.appendChild(touchClone);card.classList.add('dragging');
@@ -2221,19 +2281,19 @@ document.addEventListener('touchmove',ev=>{
   if(touchClone){touchClone.style.left=(t.clientX-80)+'px';touchClone.style.top=(t.clientY-30)+'px';}
   touchClone.style.display='none';
   const below=document.elementFromPoint(t.clientX,t.clientY);touchClone.style.display='';
-  const card=below?.closest('.PC,.CI');
-  document.querySelectorAll('.PC,.CI').forEach(el=>el.classList.remove('drag-over'));
-  if(card){const id2=card.id.replace('pc-','').replace('ci-','');if(id2!==touchDragId)card.classList.add('drag-over');}
+  const card=below?.closest(DRAG_SEL);
+  document.querySelectorAll(DRAG_SEL).forEach(el=>el.classList.remove('drag-over'));
+  if(card){const id2=dragIdFrom(card);if(id2!==touchDragId)card.classList.add('drag-over');}
 },{passive:false});
 document.addEventListener('touchend',ev=>{
   if(!touchDragId)return;
   if(touchClone){touchClone.remove();touchClone=null;}
-  document.querySelectorAll('.PC,.CI').forEach(el=>el.classList.remove('dragging'));
+  document.querySelectorAll(DRAG_SEL).forEach(el=>el.classList.remove('dragging'));
   const t=ev.changedTouches[0];
   const below=document.elementFromPoint(t.clientX,t.clientY);
-  const card=below?.closest('.PC,.CI');
-  if(card){const targetId=card.id.replace('pc-','').replace('ci-','');onDrop({preventDefault:()=>{}},targetId,touchDragCtx);}
-  document.querySelectorAll('.PC,.CI').forEach(el=>el.classList.remove('drag-over'));
+  const card=below?.closest(DRAG_SEL);
+  if(card){const targetId=dragIdFrom(card);onDrop({preventDefault:()=>{}},targetId,touchDragCtx);}
+  document.querySelectorAll(DRAG_SEL).forEach(el=>el.classList.remove('drag-over'));
   touchDragId=null;touchDragCtx=null;
 });
 async function persistOrder(ctx){
@@ -2242,7 +2302,7 @@ async function persistOrder(ctx){
     S.products.forEach((p,idx)=>{if(p.sortOrder!==idx){p.sortOrder=idx;updates.push(SB.from('products').update({sortOrder:idx}).eq('id',p.id));}});
     await Promise.all(updates);
   }catch(err2){showErr('Could not save product order. Try again.',err2);}
-  if(ctx==='inv')rProds();else rCatalog();
+  if(ctx==='inv')rInvOrd();else rCatalog();
 }
 
 // ── ORDER SUMMARY ──────────────────────────────────────
@@ -2255,7 +2315,7 @@ function toggleOrdCheck(pid,defaultCases){
     if(defaultCases&&ORD_QTY[pid]===undefined)ORD_QTY[pid]=defaultCases;
   }
   localStorage.setItem('jw_ord_ck_'+vkey(),JSON.stringify([...ORD_CHECKED]));
-  saveOrdQty();scheduleOrdSave();scheduleCarrySave();rOrd();
+  saveOrdQty();scheduleOrdSave();scheduleCarrySave();rInvOrd();
 }
 function saveOrdQty(){localStorage.setItem('jw_ord_qty_'+vkey(),JSON.stringify(ORD_QTY));}
 let _carrySaveTimer=null;
@@ -2319,76 +2379,8 @@ async function loadOrdState(mk){
 function adjOrdQty(pid,delta,max){
   const cur=ORD_QTY[pid]!==undefined?ORD_QTY[pid]:max;
   ORD_QTY[pid]=Math.max(1,Math.min(max,cur+delta));
-  saveOrdQty();scheduleOrdSave();scheduleCarrySave();rOrd();
+  saveOrdQty();scheduleOrdSave();scheduleCarrySave();rInvOrd();
 }
-
-function rOrd(){
-  const items=getItems(),ui=new Set(S.alerts.filter(a=>a.status==='urgent').map(a=>a.productId));
-  const c=document.getElementById('OC');if(!c)return;
-  if(!items.length){c.innerHTML=emptyState('&#9989;','Nothing to order','Complete an inventory count and any items below par will appear here.');return;}
-
-  // Group by budget line (bl), preserving BL order
-  const bb={};for(const bl of BL)bb[bl]=[];
-  for(const i of items)(bb[i.bl]||(bb[i.bl]=[])).push(i);
-
-  const total=items.length,done=[...ORD_CHECKED].filter(id=>items.find(i=>i.pid===id)).length;
-  const pct=total?Math.round(done/total*100):0;
-
-  // Progress bar
-  let html='<div class="ord-prog-wrap">'+
-    '<div class="ord-prog-top"><span class="ord-prog-label">Items ordered</span><span class="ord-prog-count">'+done+' of '+total+' &#10003;</span></div>'+
-    '<div class="ord-prog-bar"><div class="ord-prog-fill" style="width:'+pct+'%"></div></div></div>'+
-    '<div class="tap-hint">Tap an item to mark it as ordered</div>';
-
-  let gd=0;
-  for(const[bl,vi]of Object.entries(bb)){
-    if(!vi.length)continue;
-    const vt=vi.reduce((s,i)=>s+i.lt,0);gd+=vt;
-    const allDone=vi.every(i=>ORD_CHECKED.has(i.pid));
-    html+='<div class="OVB'+(allDone?' ovb-done':'')+'">'+
-      '<div class="OVBH"><div class="OVBN">'+e(bl)+(allDone?' &#10003;':'')+'</div><div class="OVBT">'+fmt(vt)+'</div></div>';
-    const viSorted=[...vi].sort((a,b)=>{
-      const ac=ORD_CHECKED.has(a.pid)?1:0,bc=ORD_CHECKED.has(b.pid)?1:0;
-      if(ac!==bc)return ac-bc; // pending first
-      return (ui.has(b.pid)?1:0)-(ui.has(a.pid)?1:0); // urgent first among pending
-    });
-    html+=viSorted.map(i=>{
-      const ck=ORD_CHECKED.has(i.pid),urg=ui.has(i.pid)&&!ck;
-      const ordQty=ck?(ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases):0;
-      const isPartial=ck&&ordQty<i.cases;
-      const remaining=i.cases-ordQty;
-      let cls='OR'+(ck&&!isPartial?' or-done':ck&&isPartial?' or-partial':urg?' oru':'');
-      const carryBadge=i.carryCases>0?'<span class="ord-carry-badge">&#8634; +'+i.carryCases+' prev. mo.</span>':'';
-      const qtyHtml=ck?
-        '<div class="ord-qty-wrap">'+
-        '<button class="ord-qty-btn" onclick="event.stopPropagation();adjOrdQty(\''+i.pid+'\',-1,'+i.cases+')">&#8722;</button>'+
-        '<span class="ord-qty-num">'+ordQty+'</span>'+
-        '<button class="ord-qty-btn" onclick="event.stopPropagation();adjOrdQty(\''+i.pid+'\',1,'+i.cases+')">&#43;</button>'+
-        '<span class="ord-qty-info" style="color:'+(isPartial?'var(--blu)':'var(--grn)')+'">'+
-        (isPartial?'of '+i.cases+' · '+remaining+' pending ⚠':'all ordered ✓')+
-        '</span></div>':'';
-      const displayPrice=ck?fmt(ordQty*i.pp):fmt(i.lt);
-      return '<div class="'+cls+'" onclick="toggleOrdCheck(\''+i.pid+'\','+i.cases+')">'+
-        '<div class="or-check">'+(ck?'&#10003;':'')+'</div>'+
-        '<div class="OR-body"><div class="ORN">'+e(i.name)+(urg?' &#9888;':'')+carryBadge+'</div>'+
-        '<div class="ORD">'+i.cases+' case'+(i.cases>1?'s':'')+' &times; $'+i.pp.toFixed(2)+(i.pn?' &middot; #'+e(i.pn):'')+'</div>'+
-        qtyHtml+'</div>'+
-        '<div class="ORP">'+displayPrice+'</div></div>';
-    }).join('');
-    html+='</div>';
-  }
-
-  const tb=BL.reduce((s,l)=>s+(S.budgets[l]||0),0),ts=BL.reduce((s,l)=>s+(S.budgets['spent_'+l]||0),0);
-  const rm=tb-ts,af=rm-gd,safe=af>=0;
-  html+='<div class="BI"><div class="CT mb8">Budget Impact</div>'+
-    '<div class="BIR"><span class="BIL">Available budget</span><span>'+fmt(rm)+'</span></div>'+
-    '<div class="BIR"><span class="BIL">This order total</span><span>'+fmt(gd)+'</span></div>'+
-    '<div class="BIR"><span class="BIL">Remaining after order</span><span class="'+(safe?'bi-s':'bi-o')+'">'+fmt(Math.abs(af))+' '+(safe?'left &#10003;':'OVER BUDGET &#9888;')+'</span></div></div>'+
-    '<button class="FB" id="finalize-btn" onclick="finalize()">Place Order</button>';
-  c.innerHTML=html;
-  rOrderHistory();
-}
-
 function getItems(){
   const out=[];
   const pc=S.pendingCarry||{};
@@ -2585,6 +2577,12 @@ document.addEventListener('click', function(ev) {
   const loc = span.dataset.loc;
   if (pid && loc) toggleProdLoc(pid, loc);
 });
+function toggleCatRearrange(){
+  CAT.rearrange=!CAT.rearrange;
+  const b=document.getElementById('cat-rearrange-btn');
+  if(b){b.classList.toggle('btn-g',CAT.rearrange);b.classList.toggle('btn-o',!CAT.rearrange);b.innerHTML=CAT.rearrange?'&#10003; Done':'&#10021; Rearrange';}
+  rCatalog();
+}
 function rCatalog(){
   const allVendors=[...new Set([...S.vendors.map(v=>v.name),...S.products.map(p=>p.vendorName)].filter(Boolean))].sort();
   if(!S.cv||!allVendors.includes(S.cv))S.cv=allVendors[0]||null;
@@ -2594,12 +2592,13 @@ function rCatalog(){
   const cl=document.getElementById('CList');if(!cl)return;
   const cm=p=>isEquip(p)?'units':'cases';
   const ciHTML=p=>{
-    const da='draggable="true" ondragstart="onDragStart(event,\''+p.id+'\',\'cat\')" ondragend="onDragEnd(event,\''+p.id+'\',\'cat\')" ondragover="onDragOver(event,\''+p.id+'\',\'cat\')" ondrop="onDrop(event,\''+p.id+'\',\'cat\')" ontouchstart="onTouchStart(event,\''+p.id+'\',\'cat\')"';
+    const da=CAT.rearrange?('draggable="true" ondragstart="onDragStart(event,\''+p.id+'\',\'cat\')" ondragend="onDragEnd(event,\''+p.id+'\',\'cat\')" ondragover="onDragOver(event,\''+p.id+'\',\'cat\')" ondrop="onDrop(event,\''+p.id+'\',\'cat\')" ontouchstart="onTouchStart(event,\''+p.id+'\',\'cat\')"'):'';
     const f3on=!(p.locations&&p.locations.floor3===false);
     const tdon=!(p.locations&&p.locations.tiendita===false);
     const p2on=!(p.locations&&p.locations.piso2===false);
     const em=p.photoUrl?'<img src="'+e(p.photoUrl)+'" alt="" onerror="this.style.display=\'none\'">': (p.emoji||'📦');
-    return '<div class="CI" id="ci-'+p.id+'" '+da+'>'+
+    return '<div class="CI'+(CAT.rearrange?' cat-rearrange':'')+'" id="ci-'+p.id+'" '+da+'>'+
+      (CAT.rearrange?'<div class="cat-drag" title="Drag to reorder">&#10021;</div>':'')+
       '<div class="CI-emo">'+em+'</div>'+
       '<div class="CI-body">'+
         '<div class="CI-name" title="'+e(p.name)+'">'+e(p.name)+'</div>'+
@@ -2857,76 +2856,6 @@ function smartRecommend(product){
 function runSmartAlerts(){
   if(!S.products.length)return;
   loadOrderSettings();
-
-  // ── ZERO STOCK CHECK: all active locations = 0 → urgent alert ─────
-  for(const p of S.products){
-    const f3 = S.invLoc.floor3[p.id];
-    const ti = S.invLoc.tiendita[p.id];
-    const p2 = S.invLoc.piso2[p.id];
-    const f3on = !(p.locations&&p.locations.floor3===false);
-    const tion = !(p.locations&&p.locations.tiendita===false);
-    const p2on = !(p.locations&&p.locations.piso2===false);
-    // Only check locations where the product is actually stored
-    const f3zero = !f3on || (f3 !== undefined && f3 !== '' && Number(f3) === 0);
-    const tizero = !tion || (ti !== undefined && ti !== '' && Number(ti) === 0);
-    const p2zero = !p2on || (p2 !== undefined && p2 !== '' && Number(p2) === 0);
-    // Must have at least one active location AND all active locations = 0
-    const hasActiveLocation = f3on || tion || p2on;
-    if(hasActiveLocation && f3zero && tizero && p2zero){
-      // Add/update urgent alert if not already there
-      const exists = S.alerts.find(function(a){ return a.productId===p.id && a.reason==='zero_stock'; });
-      if(!exists){
-        S.alerts.push({
-          id: 'auto_' + p.id + '_zero',   // synthetic local ID so delete/mark work
-          productId: p.id,
-          productName: p.name,
-          status: 'urgent',
-          reason: 'zero_stock',
-          message: 'Zero stock in both locations — order immediately',
-          budgetLine: p.budgetLine||'',
-          flaggedBy: 'Auto',
-          createdAt: now()
-        });
-      }
-    } else {
-      // Remove zero_stock alert if stock is no longer zero
-      S.alerts = S.alerts.filter(function(a){ return !(a.productId===p.id && a.reason==='zero_stock'); });
-    }
-  }
-
-  // ── BELOW PAR CHECK: works from day one, no history needed ──────
-  for(const p of S.products){
-    if(!Number(p.parLevel)) continue; // skip products with no par set
-    // Sum counts across all active locations
-    const locs = ['floor3','tiendita','piso2'];
-    let total = 0, anyCounted = false;
-    for(const loc of locs){
-      const on = !(p.locations && p.locations[loc] === false);
-      if(!on) continue;
-      const v = S.invLoc[loc] ? S.invLoc[loc][p.id] : undefined;
-      if(v !== undefined && v !== ''){
-        anyCounted = true;
-        total += Number(v);
-      }
-    }
-    if(!anyCounted) continue; // no count yet — don't alert
-    const par = Number(p.parLevel);
-    const isBelowPar = total < par;
-    const existsBP = S.alerts.find(function(a){ return a.productId===p.id && a.reason==='below_par'; });
-    if(isBelowPar && !existsBP){
-      const pct = Math.round((total/par)*100);
-      S.alerts.push({
-        id: 'auto_' + p.id + '_bp',       // synthetic local ID so delete/mark work
-        productId:p.id, productName:p.name,
-        status: total <= par*0.25 ? 'urgent' : 'warning',
-        reason:'below_par',
-        message:'Total ' + total + ' / par ' + par + ' (' + pct + '%) — reorder needed',
-        budgetLine:p.budgetLine||'', flaggedBy:'Auto', createdAt:now()
-      });
-    } else if(!isBelowPar && existsBP){
-      S.alerts = S.alerts.filter(function(a){ return !(a.productId===p.id && a.reason==='below_par'); });
-    }
-  }
 
   const critical=[];
   for(const p of S.products){
@@ -3267,7 +3196,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.2.3';
+const APP_VERSION='3.3.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
@@ -4339,7 +4268,7 @@ function qcRenderDone(root) {
 
   const ordBtn = qcEl('button', {cls: 'QC-start-btn', txt: '🛒 View order summary'});
   ordBtn.style.cssText = 'background:var(--s2);color:var(--ts);box-shadow:none;border:1px solid var(--bdr)';
-  ordBtn.addEventListener('click', function() { go('order'); });
+  ordBtn.addEventListener('click', function() { go('inventory'); });
 
   done.appendChild(otherBtn);
   done.appendChild(ordBtn);
@@ -4350,136 +4279,6 @@ function qcRenderDone(root) {
 </script>
 
 
-<script>
-'use strict';
-// ── QR CODES PAGE (print only) ──────────────────────────────────────
-const QRP = { search: '' };
-
-function rQrCodes() {
-  const root = document.getElementById('qr-root');
-  if (!root) return;
-  root.innerHTML = '';
-  const wrap = document.createElement('div');
-  wrap.className = 'QRP-wrap';
-
-  const ph = document.createElement('div');
-  ph.className = 'PH';
-  ph.innerHTML = '<div class="PT">QR Codes</div><div class="PD">Print a QR per product, stick one on each case &middot; scan in Quick Count to count automatically</div>';
-  wrap.appendChild(ph);
-
-  const searchBar = document.createElement('div');
-  searchBar.className = 'search-bar-row';
-  const sw = document.createElement('div');
-  sw.className = 'search-wrap';
-  sw.innerHTML = '<span class="search-icon">&#128269;</span>';
-  const sinp = document.createElement('input');
-  sinp.className = 'search-inp'; sinp.placeholder = 'Search products...';
-  sinp.value = QRP.search;
-  sinp.addEventListener('input', function(){ QRP.search = this.value; qrRenderList(); });
-  sw.appendChild(sinp);
-  searchBar.appendChild(sw);
-  wrap.appendChild(searchBar);
-
-  const note = document.createElement('div');
-  note.className = 'PD mb16';
-  note.textContent = 'Set how many copies (= boxes you have) and print. Stick one QR on each physical case.';
-  wrap.appendChild(note);
-
-  const listC = document.createElement('div');
-  listC.id = 'qr-list';
-  wrap.appendChild(listC);
-
-  root.appendChild(wrap);
-  qrRenderList();
-}
-
-function qrRenderList() {
-  const listC = document.getElementById('qr-list');
-  if (!listC) return;
-  listC.innerHTML = '';
-
-  let prods = S.products.slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
-  if (QRP.search) {
-    const q = QRP.search.toLowerCase();
-    prods = prods.filter(function(p){ return (p.name||'').toLowerCase().includes(q); });
-  }
-  if (!prods.length) {
-    listC.innerHTML = emptyState('📦','No products found','Try a different search or filter.');
-    return;
-  }
-
-  prods.forEach(function(p) {
-    const row = document.createElement('div');
-    row.className = 'QRP-row';
-
-    const qrDiv = document.createElement('div');
-    qrDiv.className = 'QRP-qr';
-    row.appendChild(qrDiv);
-    new QRCode(qrDiv, { text: 'JWQC:' + p.id, width: 36, height: 36, colorDark: '#1E2D4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-
-    const info = document.createElement('div');
-    info.className = 'QRP-info';
-    const nm = document.createElement('div');
-    nm.className = 'QRP-name'; nm.textContent = p.name;
-    const mt = document.createElement('div');
-    const txtEmoji = (p.photoUrl||!p.emoji||p.emoji.startsWith('&#'))?'📦':p.emoji;
-    mt.className = 'QRP-meta'; mt.textContent = (p.partNumber ? '#' + p.partNumber : '') + ' · ' + txtEmoji;
-    info.appendChild(nm); info.appendChild(mt);
-    row.appendChild(info);
-
-    const copies = document.createElement('input');
-    copies.type = 'number'; copies.min = '1'; copies.value = '1';
-    copies.className = 'QRP-copies';
-    row.appendChild(copies);
-
-    const printBtn = document.createElement('button');
-    printBtn.className = 'btn btn-pdf btn-sm';
-    printBtn.textContent = 'Print';
-    printBtn.addEventListener('click', function(){
-      const n = Math.max(1, parseInt(copies.value) || 1);
-      qrPrintProduct(p, n);
-    });
-    row.appendChild(printBtn);
-
-    listC.appendChild(row);
-  });
-}
-
-function qrPrintProduct(p, copies) {
-  // Build all QR data as JSON, inject into popup — popup loads its own QRCode.js
-  const qrData = JSON.stringify({ id: p.id, name: p.name, pn: p.partNumber || '', copies: copies });
-  const w = window.open('', '_blank');
-  const html = '<!DOCTYPE html><html><head><title>QR - ' + p.name.replace(/</g,'&lt;') + '</title>' +
-    '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
-    '<style>' +
-    'body{font-family:sans-serif;margin:20px}' +
-    '.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}' +
-    '.card{border:1px solid #ccc;border-radius:8px;padding:12px;text-align:center;break-inside:avoid;page-break-inside:avoid}' +
-    '.nm{font-size:11px;font-weight:700;line-height:1.4;margin-top:8px}' +
-    '.pn{font-size:9px;color:#888;margin-top:3px}' +
-    '@media print{body{margin:10px}.grid{gap:10px}}' +
-    '</style></head><body>' +
-    '<div class="grid" id="g"></div>' +
-    '<script>' +
-    'var d=' + qrData + ';' +
-    'window.onload=function(){' +
-    '  var g=document.getElementById("g");' +
-    '  for(var i=0;i<d.copies;i++){' +
-    '    var card=document.createElement("div");card.className="card";' +
-    '    var qrDiv=document.createElement("div");' +
-    '    var nm=document.createElement("div");nm.className="nm";nm.textContent=d.name;' +
-    '    var pn=document.createElement("div");pn.className="pn";pn.textContent=d.pn?"#"+d.pn:"";' +
-    '    card.appendChild(qrDiv);card.appendChild(nm);card.appendChild(pn);g.appendChild(card);' +
-    '    new QRCode(qrDiv,{text:"JWQC:"+d.id,width:110,height:110,colorDark:"#1E2D4A",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});' +
-    '  }' +
-    '  setTimeout(function(){window.print();},800);' +
-    '};' +
-    '<\/script></body></html>';
-  w.document.write(html);
-  w.document.close();
-}
-
-</script>
 
 
 <script>
