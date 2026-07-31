@@ -2391,13 +2391,19 @@ function adjOrdQty(pid,delta,max){
 function getItems(){
   const out=[];
   const pc=S.pendingCarry||{};
+  const mk=vkey();
   const seen=new Set();
   // 1. Below-par items from this month's count (+ any carry added on top)
   for(const p of S.products){
     const oh=S.inventory[p.id];if(oh===undefined||oh==='')continue;
     const par=p.parLevel||0,cp=p.casePack||1,cm=isEquip(p)?'units':'cases';
     const diff=par-Number(oh);
-    const carryCases=pc[p.id]?.cases||0;
+    // Only add carry genuinely inherited from a PRIOR month. A pendingCarry
+    // entry whose fromMonth equals the month being viewed was written by an
+    // earlier flush THIS SAME month (e.g. an "Adjust to" edit) and already
+    // represents part of this month's own shortfall — adding it again here
+    // would double-count it on top of belowParCases.
+    const carryCases=(pc[p.id]&&pc[p.id].fromMonth!==mk)?pc[p.id].cases:0;
     let belowParCases=0;
     if(diff>0){
       if(cm==='cases'){belowParCases=diff;}
@@ -2412,7 +2418,7 @@ function getItems(){
   }
   // 2. Carry-over items not yet counted this month — show them regardless
   for(const[pid,carry] of Object.entries(pc)){
-    if(seen.has(pid)||!carry?.cases)continue;
+    if(seen.has(pid)||!carry?.cases||carry.fromMonth===mk)continue;
     const p=S.products.find(x=>x.id===pid);
     if(!p)continue;
     const lt=carry.cases*(p.pricePerCase||0);
@@ -3203,7 +3209,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.3.1';
+const APP_VERSION='3.3.2';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
