@@ -2438,41 +2438,37 @@ async function finalize(){
 
 async function doFinalize(){
   if(S.finalizing)return;
+  // Only submit items YOU explicitly marked ordered — never everything
+  // below par catalog-wide. Each item goes in at the quantity you actually
+  // chose in "Adjust to", not the full amount still needed.
+  const marked=getItems().filter(i=>ORD_CHECKED.has(i.pid));
+  if(!marked.length){showNote('Mark at least one item as ordered first (tap a product, then "Mark ordered").');return;}
   S.finalizing=true;
   const btn=document.getElementById('finalize-btn');
   if(btn){btn.disabled=true;btn.textContent='Saving...';}
   try{
-    const items=getItems(),mk=vkey();
-    await SB.from('orders').insert({items,monthKey:mk,total:items.reduce((s,i)=>s+i.lt,0),createdAt:now(),orderedBy:S.managerName});
+    const mk=vkey();
+    const submitted=marked.map(i=>{
+      const oq=ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases;
+      return {...i,cases:oq,lt:oq*i.pp};
+    });
+    await SB.from('orders').insert({items:submitted,monthKey:mk,total:submitted.reduce((s,i)=>s+i.lt,0),createdAt:now(),orderedBy:S.managerName});
     const sp={};
-    for(const i of items)sp['spent_'+i.bl]=(S.budgets['spent_'+i.bl]||0)+i.lt;
+    for(const i of submitted)sp['spent_'+i.bl]=(S.budgets['spent_'+i.bl]||0)+i.lt;
     if(Object.keys(sp).length){
       const newBudgetData={...S.budgets,...sp};
       await SB.from('budgets').upsert({monthKey:mk,data:newBudgetData},{onConflict:'monthKey'});
     }
-    // Save carry-over: items not fully ordered roll to next month
-    const carry={...S.pendingCarry};
-    for(const i of items){
-      const oq=ORD_CHECKED.has(i.pid)?(ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases):0;
-      const rem=i.cases-oq;
-      if(rem>0)carry[i.pid]={cases:rem,fromMonth:mk,name:i.name,bl:i.bl,pp:i.pp};
-      else delete carry[i.pid];
-    }
-    S.pendingCarry=carry;
-    if(Object.keys(carry).length){
-      SB.from('settings').upsert({key:'pending_carry',value:carry},{onConflict:'key'}).catch(()=>{});
-    }else{
-      SB.from('settings').delete().eq('key','pending_carry').catch(()=>{});
-    }
-    ORD_CHECKED.clear();ORD_QTY={};
-    localStorage.removeItem('jw_ord_ck_'+mk);localStorage.removeItem('jw_ord_qty_'+mk);
-    SB.from('settings').delete().eq('key','ord_state_'+mk).catch(()=>{});
-    S.gaps={};S.invDirty=false;
-    for(const _loc of['floor3','tiendita','piso2']){
-      SB.from('inventory').upsert({monthKeyLoc:mk+'_'+_loc,qtyData:{},savedAt:now(),savedBy:S.managerName},{onConflict:'monthKeyLoc'}).catch(()=>{});
-    }
-    showOk('Order finalized by '+S.managerName+'. Inventory reset for next count.'+(Object.keys(carry).length?' Pending cases carried to next month.':''));
-    go('dashboard');
+    // Carry is already kept correct per-item, in real time, by flushCarryAsync() —
+    // do not recompute it here. Just clear the checked/ordered state for the
+    // items that were actually submitted; everything else (unchecked items,
+    // inventory counts, other locations' data) is left exactly as it was.
+    for(const i of marked){ORD_CHECKED.delete(i.pid);delete ORD_QTY[i.pid];}
+    localStorage.setItem('jw_ord_ck_'+mk,JSON.stringify([...ORD_CHECKED]));
+    localStorage.setItem('jw_ord_qty_'+mk,JSON.stringify(ORD_QTY));
+    scheduleOrdSave();
+    showOk(submitted.length+' item'+(submitted.length!==1?'s':'')+' submitted by '+S.managerName+'.');
+    rInvOrd();
   }catch(err){showErr('Could not save the order. Please try again.',err);}
   finally{S.finalizing=false;if(btn){btn.disabled=false;btn.textContent='Place Order';}}
 }
@@ -3209,7 +3205,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.3.2';
+const APP_VERSION='3.3.3';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
