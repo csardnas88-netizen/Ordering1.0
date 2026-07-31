@@ -2334,8 +2334,15 @@ async function flushCarryAsync(){
   // Unchecked items are "pending decision" — never touch their carry here.
   for(const i of items){
     if(!ORD_CHECKED.has(i.pid))continue;
-    const oq=ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:i.cases;
-    const rem=i.cases-oq;
+    // Use only carry genuinely inherited from a PRIOR month (fromMonth!==mk).
+    // Carry this same month's own earlier flush already wrote (fromMonth===mk)
+    // must NOT be re-added — i.cases already reflects it via getItems(), and
+    // re-adding it on every subsequent adjustment compounds it without bound.
+    const prior=S.pendingCarry[i.pid];
+    const inherited=(prior&&prior.fromMonth!==mk)?prior.cases:0;
+    const neededThisMonth=i.belowParCases+inherited;
+    const oq=ORD_QTY[i.pid]!==undefined?ORD_QTY[i.pid]:neededThisMonth;
+    const rem=neededThisMonth-oq;
     if(rem>0)carry[i.pid]={cases:rem,fromMonth:mk,name:i.name,bl:i.bl,pp:i.pp};
     else delete carry[i.pid];
   }
@@ -3196,7 +3203,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.3.0';
+const APP_VERSION='3.3.1';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
