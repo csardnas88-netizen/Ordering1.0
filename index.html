@@ -1362,7 +1362,7 @@ const S={
   finalizing:false,
   currentLoc:'floor3', // active location for counting
 };
-const INV={query:'',view:'vendor',filter:'all',hideOrdered:false,sort:'urgency',rearrange:false,open:null,editingName:null,editingPar:null};
+const INV={query:'',view:'vendor',filter:'all',hideOrdered:false,sort:'urgency',rearrange:false,open:null,editingName:null,editingPar:null,orderDraft:{}};
 const CAT={query:'',view:'vendor',rearrange:false};
 // Order page — items marked as already called/submitted
 let S_VIEW_MONTH=mkey();
@@ -2074,8 +2074,11 @@ function ioPanelHTML(r){
   }
   if(r.orderState===null){
     if(r.needed>0){
-      html+='<div class="io-ordbar"><div class="io-ordbar-l"><span>Order</span><span style="font-weight:700;color:var(--txt)">'+r.needed+' '+cm+'</span></div>'
-        +'<button class="btn btn-g btn-sm" onclick="ioMarkOrdered(\''+pid+'\')">Mark ordered</button></div>';
+      const q=INV.orderDraft[pid]!==undefined?INV.orderDraft[pid]:r.needed;
+      html+='<div class="io-ordbar"><div class="io-ordbar-l"><span>Ordering</span><span class="io-qty">'
+        +'<button onclick="ioDraftAdjust(\''+pid+'\',-1)" aria-label="Fewer cases">&minus;</button><span>'+q+'</span><button onclick="ioDraftAdjust(\''+pid+'\',1)" aria-label="More cases">+</button>'
+        +'</span><span>of '+r.needed+' '+cm+'</span></div>'
+        +'<button class="btn btn-g btn-sm" onclick="ioConfirmOrder(\''+pid+'\')">Confirm order</button></div>';
     }else{
       html+='<div class="io-calc" style="margin-bottom:0">Nothing to order &mdash; at par.</div>';
     }
@@ -2116,12 +2119,23 @@ function ioStepAdjust(pid,loc,delta){
   rInvOrd();
   setTimeout(()=>{document.getElementById('io-row-'+pid)?.scrollIntoView({block:'nearest'});},0);
 }
-function ioMarkOrdered(pid){
+function ioDraftAdjust(pid,delta){
+  const p=S.products.find(x=>x.id===pid);if(!p)return;
+  const itemsMap=new Map(getItems().map(i=>[i.pid,i]));
+  const r=ioRowData(p,itemsMap);
+  const cur=INV.orderDraft[pid]!==undefined?INV.orderDraft[pid]:r.needed;
+  INV.orderDraft[pid]=Math.max(0,cur+delta);
+  rInvOrd();
+}
+function ioConfirmOrder(pid){
   const p=S.products.find(x=>x.id===pid);if(!p)return;
   const itemsMap=new Map(getItems().map(i=>[i.pid,i]));
   const r=ioRowData(p,itemsMap);
   if(r.needed<=0)return;
-  toggleOrdCheck(pid,r.needed);
+  const q=INV.orderDraft[pid]!==undefined?INV.orderDraft[pid]:r.needed;
+  if(q<=0){showNote('Enter at least 1 case before confirming.');return;}
+  delete INV.orderDraft[pid];
+  toggleOrdCheck(pid,q);
 }
 function ioUndoOrder(pid){toggleOrdCheck(pid);}
 function ioAdjOrdered(pid,delta){
@@ -3205,7 +3219,7 @@ function fd(s){try{return new Date(s).toLocaleDateString('en-US',{month:'short',
 
 // ── VERSION BANNER ─────────────────────────────────────────────────
 // Bump APP_VERSION with every release to trigger the banner
-const APP_VERSION='3.3.3';
+const APP_VERSION='3.4.0';
 const VBN_KEY='jw_ordering_version';
 
 function vbnCheck(){
